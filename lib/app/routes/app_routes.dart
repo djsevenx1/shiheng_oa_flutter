@@ -19,6 +19,7 @@ abstract class Routes {
   static const TASK = _Paths.TASK;
   static const TASK_DETAIL = _Paths.TASK_DETAIL;
   static const TASK_CREATE = _Paths.TASK_CREATE;
+  static const TOPIC = _Paths.TOPIC;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -42,6 +43,7 @@ abstract class _Paths {
   static const TASK = '/task';
   static const TASK_DETAIL = '/task/detail';
   static const TASK_CREATE = '/task/create';
+  static const TOPIC = '/topic';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }

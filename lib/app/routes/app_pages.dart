@@ -31,6 +31,8 @@ import '../../modules/task/bindings/task_create_binding.dart';
 import '../../modules/task/views/task_view.dart';
 import '../../modules/task/views/task_detail_view.dart';
 import '../../modules/task/views/task_create_view.dart';
+import '../../modules/topic/bindings/topic_binding.dart';
+import '../../modules/topic/views/topic_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -137,6 +139,12 @@ class AppPages {
       name: _Paths.TASK_CREATE,
       page: () => const TaskCreateView(),
       binding: TaskCreateBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.TOPIC,
+      page: () => const TopicView(),
+      binding: TopicBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
