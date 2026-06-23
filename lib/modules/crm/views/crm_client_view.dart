@@ -10,21 +10,7 @@ class CrmClientView extends GetView<CrmClientController> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('客户管理'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
-            onPressed: () => _showFilterSheet(context),
-          ),
-        ],
-      ),
-      body: Column(
+    return Column(
         children: [
           _buildSearchBar(),
           _buildFilterTabs(),
@@ -41,8 +27,7 @@ class CrmClientView extends GetView<CrmClientController> {
             }),
           ),
         ],
-      ),
-    );
+      );
   }
 
   Widget _buildSearchBar() {
