@@ -12,8 +12,6 @@ class SplashView extends StatefulWidget {
 
 class _SplashViewState extends State<SplashView> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
@@ -24,21 +22,6 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
         duration: const Duration(milliseconds: 1500),
         vsync: this,
       );
-
-      _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-        ),
-      );
-
-      _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-        CurvedAnimation(
-          parent: _controller,
-          curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-        ),
-      );
-
       _controller.forward();
     } catch (e) {
       debugPrint('Splash init animation error: $e');
