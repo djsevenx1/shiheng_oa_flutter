@@ -25,7 +25,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.3'
+          flutter-version: '3.24.5'
           channel: 'stable'
 
       - name: Cache Flutter dependencies
@@ -47,7 +47,10 @@ jobs:
       - name: Build Debug APK
         run: flutter build apk --debug
 
-      - name: Build Release APK
+      - name: Build Release APK (universal - all ABIs)
+        run: flutter build apk --release
+
+      - name: Build Release APK (split per ABI)
         run: flutter build apk --release --split-per-abi
 
       - name: Build App Bundle (AAB)
@@ -62,7 +65,7 @@ jobs:
             cp build/app/outputs/flutter-apk/app-debug.apk output/shiheng-oa-debug.apk
           fi
           if [ -f build/app/outputs/flutter-apk/app-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-release.apk output/shiheng-oa-release.apk
+            cp build/app/outputs/flutter-apk/app-release.apk output/shiheng-oa-universal.apk
           fi
           if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
             cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk output/shiheng-oa-armeabi-v7a.apk
