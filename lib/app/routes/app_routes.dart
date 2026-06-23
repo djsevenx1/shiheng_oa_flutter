@@ -23,6 +23,10 @@ abstract class Routes {
   static const ARCHIVE = _Paths.ARCHIVE;
   static const COMPANY_FILE = _Paths.COMPANY_FILE;
   static const SH_REPORT = _Paths.SH_REPORT;
+  static const FAVORITE = _Paths.FAVORITE;
+  static const HELP = _Paths.HELP;
+  static const COMPANY = _Paths.COMPANY;
+  static const VERSION = _Paths.VERSION;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -50,6 +54,10 @@ abstract class _Paths {
   static const ARCHIVE = '/archive';
   static const COMPANY_FILE = '/company_file';
   static const SH_REPORT = '/sh_report';
+  static const FAVORITE = '/favorite';
+  static const HELP = '/help';
+  static const COMPANY = '/company';
+  static const VERSION = '/version';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }

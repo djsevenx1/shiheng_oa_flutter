@@ -39,6 +39,11 @@ import '../../modules/company_file/bindings/company_file_binding.dart';
 import '../../modules/company_file/views/company_file_view.dart';
 import '../../modules/sh_report/bindings/sh_report_binding.dart';
 import '../../modules/sh_report/views/sh_report_view.dart';
+import '../../modules/favorite/bindings/favorite_binding.dart';
+import '../../modules/favorite/views/favorite_view.dart';
+import '../../modules/help/views/help_view.dart';
+import '../../modules/company/views/company_view.dart';
+import '../../modules/version/views/version_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -169,6 +174,27 @@ class AppPages {
       name: _Paths.SH_REPORT,
       page: () => const ShReportView(),
       binding: ShReportBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.FAVORITE,
+      page: () => const FavoriteView(),
+      binding: FavoriteBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.HELP,
+      page: () => const HelpView(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.COMPANY,
+      page: () => const CompanyView(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.VERSION,
+      page: () => const VersionView(),
       transition: Transition.cupertino,
     ),
     GetPage(

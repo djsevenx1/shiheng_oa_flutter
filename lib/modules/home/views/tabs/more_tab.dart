@@ -23,12 +23,17 @@ class MoreTab extends GetView<HomeController> {
             _MenuItem(Icons.map_outlined, '地图', Colors.green, Routes.MAP),
             _MenuItem(Icons.folder_copy_outlined, '项目管理', Colors.purple, Routes.PROJECT),
             _MenuItem(Icons.task_alt, '任务管理', Colors.teal, Routes.TASK),
+            _MenuItem(Icons.forum_outlined, '话题讨论', Colors.cyan, Routes.TOPIC),
+            _MenuItem(Icons.archive_outlined, '档案管理', Colors.brown, Routes.ARCHIVE),
+            _MenuItem(Icons.folder_shared_outlined, '公司文件', Colors.indigo, Routes.COMPANY_FILE),
+            _MenuItem(Icons.analytics, '时恒报表', Colors.pink, Routes.SH_REPORT),
           ]),
           SizedBox(height: 16.h),
-          _buildMenuSection('系统', [
-            _MenuItem(Icons.settings_outlined, '设置', Colors.grey, '/settings'),
-            _MenuItem(Icons.help_outline, '帮助', Colors.teal, '/help'),
-            _MenuItem(Icons.info_outline, '关于', Colors.indigo, '/about'),
+          _buildMenuSection('其他', [
+            _MenuItem(Icons.star_outline, '我的收藏', Colors.amber, Routes.FAVORITE),
+            _MenuItem(Icons.help_outline, '帮助中心', Colors.blue, Routes.HELP),
+            _MenuItem(Icons.business_outlined, '公司信息', Colors.indigo, Routes.COMPANY),
+            _MenuItem(Icons.info_outline, '关于版本', Colors.grey, Routes.VERSION),
           ]),
           SizedBox(height: 32.h),
           Padding(
