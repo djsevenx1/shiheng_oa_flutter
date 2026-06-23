@@ -7,6 +7,7 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const HOME = _Paths.HOME;
   static const WORKFLOW = _Paths.WORKFLOW;
+  static const WORKFLOW_DETAIL = _Paths.WORKFLOW_DETAIL;
   static const REPORT = _Paths.REPORT;
   static const STOCK_REPORT = _Paths.STOCK_REPORT;
   static const ATTENDANCE = _Paths.ATTENDANCE;
@@ -21,6 +22,7 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const HOME = '/home';
   static const WORKFLOW = '/workflow';
+  static const WORKFLOW_DETAIL = '/workflow/detail';
   static const REPORT = '/report';
   static const STOCK_REPORT = '/report/stock';
   static const ATTENDANCE = '/attendance';
