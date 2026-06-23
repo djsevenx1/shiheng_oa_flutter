@@ -10,7 +10,11 @@ class LoginView extends GetView<LoginController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.primaryDark,
+      extendBody: true,
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -22,6 +26,7 @@ class LoginView extends GetView<LoginController> {
           ),
         ),
         child: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
             child: Column(
@@ -110,6 +115,30 @@ class LoginView extends GetView<LoginController> {
                         ),
                       ),
                       SizedBox(height: 24.h),
+                      // Server Address
+                      TextField(
+                        controller: controller.serverController,
+                        decoration: InputDecoration(
+                          hintText: '服务器地址',
+                          prefixIcon: const Icon(Icons.cloud_outlined, color: AppTheme.gray400),
+                          filled: true,
+                          fillColor: AppTheme.gray50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12.r),
+                            borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                        ),
+                      ),
+                      SizedBox(height: 16.h),
                       // Username
                       TextField(
                         controller: controller.usernameController,
@@ -247,6 +276,7 @@ class LoginView extends GetView<LoginController> {
                   ),
                 ),
                 SizedBox(height: 20.h),
+                SizedBox(height: kBottomNavigationBarHeight),
               ],
             ),
           ),

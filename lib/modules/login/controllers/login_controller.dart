@@ -6,6 +6,7 @@ import '../../../app/routes/app_pages.dart';
 class LoginController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
 
+  final serverController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
@@ -18,10 +19,13 @@ class LoginController extends GetxController {
     super.onInit();
     // 预填充测试账号
     usernameController.text = 'admin';
+    // 默认服务器地址
+    serverController.text = 'http://xmyjsss.gnway.cc:22178';
   }
 
   @override
   void onClose() {
+    serverController.dispose();
     usernameController.dispose();
     passwordController.dispose();
     super.onClose();
