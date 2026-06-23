@@ -25,6 +25,9 @@ dependencies:
   pull_to_refresh: any
   flutter_smart_dialog: any
   mobile_scanner: ^5.2.3
+  flutter_bmflocation: ^3.8.4
+  amap_flutter_location: ^3.0.0
+  permission_handler: ^11.0.0
 
 dev_dependencies:
   flutter_test:
