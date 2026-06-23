@@ -9,7 +9,11 @@ import 'app/themes/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
+  try {
+    await GetStorage.init();
+  } catch (e) {
+    // GetStorage 初始化失败不影响主流程
+  }
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

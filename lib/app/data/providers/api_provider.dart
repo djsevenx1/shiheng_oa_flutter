@@ -9,14 +9,19 @@ class ApiProvider {
 
   late dio.Dio _dio;
   final _storage = GetStorage();
+  bool _initialized = false;
 
   // 基础配置 - 时恒电子服务器
   static const String baseUrl = 'http://xmyjsss.gnway.cc:22178';
   static const String apiPrefix = '/oa';
 
-  dio.Dio get dioInstance => _dio;
+  dio.Dio get dioInstance {
+    if (!_initialized) init();
+    return _dio;
+  }
 
   void init() {
+    if (_initialized) return;
     _dio = dio.Dio(dio.BaseOptions(
       baseUrl: baseUrl + apiPrefix,
       connectTimeout: const Duration(seconds: 30),
@@ -64,6 +69,7 @@ class ApiProvider {
         return handler.next(error);
       },
     ));
+    _initialized = true;
   }
 
   // GET 请求

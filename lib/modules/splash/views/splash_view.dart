@@ -20,7 +20,6 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
   @override
   void initState() {
     super.initState();
-    ApiProvider().init();
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
@@ -42,17 +41,27 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
     );
 
     _controller.forward();
-    _checkLogin();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkLogin();
+    });
   }
 
   void _checkLogin() async {
     await Future.delayed(const Duration(seconds: 2));
 
-    final authRepo = AuthRepository();
-    if (authRepo.isLoggedIn()) {
-      Get.offAllNamed(Routes.HOME);
-    } else {
-      Get.offAllNamed(Routes.LOGIN);
+    if (!mounted) return;
+    try {
+      // 确保 ApiProvider 已初始化
+      ApiProvider().init();
+      final authRepo = AuthRepository();
+      if (authRepo.isLoggedIn()) {
+        if (mounted) Get.offAllNamed(Routes.HOME);
+      } else {
+        if (mounted) Get.offAllNamed(Routes.LOGIN);
+      }
+    } catch (e) {
+      // 任何异常都跳到登录页，避免闪退
+      if (mounted) Get.offAllNamed(Routes.LOGIN);
     }
   }
 
