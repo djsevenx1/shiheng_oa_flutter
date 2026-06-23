@@ -90,7 +90,9 @@ class _WorkflowTabState extends State<WorkflowTab> {
         ),
         floatingActionButton: FloatingActionButton.extended(
           onPressed: () {
-            Get.snackbar('提示', '请在浏览器发起流程', snackPosition: SnackPosition.BOTTOM);
+            // 关键改动：不再 snackbar 让用户去浏览器；
+            // 直接跳到已存在的「发起流程」表单页（workflow_form_view.dart）。
+            Get.toNamed(Routes.WORKFLOW_FORM);
           },
           icon: const Icon(Icons.add),
           label: const Text('发起流程'),
