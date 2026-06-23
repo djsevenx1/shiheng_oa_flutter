@@ -1,16 +1,13 @@
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_bmflocation/flutter_bmflocation.dart';
-import 'package:amap_flutter_location/amap_flutter_location.dart';
+import 'package:fl_amap/fl_amap.dart';
 
-/// 统一的位置服务封装：默认使用百度定位，备选高德定位。
+/// 统一的位置服务封装：默认使用百度定位，备选高德 fl_amap。
 class LocationService {
   LocationService._internal();
   static final LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
-
-  /// 当前使用的高德插件（备用）
-  final AMapFlutterLocation _aMap = AMapFlutterLocation();
 
   /// 百度定位结果回调
   BMFLoCallback? _baiduCallback;
@@ -19,14 +16,12 @@ class LocationService {
   Future<bool> requestPermission() async {
     final status = await Permission.locationWhenInUse.request();
     if (status.isGranted) return true;
-
-    // 申请后台位置（可选，1.0.4 用了后台定位用于打卡）
     final bg = await Permission.locationAlways.request();
     return bg.isGranted || status.isGranted;
   }
 
-  /// 单次获取位置（百度）
-  /// 返回 {latitude, longitude, address, province, city, district, street, adCode}
+  /// 单次获取位置（百度优先，高德 fl_amap 备选）
+  /// 返回 {latitude, longitude, address, province, city, district, street, source}
   Future<Map<String, dynamic>> getCurrentLocation() async {
     if (!await requestPermission()) {
       throw '未授予定位权限';
@@ -40,21 +35,13 @@ class LocationService {
 
     _baiduCallback = BMFLoCallback(
       onSuccess: (Map<String, dynamic> result) async {
-        // 解析百度返回
         final loc = result['location'] as Map<String, dynamic>?;
         if (loc == null) {
           completer.fail('百度定位无数据');
           return;
         }
-        // 反向地理编码
         final lat = loc['latitude'] as double? ?? 0.0;
         final lng = loc['longitude'] as double? ?? 0.0;
-        try {
-          final geo = await FlutterBmflocation.bmfLocationCoordinateFromLocation(
-            BMFCoordinate(lat, lng),
-          );
-          debugPrint('baidu geocode: $geo');
-        } catch (_) {}
         completer.complete({
           'latitude': lat,
           'longitude': lng,
@@ -77,8 +64,7 @@ class LocationService {
       await FlutterBmflocation.initLocationService(_baiduCallback!);
       await FlutterBmflocation.startLocation();
     } catch (e) {
-      // 百度初始化失败时回退到高德
-      debugPrint('baidu init failed, fallback to amap: $e');
+      debugPrint('baidu init failed, fallback to fl_amap: $e');
       try {
         await FlutterBmflocation.stopLocation();
       } catch (_) {}
@@ -86,38 +72,32 @@ class LocationService {
     }
 
     return completer.future.timeout(const Duration(seconds: 15), onTimeout: () {
-      // 超时也回退到高德
       return _getAmapLocation();
     });
   }
 
-  /// 使用高德定位 SDK（备用）
+  /// 使用 fl_amap（高德）定位
   Future<Map<String, dynamic>> _getAmapLocation() async {
-    final completer = _CompleterOnce<Map<String, dynamic>>();
-
-    await _aMap.setApiKey('', ''); // 通过 AndroidManifest 配置 key
-    _aMap
-      ..onLocationChanged()
-      ..onLocationChanged().listen((Map<String, Object> event) {
-        final lat = (event['latitude'] as num?)?.toDouble() ?? 0.0;
-        final lng = (event['longitude'] as num?)?.toDouble() ?? 0.0;
-        if (lat == 0.0 && lng == 0.0) return;
-        completer.complete({
-          'latitude': lat,
-          'longitude': lng,
-          'address': event['address']?.toString() ?? event['poiName']?.toString() ?? '',
-          'province': event['province']?.toString() ?? '',
-          'city': event['city']?.toString() ?? '',
-          'district': event['district']?.toString() ?? '',
-          'street': event['street']?.toString() ?? '',
-          'source': 'amap',
-        });
-      });
-
-    await _aMap.startLocation();
-    return completer.future.timeout(const Duration(seconds: 15), onTimeout: () {
-      throw '定位超时';
-    });
+    try {
+      // fl_amap 在初始化时需要先 set key（高德开放平台申请的 API Key）
+      await FlAMap().setAMapKey(iosKey: '', androidKey: '');
+      await FlAMapLocation().initialize();
+      final loc = await FlAMapLocation().getLocation();
+      return {
+        'latitude': loc.latitude,
+        'longitude': loc.longitude,
+        'radius': 0.0,
+        'direction': 0.0,
+        'address': loc.address ?? '',
+        'province': loc.province ?? '',
+        'city': loc.city ?? '',
+        'district': loc.district ?? '',
+        'street': loc.street ?? '',
+        'source': 'amap',
+      };
+    } catch (e) {
+      throw 'fl_amap 定位失败: $e';
+    }
   }
 
   Future<void> stop() async {
@@ -125,7 +105,7 @@ class LocationService {
       await FlutterBmflocation.stopLocation();
     } catch (_) {}
     try {
-      await _aMap.stopLocation();
+      await FlAMapLocation().stopLocation();
     } catch (_) {}
   }
 }
