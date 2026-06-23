@@ -17,6 +17,8 @@ import '../../modules/attendance/bindings/attendance_binding.dart';
 import '../../modules/attendance/views/attendance_view.dart';
 import '../../modules/crm/bindings/crm_binding.dart';
 import '../../modules/crm/views/crm_view.dart';
+import '../../modules/crm/bindings/crm_client_detail_binding.dart';
+import '../../modules/crm/views/crm_client_detail_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -81,6 +83,12 @@ class AppPages {
       name: _Paths.CRM,
       page: () => const CrmView(),
       binding: CrmBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.CRM_CLIENT_DETAIL,
+      page: () => const CrmClientDetailView(),
+      binding: CrmClientDetailBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(

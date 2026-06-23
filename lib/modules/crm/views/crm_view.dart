@@ -1,46 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 import '../../../app/themes/app_theme.dart';
-import '../controllers/crm_controller.dart';
+import 'crm_client_view.dart';
 
-class CrmView extends GetView<CrmController> {
+class CrmView extends StatelessWidget {
   const CrmView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CRM'),
+        title: const Text('CRM 客户管理'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.people_outline,
-              size: 64.w,
-              color: AppTheme.gray300,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              'CRM 模块',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '功能开发中...',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: AppTheme.textTertiary,
-              ),
-            ),
-          ],
-        ),
+      body: const CrmClientView(),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {},
+        icon: const Icon(Icons.add),
+        label: const Text('新增客户'),
+        backgroundColor: AppTheme.primaryColor,
       ),
     );
   }

@@ -12,6 +12,7 @@ abstract class Routes {
   static const STOCK_REPORT = _Paths.STOCK_REPORT;
   static const ATTENDANCE = _Paths.ATTENDANCE;
   static const CRM = _Paths.CRM;
+  static const CRM_CLIENT_DETAIL = _Paths.CRM_CLIENT_DETAIL;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -28,6 +29,7 @@ abstract class _Paths {
   static const STOCK_REPORT = '/report/stock';
   static const ATTENDANCE = '/attendance';
   static const CRM = '/crm';
+  static const CRM_CLIENT_DETAIL = '/crm/client/detail';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }
