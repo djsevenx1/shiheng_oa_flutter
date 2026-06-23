@@ -14,6 +14,10 @@ import '../../modules/my_application/bindings/my_application_binding.dart';
 import '../../modules/my_application/views/my_application_view.dart';
 import '../../modules/qr_scan/bindings/qr_scan_binding.dart';
 import '../../modules/qr_scan/views/qr_scan_view.dart';
+import '../../modules/payslip/bindings/payslip_binding.dart';
+import '../../modules/payslip/views/payslip_view.dart';
+import '../../modules/knowledge/bindings/knowledge_binding.dart';
+import '../../modules/knowledge/views/knowledge_view.dart';
 import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
 import '../../modules/workflow/bindings/workflow_detail_binding.dart';
@@ -245,6 +249,18 @@ class AppPages {
       name: _Paths.QR_SCAN,
       page: () => const QrScanView(),
       binding: QrScanBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.PAYSLIP,
+      page: () => const PayslipView(),
+      binding: PayslipBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.KNOWLEDGE,
+      page: () => const KnowledgeView(),
+      binding: KnowledgeBinding(),
       transition: Transition.cupertino,
     ),
   ];

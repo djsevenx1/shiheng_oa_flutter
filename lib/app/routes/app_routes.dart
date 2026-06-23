@@ -70,4 +70,6 @@ abstract class _Paths {
   static const CONTACTS = '/contacts';
   static const MY_APPLICATION = '/my_application';
   static const QR_SCAN = '/qr_scan';
+  static const PAYSLIP = '/payslip';
+  static const KNOWLEDGE = '/knowledge';
 }

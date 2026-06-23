@@ -30,6 +30,7 @@ dependencies:
   permission_handler: ^11.0.0
   getuiflut: ^0.2.31
   emoji_picker_flutter: ^2.1.0
+  lpinyin: ^2.0.0
 
 dev_dependencies:
   flutter_test:
