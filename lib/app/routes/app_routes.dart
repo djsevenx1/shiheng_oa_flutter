@@ -22,6 +22,7 @@ abstract class Routes {
   static const TOPIC = _Paths.TOPIC;
   static const ARCHIVE = _Paths.ARCHIVE;
   static const COMPANY_FILE = _Paths.COMPANY_FILE;
+  static const SH_REPORT = _Paths.SH_REPORT;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -48,6 +49,7 @@ abstract class _Paths {
   static const TOPIC = '/topic';
   static const ARCHIVE = '/archive';
   static const COMPANY_FILE = '/company_file';
+  static const SH_REPORT = '/sh_report';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }

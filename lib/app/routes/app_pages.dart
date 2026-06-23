@@ -37,6 +37,8 @@ import '../../modules/archive/bindings/archive_binding.dart';
 import '../../modules/archive/views/archive_view.dart';
 import '../../modules/company_file/bindings/company_file_binding.dart';
 import '../../modules/company_file/views/company_file_view.dart';
+import '../../modules/sh_report/bindings/sh_report_binding.dart';
+import '../../modules/sh_report/views/sh_report_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -161,6 +163,12 @@ class AppPages {
       name: _Paths.COMPANY_FILE,
       page: () => const CompanyFileView(),
       binding: CompanyFileBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.SH_REPORT,
+      page: () => const ShReportView(),
+      binding: ShReportBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
