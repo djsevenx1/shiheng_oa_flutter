@@ -24,6 +24,7 @@ dependencies:
   flutter_staggered_grid_view: any
   pull_to_refresh: any
   flutter_smart_dialog: any
+  mobile_scanner: ^5.2.3
 
 dev_dependencies:
   flutter_test:

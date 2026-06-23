@@ -5,6 +5,15 @@ import '../../modules/home/views/home_view.dart';
 import '../../modules/login/bindings/login_binding.dart';
 import '../../modules/login/views/login_view.dart';
 import '../../modules/splash/views/splash_view.dart';
+import '../../modules/notice/bindings/notice_binding.dart';
+import '../../modules/notice/views/notice_view.dart';
+import '../../modules/notice/views/notice_detail_view.dart';
+import '../../modules/contacts/bindings/contacts_binding.dart';
+import '../../modules/contacts/views/contacts_view.dart';
+import '../../modules/my_application/bindings/my_application_binding.dart';
+import '../../modules/my_application/views/my_application_view.dart';
+import '../../modules/qr_scan/bindings/qr_scan_binding.dart';
+import '../../modules/qr_scan/views/qr_scan_view.dart';
 import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
 import '../../modules/workflow/bindings/workflow_detail_binding.dart';
@@ -207,6 +216,35 @@ class AppPages {
       name: _Paths.MAP,
       page: () => const MapView(),
       binding: MapBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.NOTICE,
+      page: () => const NoticeView(),
+      binding: NoticeBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.NOTICE_DETAIL,
+      page: () => const NoticeDetailView(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.CONTACTS,
+      page: () => const ContactsView(),
+      binding: ContactsBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.MY_APPLICATION,
+      page: () => const MyApplicationView(),
+      binding: MyApplicationBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.QR_SCAN,
+      page: () => const QrScanView(),
+      binding: QrScanBinding(),
       transition: Transition.cupertino,
     ),
   ];

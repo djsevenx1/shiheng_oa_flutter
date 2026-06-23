@@ -29,6 +29,11 @@ abstract class Routes {
   static const VERSION = _Paths.VERSION;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
+  static const NOTICE = _Paths.NOTICE;
+  static const NOTICE_DETAIL = _Paths.NOTICE_DETAIL;
+  static const CONTACTS = _Paths.CONTACTS;
+  static const MY_APPLICATION = _Paths.MY_APPLICATION;
+  static const QR_SCAN = _Paths.QR_SCAN;
 }
 
 abstract class _Paths {
@@ -60,4 +65,9 @@ abstract class _Paths {
   static const VERSION = '/version';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
+  static const NOTICE = '/notice';
+  static const NOTICE_DETAIL = '/notice/detail';
+  static const CONTACTS = '/contacts';
+  static const MY_APPLICATION = '/my_application';
+  static const QR_SCAN = '/qr_scan';
 }
