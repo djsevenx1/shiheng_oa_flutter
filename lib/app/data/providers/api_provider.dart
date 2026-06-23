@@ -2,6 +2,42 @@ import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import '../core/app_config.dart';
+
+/// 统一的业务错误结构，避免把 [dio.DioException] 整段抛到 UI。
+class ApiError {
+  ApiError({
+    required this.message,
+    this.statusCode,
+    this.kind = ApiErrorKind.unknown,
+  });
+
+  /// 给用户看的友好提示。
+  final String message;
+
+  /// HTTP 状态码（如果有）。
+  final int? statusCode;
+
+  /// 错误分类。
+  final ApiErrorKind kind;
+
+  @override
+  String toString() => 'ApiError($kind, $statusCode): $message';
+}
+
+enum ApiErrorKind {
+  /// 1xx/2xx 不会出现这里。
+  unauthorized, // 401
+  forbidden, // 403
+  notFound, // 404
+  client, // 其它 4xx
+  server, // 5xx
+  timeout, // 连接/接收/发送超时
+  network, // 没有响应、DNS 失败等
+  canceled, // 请求被取消
+  unknown,
+}
+
 class ApiProvider {
   static final ApiProvider _instance = ApiProvider._internal();
   factory ApiProvider() => _instance;
@@ -83,7 +119,9 @@ class ApiProvider {
       followRedirects: true,
       maxRedirects: 5,
       validateStatus: (status) {
-        return status != null && status < 500;
+        // 关键改动：让所有非 2xx 都走业务分支，而不是直接 throw 一段 DioException。
+        // 这样上层能拿到 response 自行决定怎么提示。
+        return status != null && status >= 200 && status < 300;
       },
       headers: {
         'Content-Type': 'application/json',
@@ -157,5 +195,55 @@ class ApiProvider {
   Future<dio.Response> delete(String path, {dynamic data}) async {
     _ensureInitialized();
     return await _dio.delete(path, data: data);
+  }
+
+  // —— 业务错误归一化 —— //
+
+  /// 把任意 Dio/网络异常转成 [ApiError]，供 UI 层直接展示。
+  static ApiError normalize(Object error) {
+    if (error is dio.DioException) {
+      final code = error.response?.statusCode;
+      switch (error.type) {
+        case dio.DioExceptionType.connectionTimeout:
+        case dio.DioExceptionType.sendTimeout:
+        case dio.DioExceptionType.receiveTimeout:
+          return ApiError(
+            message: '请求超时，请检查网络',
+            statusCode: code,
+            kind: ApiErrorKind.timeout,
+          );
+        case dio.DioExceptionType.badResponse:
+          if (code == 401) {
+            return ApiError(message: '登录已过期，请重新登录', statusCode: code, kind: ApiErrorKind.unauthorized);
+          } else if (code == 403) {
+            return ApiError(message: '没有访问权限', statusCode: code, kind: ApiErrorKind.forbidden);
+          } else if (code == 404) {
+            return ApiError(message: '资源不存在', statusCode: code, kind: ApiErrorKind.notFound);
+          } else if (code != null && code >= 500) {
+            return ApiError(message: '服务暂时不可用，请稍后再试', statusCode: code, kind: ApiErrorKind.server);
+          } else if (code != null && code >= 400) {
+            return ApiError(message: '请求异常 (HTTP $code)', statusCode: code, kind: ApiErrorKind.client);
+          }
+          return ApiError(message: '请求失败', statusCode: code, kind: ApiErrorKind.client);
+        case dio.DioExceptionType.cancel:
+          return ApiError(message: '请求已取消', statusCode: code, kind: ApiErrorKind.canceled);
+        case dio.DioExceptionType.connectionError:
+        case dio.DioExceptionType.unknown:
+          return ApiError(message: '网络连接失败', statusCode: code, kind: ApiErrorKind.network);
+      }
+    }
+    return ApiError(message: '未知错误', kind: ApiErrorKind.unknown);
+  }
+
+  /// 调试时把异常细节拼成一行，便于 UI 折叠展示。
+  static String debugDetail(Object error) {
+    if (!AppConfig.verboseErrors) return '';
+    if (error is dio.DioException) {
+      final method = error.requestOptions.method;
+      final url = error.requestOptions.uri;
+      final code = error.response?.statusCode;
+      return '[$method $url${code != null ? ' · HTTP $code' : ''}]';
+    }
+    return '';
   }
 }

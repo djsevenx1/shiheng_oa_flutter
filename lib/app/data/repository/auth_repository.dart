@@ -93,7 +93,9 @@ class AuthRepository {
       }
     } catch (e, st) {
       debugPrint('Login error: $e\n$st');
-      return {'success': false, 'message': '网络错误: $e'};
+      // 关键改动：不再把原始异常 toString 透传给 UI；改用 ApiProvider 归一化的友好提示。
+      final apiErr = ApiProvider.normalize(e);
+      return {'success': false, 'message': apiErr.message};
     }
   }
 
@@ -106,7 +108,8 @@ class AuthRepository {
       }
       return {'success': false, 'message': '获取用户信息失败'};
     } catch (e) {
-      return {'success': false, 'message': '网络错误: $e'};
+      final apiErr = ApiProvider.normalize(e);
+      return {'success': false, 'message': apiErr.message};
     }
   }
 

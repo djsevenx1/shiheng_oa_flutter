@@ -16,6 +16,11 @@ class LoginController extends GetxController {
   final isPasswordVisible = false.obs;
   final rememberMe = true.obs;
 
+  /// 顶部红色 banner 的短文案。null 表示不展示。
+  final RxnString errorBanner = RxnString();
+  /// 顶部红色 banner 副标题（调试细节），仅当 [AppConfig.verboseErrors] 为 true 时显示。
+  final RxnString errorBannerDetail = RxnString();
+
   @override
   void onInit() {
     super.onInit();
@@ -41,15 +46,35 @@ class LoginController extends GetxController {
     rememberMe.value = value ?? false;
   }
 
-  void _showSnack(String title, String message, Color bg) {
+  void clearError() {
+    errorBanner.value = null;
+    errorBannerDetail.value = null;
+  }
+
+  /// 顶部 banner 风格的提示（短文案 + 可选调试细节 + 关闭按钮）。
+  ///
+  /// 同时保留一个轻量 SnackBar 给用户即时反馈（2 秒就消失，不会盖住表单）。
+  void _showMessage({
+    required String title,
+    required String message,
+    required Color bg,
+    bool isError = false,
+    String? detail,
+  }) {
+    if (isError) {
+      errorBanner.value = message;
+      errorBannerDetail.value = detail;
+    } else {
+      clearError();
+    }
     final ctx = Get.context;
     if (ctx == null) return;
     ScaffoldMessenger.of(ctx).hideCurrentSnackBar();
     ScaffoldMessenger.of(ctx).showSnackBar(
       SnackBar(
-        content: Text('$title：$message'),
+        content: Text('$title：${AppConfig.summarize(message)}'),
         backgroundColor: bg,
-        duration: const Duration(seconds: 2),
+        duration: Duration(seconds: isError ? 3 : 2),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -60,16 +85,17 @@ class LoginController extends GetxController {
     final password = passwordController.text.trim();
 
     if (username.isEmpty) {
-      _showSnack('提示', '请输入用户名', Colors.orange);
+      _showMessage(title: '提示', message: '请输入用户名', bg: Colors.orange, isError: true);
       return;
     }
 
     if (password.isEmpty) {
-      _showSnack('提示', '请输入密码', Colors.orange);
+      _showMessage(title: '提示', message: '请输入密码', bg: Colors.orange, isError: true);
       return;
     }
 
     isLoading.value = true;
+    clearError();
 
     try {
       // 切换服务器地址
@@ -78,14 +104,30 @@ class LoginController extends GetxController {
       final result = await _authRepository.login(username, password);
 
       if (result['success'] == true) {
-        _showSnack('登录成功', '欢迎回来，${result['data']?['name'] ?? username}', Colors.green);
+        _showMessage(
+          title: '登录成功',
+          message: '欢迎回来，${result['data']?['name'] ?? username}',
+          bg: Colors.green,
+        );
         await Future.delayed(const Duration(milliseconds: 500));
         Get.offAllNamed(Routes.HOME);
       } else {
-        _showSnack('登录失败', result['message'] ?? '用户名或密码错误', Colors.red);
+        _showMessage(
+          title: '登录失败',
+          message: result['message'] ?? '用户名或密码错误',
+          bg: Colors.red,
+          isError: true,
+        );
       }
-    } catch (e) {
-      _showSnack('错误', '网络连接失败: $e', Colors.red);
+    } on Object catch (e) {
+      // 防御性兜底：AuthRepository.login 不会再 throw DioException，但万一有其它异常。
+      _showMessage(
+        title: '登录异常',
+        message: '请稍后再试',
+        bg: Colors.red,
+        isError: true,
+        detail: ApiProvider.debugDetail(e),
+      );
     } finally {
       isLoading.value = false;
     }
