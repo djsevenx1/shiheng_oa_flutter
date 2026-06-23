@@ -11,7 +11,7 @@ class LoginView extends GetView<LoginController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.primaryDark,
-      extendBody: true,
+      resizeToAvoidBottomInset: true,
       body: Container(
         width: double.infinity,
         height: double.infinity,
@@ -29,6 +29,7 @@ class LoginView extends GetView<LoginController> {
           bottom: false,
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: 32.w),
+            physics: const ClampingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -41,29 +41,31 @@ class LoginController extends GetxController {
     rememberMe.value = value ?? false;
   }
 
+  void _showSnack(String title, String message, Color bg) {
+    final ctx = Get.context;
+    if (ctx == null) return;
+    ScaffoldMessenger.of(ctx).hideCurrentSnackBar();
+    ScaffoldMessenger.of(ctx).showSnackBar(
+      SnackBar(
+        content: Text('$title：$message'),
+        backgroundColor: bg,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> login() async {
     final username = usernameController.text.trim();
     final password = passwordController.text.trim();
 
     if (username.isEmpty) {
-      Get.snackbar(
-        '提示',
-        '请输入用户名',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
+      _showSnack('提示', '请输入用户名', Colors.orange);
       return;
     }
 
     if (password.isEmpty) {
-      Get.snackbar(
-        '提示',
-        '请输入密码',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-      );
+      _showSnack('提示', '请输入密码', Colors.orange);
       return;
     }
 
@@ -76,31 +78,14 @@ class LoginController extends GetxController {
       final result = await _authRepository.login(username, password);
 
       if (result['success'] == true) {
-        Get.snackbar(
-          '登录成功',
-          '欢迎回来，${result['data']?['name'] ?? username}',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.green,
-          colorText: Colors.white,
-        );
+        _showSnack('登录成功', '欢迎回来，${result['data']?['name'] ?? username}', Colors.green);
+        await Future.delayed(const Duration(milliseconds: 500));
         Get.offAllNamed(Routes.HOME);
       } else {
-        Get.snackbar(
-          '登录失败',
-          result['message'] ?? '用户名或密码错误',
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        _showSnack('登录失败', result['message'] ?? '用户名或密码错误', Colors.red);
       }
     } catch (e) {
-      Get.snackbar(
-        '错误',
-        '网络连接失败: $e',
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      _showSnack('错误', '网络连接失败: $e', Colors.red);
     } finally {
       isLoading.value = false;
     }
