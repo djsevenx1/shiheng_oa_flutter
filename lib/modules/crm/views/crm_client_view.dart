@@ -324,7 +324,7 @@ class CrmClientView extends GetView<CrmClientController> {
     );
   }
 
-  void _showFilterSheet(BuildContext context) {
+  void _showFilterSheet(BuildContext context) { // ignore: unused_element
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
