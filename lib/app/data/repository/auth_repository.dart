@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
+import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import '../providers/api_provider.dart';
 
@@ -17,15 +18,42 @@ class AuthRepository {
           'password': password,
         },
         options: dio.Options(
-          responseType: dio.ResponseType.json,
-          contentType: 'application/json',
+          responseType: dio.ResponseType.plain, // 先用 plain 拿到原始文本
+          contentType: 'application/x-www-form-urlencoded',
+          headers: {
+            'Accept': 'application/json, text/plain, */*',
+          },
         ),
       );
 
       // 打印原始响应，方便调试
+      debugPrint('Login response type: ${response.data.runtimeType}');
       debugPrint('Login response: ${response.data}');
 
-      final data = response.data;
+      // 处理响应数据：可能是 JSON 字符串、已经是 Map、或其他类型
+      dynamic data = response.data;
+      if (data is String) {
+        final trimmed = data.trim();
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          // 尝试解析为 JSON
+          try {
+            data = jsonDecode(trimmed);
+          } catch (e) {
+            // 不是 JSON
+            return {
+              'success': false,
+              'message': '服务器返回非JSON: ${trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed}'
+            };
+          }
+        } else {
+          // 纯文本/HTML
+          return {
+            'success': false,
+            'message': '服务器返回: ${trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed}'
+          };
+        }
+      }
+
       if (data != null && data is Map) {
         // 兼容不同返回结构
         // 格式1: {success: true, data: {user}, token: 'xxx'}
@@ -63,7 +91,11 @@ class AuthRepository {
         }
       }
 
-      return {'success': false, 'message': '返回数据格式错误'};
+      // 打印完整的服务器响应内容（前 500 字符），方便调试
+      final rawData = data.toString();
+      debugPrint('Login response raw data type: ${data.runtimeType}');
+      debugPrint('Login response raw data (first 500 chars): ${rawData.length > 500 ? rawData.substring(0, 500) : rawData}');
+      return {'success': false, 'message': '返回数据格式错误: ${rawData.length > 200 ? rawData.substring(0, 200) : rawData}'};
     } catch (e, st) {
       debugPrint('Login error: $e\n$st');
       return {'success': false, 'message': '网络错误: $e'};
