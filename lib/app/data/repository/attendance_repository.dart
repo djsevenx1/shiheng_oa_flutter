@@ -70,6 +70,56 @@ class AttendanceRepository {
     }
   }
 
+  /// 月度统计
+  Future<Map<String, dynamic>> getMonthStats(int month) async {
+    try {
+      final response = await _api.dioInstance.get(
+        '/oa/attendance/monthStats',
+        queryParameters: {'month': month},
+      );
+      return {'success': true, 'data': response.data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '获取月度统计失败'};
+    }
+  }
+
+  /// 月度打卡明细
+  Future<Map<String, dynamic>> getAttendanceList({required int month, int page = 1, int pageSize = 30}) async {
+    try {
+      final response = await _api.dioInstance.get(
+        '/oa/attendance/list',
+        queryParameters: {'month': month, 'page': page, 'pageSize': pageSize},
+      );
+      return {'success': true, 'data': response.data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '获取打卡列表失败'};
+    }
+  }
+
+  /// 上班打卡（封装 punch）
+  Future<Map<String, dynamic>> checkIn({
+    String location = '',
+    String address = '',
+    double lat = 0.0,
+    double lng = 0.0,
+  }) async {
+    return punch(type: 'in', remark: 'checkin @ $address');
+  }
+
+  /// 下班打卡
+  Future<Map<String, dynamic>> checkOut({
+    String location = '',
+    String address = '',
+    double lat = 0.0,
+    double lng = 0.0,
+  }) async {
+    return punch(type: 'out', remark: 'checkout @ $address');
+  }
+
   /// 打卡历史
   Future<Map<String, dynamic>> getHistory({String? from, String? to, int page = 1, int pageSize = 30}) async {
     try {

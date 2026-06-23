@@ -27,8 +27,13 @@ class AppTheme {
 
   // 背景色
   static const Color background = Color(0xFFF8F9FA);
+  // 兼容别名：view 里习惯用 backgroundColor
+  static const Color backgroundColor = background;
   static const Color surface = Colors.white;
   static const Color cardBackground = Colors.white;
+
+  // 分隔线颜色别名
+  static const Color dividerColor = Color(0xFFE5E7EB);
 
   // 文字色
   static const Color textPrimary = Color(0xFF1F2937);

@@ -5,9 +5,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:getuiflut/getuiflut.dart';
+import 'package:get/get.dart';
 
 import '../../modules/notice/controllers/notice_controller.dart';
-import '../routes/app_pages.dart';
 
 /// 个推推送服务封装。
 /// - Android: 集成 getui SDK（需要 appid/appkey/secret）
@@ -105,7 +105,8 @@ class PushService {
       case 'url':
         final url = payload['url']?.toString() ?? '';
         if (url.isNotEmpty) {
-          Get.toNamed(Routes.WEB_VIEW, arguments: {'url': url, 'title': payload['title']?.toString() ?? '详情'});
+          // TODO: 接通 WebView 页面后改为 Get.toNamed(Routes.WEB_VIEW, ...)
+          debugPrint('push url payload: $url');
         }
         break;
     }

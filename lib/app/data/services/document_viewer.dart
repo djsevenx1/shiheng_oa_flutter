@@ -7,11 +7,10 @@ import 'package:get/get.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 
-import '../routes/app_pages.dart';
 import '../themes/app_theme.dart';
 
 /// 文档预览服务
-/// - PDF：App 内用 flutter_pdfview 渲染
+/// - PDF：先下载到本地缓存，再用 flutter_pdfview 渲染
 /// - Office/图片/其他：下载后用 open_filex 调系统应用
 class DocumentViewer {
   DocumentViewer._internal();
@@ -23,30 +22,31 @@ class DocumentViewer {
   Future<void> openRemote(String url, {String title = '文档', String? fileName}) async {
     final name = fileName ?? _extractFileName(url);
     final ext = name.contains('.') ? name.split('.').last.toLowerCase() : '';
-    if (ext == 'pdf') {
-      // PDF 走 App 内预览
-      Get.to(
-        () => _PdfPreviewPage(url: url, title: title),
-        transition: Transition.cupertino,
-      );
-    } else {
-      // 其它：下载后用系统应用打开
-      try {
-        Get.dialog(const Center(child: CircularProgressIndicator()), barrierDismissible: false);
-        final saved = await _downloadToTemp(url, name);
-        Get.back();
-        if (saved == null) {
-          Get.snackbar('失败', '下载失败', snackPosition: SnackPosition.BOTTOM);
-          return;
-        }
+    Get.dialog(
+      const Center(child: CircularProgressIndicator()),
+      barrierDismissible: false,
+    );
+    try {
+      final saved = await _downloadToTemp(url, name);
+      Get.back();
+      if (saved == null) {
+        Get.snackbar('失败', '下载失败', snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+      if (ext == 'pdf') {
+        Get.to(
+          () => _PdfPreviewPage(path: saved.path, title: title),
+          transition: Transition.cupertino,
+        );
+      } else {
         final result = await OpenFilex.open(saved.path);
         if (result.type != ResultType.done) {
           Get.snackbar('失败', '没有应用能打开此文件', snackPosition: SnackPosition.BOTTOM);
         }
-      } catch (e) {
-        try { Get.back(); } catch (_) {}
-        Get.snackbar('失败', '打开文件出错: $e', snackPosition: SnackPosition.BOTTOM);
       }
+    } catch (e) {
+      try { Get.back(); } catch (_) {}
+      Get.snackbar('失败', '打开文件出错: $e', snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -81,8 +81,8 @@ class DocumentViewer {
 }
 
 class _PdfPreviewPage extends StatelessWidget {
-  const _PdfPreviewPage({required this.url, required this.title});
-  final String url;
+  const _PdfPreviewPage({required this.path, required this.title});
+  final String path;
   final String title;
 
   @override
@@ -94,11 +94,13 @@ class _PdfPreviewPage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: PDFView(
-        filePath: null,
-        // flutter_pdfview 也支持 url，但需要先 download
-        // 这里直接传 url，由 PDFView 内部下载
-        // 若不支持，可以改用 syncfusion_flutter_pdfviewer 的 SfPdfViewer.network
-        pdfData: null,
+        filePath: path,
+        enableSwipe: true,
+        autoSpacing: true,
+        pageFling: true,
+        onError: (error) {
+          debugPrint('pdf error: $error');
+        },
       ),
     );
   }

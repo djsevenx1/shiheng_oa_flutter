@@ -28,14 +28,16 @@
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"
         android:networkSecurityConfig="@xml/network_security_config">
-        <!-- 百度地图定位 Key（占位，待替换为真实 Key） -->
+        <!-- 定位改用 geolocator（无需原生 API Key）。如需百度/高德原生 SDK，
+             后续添加时取消下面注释并替换 Key 占位符。 -->
+        <!--
         <meta-data
             android:name="com.baidu.lbsapi.API_KEY"
             android:value="PUT_BAIDU_KEY_HERE"/>
-        <!-- 高德地图定位 Key（占位，待替换为真实 Key） -->
         <meta-data
             android:name="com.amap.api.v2.apikey"
             android:value="PUT_AMAP_KEY_HERE"/>
+        -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

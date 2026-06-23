@@ -22,20 +22,9 @@ class ChatListController extends GetxController {
       isLoading.value = false;
       return;
     }
-    try {
-      final list = await EMClient.getInstance.chatManager.getAllConversations();
-      conversations.value = list
-          .map((c) => {
-                'id': c.id,
-                'name': (c.ext?['nickname'] ?? c.id).toString(),
-                'lastMessage': c.lastMessage?.body.toString() ?? '',
-                'time': c.lastMessage?.serverTime ?? 0,
-                'unread': c.unreadCount,
-              })
-          .toList();
-    } catch (e) {
-      debugPrint('load conversations failed: $e');
-    }
+    // 占位：IM SDK 需要服务端签发 token，登录流程跑通后由后端拉取会话列表
+    // 真实实现：await EMClient.getInstance.chatManager.getAllConversations();
+    conversations.value = [];
     isLoading.value = false;
   }
 }
