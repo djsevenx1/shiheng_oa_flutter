@@ -121,7 +121,7 @@ class HelpView extends StatelessWidget {
         ],
       ),
       child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        data: ThemeData(dividerColor: Colors.transparent),
         child: ExpansionTile(
           title: Text(
             q,
