@@ -1,25 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../app/data/repository/task_repository.dart';
 import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 
-class WorkflowTab extends StatelessWidget {
+class WorkflowTab extends StatefulWidget {
   const WorkflowTab({super.key});
 
-  final mockWorkflows = const [
-    {'id': 1, 'name': '请假申请', 'type': '事假', 'days': '2天', 'creator': '张三', 'date': '2024-01-15', 'state': 1},
-    {'id': 2, 'name': '报销申请', 'type': '差旅费', 'amount': '¥3,500', 'creator': '李四', 'date': '2024-01-14', 'state': 1},
-    {'id': 3, 'name': '采购申请', 'type': '办公用品', 'amount': '¥1,200', 'creator': '王五', 'date': '2024-01-13', 'state': 1},
-    {'id': 4, 'name': '请假申请', 'type': '年假', 'days': '3天', 'creator': '赵六', 'date': '2024-01-12', 'state': 1},
-    {'id': 5, 'name': '出差申请', 'type': '上海', 'days': '5天', 'creator': '钱七', 'date': '2024-01-11', 'state': 1},
-  ];
+  @override
+  State<WorkflowTab> createState() => _WorkflowTabState();
+}
 
-  final mockHandledWorkflows = const [
-    {'id': 101, 'name': '请假申请', 'type': '病假', 'days': '1天', 'creator': '孙八', 'date': '2024-01-10', 'state': 2},
-    {'id': 102, 'name': '报销申请', 'type': '招待费', 'amount': '¥800', 'creator': '周九', 'date': '2024-01-09', 'state': 2},
-    {'id': 103, 'name': '采购申请', 'type': '电子元件', 'amount': '¥15,000', 'creator': '吴十', 'date': '2024-01-08', 'state': -1},
-  ];
+class _WorkflowTabState extends State<WorkflowTab> {
+  final _taskRepository = TaskRepository();
+
+  List<dynamic> todoList = [];
+  List<dynamic> doneList = [];
+  bool isLoadingTodo = true;
+  bool isLoadingDone = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodo();
+    _loadDone();
+  }
+
+  Future<void> _loadTodo() async {
+    setState(() => isLoadingTodo = true);
+    final result = await _taskRepository.getTaskList(status: 'Todo', pageSize: 50);
+    if (mounted) {
+      setState(() {
+        isLoadingTodo = false;
+        if (result['success'] == true) {
+          todoList = List<dynamic>.from(result['data'] ?? []);
+        } else {
+          todoList = [];
+        }
+      });
+    }
+  }
+
+  Future<void> _loadDone() async {
+    setState(() => isLoadingDone = true);
+    final result = await _taskRepository.getTaskList(status: 'Done', pageSize: 50);
+    if (mounted) {
+      setState(() {
+        isLoadingDone = false;
+        if (result['success'] == true) {
+          doneList = List<dynamic>.from(result['data'] ?? []);
+        } else {
+          doneList = [];
+        }
+      });
+    }
+  }
+
+  String _formatDate(dynamic timestamp) {
+    if (timestamp == null) return '';
+    if (timestamp is int) {
+      final dt = DateTime.fromMillisecondsSinceEpoch(timestamp);
+      return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+    }
+    return timestamp.toString();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -30,8 +75,8 @@ class WorkflowTab extends StatelessWidget {
           title: const Text('流程审批'),
           bottom: TabBar(
             tabs: [
-              Tab(text: '待处理'),
-              Tab(text: '已处理'),
+              Tab(text: '待处理 (${todoList.length})'),
+              Tab(text: '已处理 (${doneList.length})'),
             ],
             labelStyle: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
             unselectedLabelStyle: TextStyle(fontSize: 15.sp),
@@ -39,12 +84,14 @@ class WorkflowTab extends StatelessWidget {
         ),
         body: TabBarView(
           children: [
-            _buildWorkflowList(mockWorkflows, isHandle: true),
-            _buildWorkflowList(mockHandledWorkflows, isHandle: false),
+            _buildTaskList(todoList, isLoadingTodo, '暂无待办任务', _loadTodo),
+            _buildTaskList(doneList, isLoadingDone, '暂无已办任务', _loadDone),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => Get.toNamed(Routes.WORKFLOW_FORM, arguments: {'modId': 1}),
+          onPressed: () {
+            Get.snackbar('提示', '请在浏览器发起流程', snackPosition: SnackPosition.BOTTOM);
+          },
           icon: const Icon(Icons.add),
           label: const Text('发起流程'),
           backgroundColor: AppTheme.primaryColor,
@@ -53,19 +100,39 @@ class WorkflowTab extends StatelessWidget {
     );
   }
 
-  Widget _buildWorkflowList(List<Map<String, dynamic>> items, {required bool isHandle}) {
-    return ListView.builder(
-      padding: EdgeInsets.all(16.w),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final state = item['state'] as int;
-        final stateName = state == 1 ? '待审批' : state == 2 ? '已通过' : '已拒绝';
-        final stateColor = state == 1 ? AppTheme.warning : state == 2 ? AppTheme.success : AppTheme.danger;
-
-        return GestureDetector(
-          onTap: () => Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': item['id']}),
-          child: Container(
+  Widget _buildTaskList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (items.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView(
+          children: [
+            SizedBox(height: 100.h),
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.inbox_outlined, size: 64.w, color: AppTheme.gray300),
+                  SizedBox(height: 16.h),
+                  Text(emptyText, style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
+                  SizedBox(height: 8.h),
+                  TextButton(onPressed: onRefresh, child: const Text('刷新')),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.builder(
+        padding: EdgeInsets.all(16.w),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          final item = items[index] as Map<String, dynamic>;
+          return Container(
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
@@ -87,66 +154,50 @@ class WorkflowTab extends StatelessWidget {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: stateColor.withOpacity(0.1),
+                        color: AppTheme.primaryColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Text(
-                        stateName,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: stateColor,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        '任务',
+                        style: TextStyle(fontSize: 12.sp, color: AppTheme.primaryColor, fontWeight: FontWeight.w500),
                       ),
                     ),
                     const Spacer(),
                     Text(
-                      item['date'] ?? '',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppTheme.textTertiary,
-                      ),
+                      _formatDate(item['startDate']),
+                      style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
                     ),
                   ],
                 ),
                 SizedBox(height: 12.h),
                 Text(
-                  '${item['name']} - ${item['creator']}',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  ),
+                  item['name']?.toString() ?? '无标题',
+                  style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                 ),
                 SizedBox(height: 8.h),
-                Text(
-                  '类型: ${item['type']} | ${item['days'] != null ? '天数: ${item['days']}' : '金额: ${item['amount']}'}',
-                  style: TextStyle(
-                    fontSize: 13.sp,
-                    color: AppTheme.textSecondary,
+                if (item['leader'] != null)
+                  Text(
+                    '负责人: ${item['leader']}',
+                    style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
                   ),
-                ),
-                SizedBox(height: 12.h),
+                SizedBox(height: 4.h),
                 Row(
                   children: [
-                    Icon(Icons.person_outline, size: 16.w, color: AppTheme.textTertiary),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '发起人: ${item['creator']}',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppTheme.textTertiary,
+                    if (item['deadline'] != null) ...[
+                      Icon(Icons.schedule, size: 14.w, color: AppTheme.textTertiary),
+                      SizedBox(width: 4.w),
+                      Text(
+                        '截止: ${_formatDate(item['deadline'])}',
+                        style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
                       ),
-                    ),
-                    const Spacer(),
-                    Icon(Icons.chevron_right, size: 20.w, color: AppTheme.gray400),
+                    ],
                   ],
                 ),
               ],
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

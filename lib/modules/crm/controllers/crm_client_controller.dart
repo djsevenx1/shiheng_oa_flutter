@@ -53,10 +53,12 @@ class CrmClientController extends GetxController {
         }
         totalCount.value = result['count'] ?? 0;
       } else {
-        _loadMockData();
+        clientList.value = [];
+        totalCount.value = 0;
       }
     } catch (e) {
-      _loadMockData();
+      clientList.value = [];
+      totalCount.value = 0;
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;

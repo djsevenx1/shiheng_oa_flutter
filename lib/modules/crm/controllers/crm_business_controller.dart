@@ -38,10 +38,12 @@ class CrmBusinessController extends GetxController {
         businessList.value = result['data'] ?? [];
         totalCount.value = result['count'] ?? 0;
       } else {
-        _loadMock();
+        businessList.value = [];
+        totalCount.value = 0;
       }
     } catch (e) {
-      _loadMock();
+      businessList.value = [];
+      totalCount.value = 0;
     } finally {
       isLoading.value = false;
     }

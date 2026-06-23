@@ -46,10 +46,12 @@ class TaskController extends GetxController {
         taskList.value = result['data'] ?? [];
         totalCount.value = result['count'] ?? 0;
       } else {
-        _loadMockData();
+        taskList.value = [];
+        totalCount.value = 0;
       }
     } catch (e) {
-      _loadMockData();
+      taskList.value = [];
+      totalCount.value = 0;
     } finally {
       isLoading.value = false;
     }
