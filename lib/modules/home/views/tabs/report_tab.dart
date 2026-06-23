@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
+import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 
 class ReportTab extends StatelessWidget {
@@ -25,8 +27,8 @@ class ReportTab extends StatelessWidget {
             Icons.inventory_2_outlined,
             Colors.blue,
             [
-              {'name': '非批号查询', 'route': '/report/stock/1'},
-              {'name': '批号查询', 'route': '/report/stock/2'},
+              {'name': '非批号查询', 'route': Routes.STOCK_REPORT},
+              {'name': '批号查询', 'route': Routes.STOCK_REPORT},
             ],
           ),
           SizedBox(height: 16.h),
@@ -116,7 +118,7 @@ class ReportTab extends StatelessWidget {
             ),
             trailing: Icon(Icons.chevron_right, color: AppTheme.gray400, size: 20.w),
             onTap: () {
-              // Get.toNamed(item['route']!);
+              Get.toNamed(item['route']!);
             },
           )),
         ],

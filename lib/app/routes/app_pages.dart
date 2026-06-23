@@ -9,6 +9,8 @@ import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
 import '../../modules/report/bindings/report_binding.dart';
 import '../../modules/report/views/report_view.dart';
+import '../../modules/report/views/stock_report_view.dart';
+import '../../modules/report/bindings/stock_report_binding.dart';
 import '../../modules/attendance/bindings/attendance_binding.dart';
 import '../../modules/attendance/views/attendance_view.dart';
 import '../../modules/crm/bindings/crm_binding.dart';
@@ -51,6 +53,12 @@ class AppPages {
       name: _Paths.REPORT,
       page: () => const ReportView(),
       binding: ReportBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.STOCK_REPORT,
+      page: () => const StockReportView(),
+      binding: StockReportBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
