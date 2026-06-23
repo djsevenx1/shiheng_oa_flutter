@@ -22,8 +22,13 @@ android {
         applicationId = "com.shiheng.shiheng_oa"
         minSdk = flutter.minSdkVersion
         targetSdk = 36
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        // 从 pubspec.yaml 读 version
+        val pubspecFile = rootProject.file("../pubspec.yaml")
+        val versionLine = pubspecFile.readLines().first { it.startsWith("version:") }
+        val versionStr = versionLine.substringAfter("version:").trim()
+        val parts = versionStr.split("+")
+        versionName = parts[0]
+        versionCode = if (parts.size > 1) parts[1].toInt() else 1
     }
 
     buildTypes {
