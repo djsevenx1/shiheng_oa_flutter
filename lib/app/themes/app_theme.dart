@@ -57,7 +57,7 @@ class AppTheme {
         ),
         toolbarHeight: 48.h,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
@@ -147,7 +147,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(16.r),
         ),
       ),
-      tabBarTheme: TabBarThemeData(
+      tabBarTheme: TabBarTheme(
         labelColor: primaryColor,
         unselectedLabelColor: gray500,
         labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
@@ -202,7 +202,7 @@ class AppTheme {
         ),
         toolbarHeight: 48.h,
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.r),
