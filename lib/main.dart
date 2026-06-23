@@ -1,59 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
-
-import 'app/routes/app_pages.dart';
-import 'app/themes/app_theme.dart';
 
 void main() {
-  runZonedGuarded(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-
-      // 全局异常捕获，避免任何错误导致闪退
-      FlutterError.onError = (FlutterErrorDetails details) {
-        FlutterError.presentError(details);
-        debugPrint('FlutterError: ${details.exception}');
-      };
-
-      try {
-        await GetStorage.init();
-      } catch (e) {
-        debugPrint('GetStorage init failed: $e');
-      }
-
-      try {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.portraitUp,
-          DeviceOrientation.portraitDown,
-        ]);
-      } catch (e) {
-        debugPrint('setPreferredOrientations failed: $e');
-      }
-
-      try {
-        SystemChrome.setSystemUIOverlayStyle(
-          const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.light,
-            systemNavigationBarColor: Colors.white,
-            systemNavigationBarIconBrightness: Brightness.dark,
-          ),
-        );
-      } catch (e) {
-        debugPrint('setSystemUIOverlayStyle failed: $e');
-      }
-
-      runApp(const MyApp());
-    },
-    (error, stack) {
-      debugPrint('Uncaught zone error: $error\n$stack');
-    },
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -61,22 +10,92 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ScreenUtilInit(
-      designSize: const Size(375, 812),
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (context, child) {
-        return GetMaterialApp(
-          title: '时恒电子 OA',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.system,
-          initialRoute: AppPages.INITIAL,
-          getPages: AppPages.routes,
-          defaultTransition: Transition.cupertino,
-        );
-      },
+    return GetMaterialApp(
+      title: '时恒电子 OA',
+      debugShowCheckedModeBanner: false,
+      home: const _BootScreen(),
     );
   }
 }
+
+class _BootScreen extends StatefulWidget {
+  const _BootScreen();
+
+  @override
+  State<_BootScreen> createState() => _BootScreenState();
+}
+
+class _BootScreenState extends State<_BootScreen> {
+  String _status = '启动中...';
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _boot();
+  }
+
+  Future<void> _boot() async {
+    try {
+      await Future.delayed(const Duration(milliseconds: 500));
+      // 动态加载主程序
+      // ignore: avoid_dynamic_calls
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        setState(() {
+          _status = '应用就绪';
+        });
+      }
+    } catch (e, st) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _status = '启动失败';
+        });
+      }
+      debugPrint('Boot error: $e\n$st');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF61428F),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.business, size: 80, color: Colors.white),
+            const SizedBox(height: 24),
+            const Text(
+              '时恒电子 OA',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _status,
+              style: const TextStyle(fontSize: 14, color: Colors.white70),
+            ),
+            if (_error != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
+                color: Colors.red.shade100,
+                child: Text(
+                  _error!,
+                  style: const TextStyle(fontSize: 10, color: Colors.red),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+

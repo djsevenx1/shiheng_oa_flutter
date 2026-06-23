@@ -39,20 +39,10 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: const ColorScheme.light(
-        primary: primaryColor,
-        onPrimary: Colors.white,
-        primaryContainer: primaryLight,
-        onPrimaryContainer: Colors.white,
-        secondary: primaryLight,
-        onSecondary: Colors.white,
-        surface: surface,
-        onSurface: textPrimary,
-        background: background,
-        onBackground: textPrimary,
-        error: danger,
-        onError: Colors.white,
-        outline: gray300,
+      primaryColor: primaryColor,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
+        brightness: Brightness.light,
       ),
       scaffoldBackgroundColor: background,
       appBarTheme: AppBarTheme(
@@ -194,20 +184,10 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: const ColorScheme.dark(
-        primary: primaryLight,
-        onPrimary: Colors.white,
-        primaryContainer: primaryDark,
-        onPrimaryContainer: Colors.white,
-        secondary: primaryColor,
-        onSecondary: Colors.white,
-        surface: Color(0xFF1F2937),
-        onSurface: Colors.white,
-        background: Color(0xFF111827),
-        onBackground: Colors.white,
-        error: Color(0xFFFCA5A5),
-        onError: Color(0xFF7F1D1D),
-        outline: Color(0xFF374151),
+      primaryColor: primaryLight,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
+        brightness: Brightness.dark,
       ),
       scaffoldBackgroundColor: const Color(0xFF111827),
       appBarTheme: AppBarTheme(

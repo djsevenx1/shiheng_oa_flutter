@@ -1,125 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_pages.dart';
-import '../../../app/themes/app_theme.dart';
 
-class SplashView extends StatefulWidget {
+class SplashView extends StatelessWidget {
   const SplashView({super.key});
 
   @override
-  State<SplashView> createState() => _SplashViewState();
-}
-
-class _SplashViewState extends State<SplashView> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-
-    try {
-      _controller = AnimationController(
-        duration: const Duration(milliseconds: 1500),
-        vsync: this,
-      );
-      _controller.forward();
-    } catch (e) {
-      debugPrint('Splash init animation error: $e');
-    }
-
-    // 延迟跳转登录
-    Future.delayed(const Duration(seconds: 2), _navigateNext);
-  }
-
-  void _navigateNext() {
-    if (!mounted) return;
-    try {
-      Get.offAllNamed(Routes.LOGIN);
-    } catch (e) {
-      debugPrint('Navigate to login error: $e');
-      // 兜底：直接重启到登录
-      try {
-        Get.offAll(() => const _SafeLoginFallback());
-      } catch (_) {}
-    }
-  }
-
-  @override
-  void dispose() {
-    try {
-      _controller.dispose();
-    } catch (_) {}
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.primaryColor,
+    Future.delayed(const Duration(seconds: 2), () {
+      try {
+        Get.offAllNamed(Routes.LOGIN);
+      } catch (e) {
+        debugPrint('Navigate error: $e');
+      }
+    });
+
+    return const Scaffold(
+      backgroundColor: Color(0xFF61428F),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Icon(
-                Icons.business,
-                size: 56,
-                color: AppTheme.primaryColor,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const Text(
-              '时恒电子',
+            Icon(Icons.business, size: 80, color: Colors.white),
+            SizedBox(height: 16),
+            Text(
+              '时恒电子 OA',
               style: TextStyle(
-                fontSize: 32,
+                fontSize: 24,
+                color: Colors.white,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
-                letterSpacing: 4,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '移动办公平台',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.white70,
-                letterSpacing: 2,
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-// 兜底登录页 - 避免任何依赖问题
-class _SafeLoginFallback extends StatelessWidget {
-  const _SafeLoginFallback();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.business, size: 80, color: AppTheme.primaryColor),
-              const SizedBox(height: 24),
-              const Text('时恒电子 OA', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text('应用启动成功', style: TextStyle(fontSize: 14, color: Colors.grey)),
-            ],
-          ),
         ),
       ),
     );
