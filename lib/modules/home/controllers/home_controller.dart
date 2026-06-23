@@ -37,8 +37,47 @@ class HomeController extends GetxController {
 
   void loadUserInfo() {
     final info = _authRepository.getUserInfo();
-    if (info != null) {
+    if (info != null && info.isNotEmpty) {
       userInfo.value = info;
+    } else {
+      // 兜底：从 login 时缓存的真实 user/current 读
+      final name = _authRepository.getStorage().read('cachedUserName');
+      final group = _authRepository.getStorage().read('cachedUserGroup');
+      final id = _authRepository.getStorage().read('cachedUserId');
+      final icon = _authRepository.getStorage().read('cachedUserIcon');
+      userInfo.value = {
+        if (name != null) 'name': name,
+        if (group != null) 'groupName': group,
+        if (id != null) 'id': id,
+        if (icon != null) 'icon': icon,
+      };
+    }
+    // 触发 /oa/user/current 异步刷新
+    refreshUserInfo();
+  }
+
+  /// 异步从 /oa/user/current 拉取最新用户信息
+  Future<void> refreshUserInfo() async {
+    try {
+      final response = await _authRepository.getApi().dioInstance.get('/oa/user/current');
+      final data = response.data;
+      if (data is Map) {
+        final m = data.cast<String, dynamic>();
+        userInfo.value = {
+          'name': m['name']?.toString() ?? userInfo.value['name'] ?? '用户',
+          'groupName': m['groupName']?.toString() ?? userInfo.value['groupName'] ?? '',
+          'id': m['id']?.toString() ?? userInfo.value['id'] ?? '',
+          'icon': m['icon']?.toString() ?? userInfo.value['icon'] ?? '',
+        };
+        // 顺便缓存到 storage
+        final s = _authRepository.getStorage();
+        if (m['name'] != null) s.write('cachedUserName', m['name'].toString());
+        if (m['groupName'] != null) s.write('cachedUserGroup', m['groupName'].toString());
+        if (m['icon'] != null) s.write('cachedUserIcon', m['icon'].toString());
+        if (m['id'] != null) s.write('cachedUserId', m['id'].toString());
+      }
+    } catch (e) {
+      // 静默失败——已有缓存就用缓存
     }
   }
 

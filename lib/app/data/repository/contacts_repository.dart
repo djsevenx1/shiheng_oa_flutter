@@ -4,7 +4,7 @@ import 'package:get_storage/get_storage.dart';
 import '../providers/api_provider.dart';
 
 /// 通讯录仓库
-/// 真实接口：/oa/common/groups（部门树）+ /oa/human/initList（成员）
+/// 真实接口：/oa/common/groups（部门树）+ /oa/u/initList（人员列表）
 class ContactsRepository {
   ContactsRepository({ApiProvider? api, GetStorage? storage})
       : _api = api ?? ApiProvider(),
@@ -14,7 +14,6 @@ class ContactsRepository {
   final GetStorage _storage;
 
   /// 部门树（GET /oa/common/groups）
-  /// 返回结构因 OA 版本而异：通常是 list<{id, name, parentId, children:[]}>
   Future<Map<String, dynamic>> getDepartmentTree() async {
     try {
       final response = await _api.dioInstance.get('/oa/common/groups');
@@ -34,12 +33,13 @@ class ContactsRepository {
     }
   }
 
-  /// 部门成员（GET /oa/human/initList?limit&offset）
-  /// 备注：老 OA 这个接口是全员列表，部门筛选要靠前端用 groupId 过滤
+  /// 全员（GET /oa/u/initList?limit&offset）
+  /// 真实字段：{id, login_name, name, userGroup, groupId, userRole, userId, mobile, email, icon}
+  /// 关键修复：之前用 /oa/human/initList 后端返回 0，真实接口是 /oa/u/initList 有 155 人
   Future<Map<String, dynamic>> getAllMembers({int limit = 200, int offset = 0}) async {
     try {
       final response = await _api.dioInstance.get(
-        '/oa/human/initList',
+        '/oa/u/initList',
         queryParameters: {'limit': limit, 'offset': offset},
       );
       return _parseListResponse(response.data);
@@ -50,15 +50,28 @@ class ContactsRepository {
     }
   }
 
-  /// 搜索成员（POST /oa/u/initList?limit&offset body={humanSearch:{name:"%X%"}}）
+  /// 按部门筛选成员（前端用 groupId 过滤）
+  /// 老 OA 字段可能是 groupId（数字）或 userGroup（字符串）
+  List<Map<String, dynamic>> filterByDept(List<dynamic> all, String groupId) {
+    return all
+        .where((m) {
+          if (m is! Map) return false;
+          final gid = m['groupId'];
+          return gid?.toString() == groupId;
+        })
+        .cast<Map<String, dynamic>>()
+        .toList();
+  }
+
+  /// 搜索成员（GET /oa/u/initList?humanSearch.name=%X%&limit&offset）
   Future<Map<String, dynamic>> searchMembers(String keyword, {int limit = 50, int offset = 0}) async {
     try {
-      final response = await _api.dioInstance.post(
-        '/oa/u/initList?limit=$limit&offset=$offset',
-        data: {
-          'humanSearch': {
-            'name': '%${keyword.trim()}%',
-          },
+      final response = await _api.dioInstance.get(
+        '/oa/u/initList',
+        queryParameters: {
+          'limit': limit,
+          'offset': offset,
+          'humanSearch.name': '%${keyword.trim()}%',
         },
       );
       return _parseListResponse(response.data);
@@ -93,7 +106,7 @@ class ContactsRepository {
     }
   }
 
-  /// 缓存部门树，避免每次启动都拉
+  /// 缓存部门树
   Future<void> cacheDepartments(List<dynamic> data) async {
     try {
       await _storage.write('contacts_departments', data);
@@ -108,7 +121,9 @@ class ContactsRepository {
     }
   }
 
-  /// 把嵌套的部门树拍平成 list<{id, name, depth, parentId}>
+  /// 把嵌套部门树拍平成 [{id, name, depth, parentId}]
+  /// 老 OA 返回的是平铺 [{id, name, parentId, ...}]（无 children），
+  /// 我们按 parentId 二次构图
   List<Map<String, dynamic>> _flattenGroups(List<dynamic> groups, {int depth = 0, String? parentId}) {
     final out = <Map<String, dynamic>>[];
     for (final g in groups) {
@@ -117,7 +132,12 @@ class ContactsRepository {
       final id = (m['id'] ?? m['groupId'] ?? '').toString();
       final name = (m['name'] ?? m['groupName'] ?? '').toString();
       if (id.isNotEmpty) {
-        out.add({'id': id, 'name': name, 'depth': depth, 'parentId': parentId ?? m['parentId']?.toString()});
+        out.add({
+          'id': id,
+          'name': name,
+          'depth': depth,
+          'parentId': parentId ?? m['parentId']?.toString(),
+        });
       }
       final children = m['children'] ?? m['subGroups'];
       if (children is List && children.isNotEmpty) {

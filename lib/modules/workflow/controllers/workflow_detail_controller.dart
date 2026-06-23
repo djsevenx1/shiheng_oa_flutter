@@ -121,38 +121,6 @@ class WorkflowDetailController extends GetxController {
   }
 
   void _loadMockDetail() {
-    workflowDetail.value = {
-      'id': proId.value,
-      'name': '请假申请',
-      'moduleName': '请假流程',
-      'state': 1,
-      'creatorName': '张三',
-      'createdDate': '2024-01-15 09:30',
-      'currentNodeName': '部门经理审批',
-    };
-    formData.value = {
-      '请假类型': '事假',
-      '开始日期': '2024-01-16',
-      '结束日期': '2024-01-17',
-      '请假天数': '2天',
-      '请假原因': '家中有事需要处理',
-      '附件': '无',
-    };
-    logs.value = [
-      {
-        'userName': '张三',
-        'action': '发起申请',
-        'message': '申请事假2天',
-        'date': '2024-01-15 09:30',
-        'flagPositive': true,
-      },
-      {
-        'userName': '李四',
-        'action': '组长审批',
-        'message': '同意',
-        'date': '2024-01-15 10:15',
-        'flagPositive': true,
-      },
-    ];
+    // [MOCK-DISABLED] 不再加载假数据；后端失败时显示错误状态
   }
 }

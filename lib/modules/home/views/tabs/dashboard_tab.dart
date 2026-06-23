@@ -85,10 +85,10 @@ class DashboardTab extends GetView<HomeController> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _buildQuickAction(Icons.edit_location_alt, '签到', Colors.orange),
-                          _buildQuickAction(Icons.people_outline, '通讯录', Colors.blue),
-                          _buildQuickAction(Icons.favorite_outline, '收藏', Colors.red),
-                          _buildQuickAction(Icons.folder_open, '文档', Colors.green),
+                          _buildQuickAction(Icons.edit_location_alt, '签到', Colors.orange, () => Get.toNamed(Routes.ATTENDANCE)),
+                          _buildQuickAction(Icons.people_outline, '通讯录', Colors.blue, () => Get.toNamed(Routes.CONTACTS)),
+                          _buildQuickAction(Icons.favorite_outline, '收藏', Colors.red, () => Get.toNamed(Routes.FAVORITE)),
+                          _buildQuickAction(Icons.folder_open, '文档', Colors.green, () => Get.toNamed(Routes.COMPANY_FILE)),
                         ],
                       ),
                     ],
@@ -165,9 +165,9 @@ class DashboardTab extends GetView<HomeController> {
     );
   }
 
-  Widget _buildQuickAction(IconData icon, String label, Color color) {
+  Widget _buildQuickAction(IconData icon, String label, Color color, VoidCallback? onTap) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap ?? () {},
       child: Column(
         children: [
           Container(

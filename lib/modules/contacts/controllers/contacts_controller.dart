@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'dart:async';
 
 import '../../../app/data/repository/contacts_repository.dart';
 
@@ -53,10 +54,13 @@ class ContactsController extends GetxController {
     isLoading.value = false;
   }
 
+  /// 加载全员到 members（默认视图）
   Future<void> loadAllMembers() async {
     final result = await _repo.getAllMembers(limit: 200);
     if (result['success'] == true) {
       allMembers.value = (result['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      // 默认视图：显示全部
+      members.value = allMembers.toList();
     }
   }
 
@@ -71,29 +75,43 @@ class ContactsController extends GetxController {
     members.value = filtered;
   }
 
+  Timer? _searchDebounce;
   Future<void> search(String keyword) async {
     searchKeyword.value = keyword;
+    _searchDebounce?.cancel();
     if (keyword.trim().isEmpty) {
       searchResults.clear();
       isSearching.value = false;
       return;
     }
     isSearching.value = true;
-    final result = await _repo.searchMembers(keyword.trim());
-    isSearching.value = false;
-    if (result['success'] == true) {
-      searchResults.value = (result['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    }
+    final completer = Completer<void>();
+    _searchDebounce = Timer(const Duration(milliseconds: 250), () async {
+      final result = await _repo.searchMembers(keyword.trim());
+      if (!completer.isCompleted) completer.complete();
+      if (result['success'] == true) {
+        searchResults.value = (result['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      }
+      isSearching.value = false;
+    });
+    return completer.future;
+  }
+
+  @override
+  void onClose() {
+    _searchDebounce?.cancel();
+    super.onClose();
   }
 
   void clearSearch() {
+    _searchDebounce?.cancel();
     searchKeyword.value = '';
     searchResults.clear();
     isSearching.value = false;
   }
 
   void callMember(Map<String, dynamic> m) {
-    final phone = m['phone']?.toString() ?? m['mobile']?.toString() ?? '';
+    final phone = m['mobile']?.toString() ?? m['phone']?.toString() ?? m['tel']?.toString() ?? '';
     if (phone.isEmpty) {
       Get.snackbar('提示', '该成员没有电话', snackPosition: SnackPosition.BOTTOM);
       return;

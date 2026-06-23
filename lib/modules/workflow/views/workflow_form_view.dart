@@ -11,7 +11,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Obx(() => Text(controller.moduleName.value)),
+        title: Obx(() => Text(controller.moduleName.value.isEmpty ? '流程表单' : controller.moduleName.value)),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
@@ -23,20 +23,47 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
         if (controller.isLoading.value) {
           return Center(child: CircularProgressIndicator(color: AppTheme.primaryColor));
         }
-        return Form(
-          key: controller.formKey,
-          child: ListView(
-            padding: EdgeInsets.all(16.w),
-            children: [
-              _buildFormHeader(),
-              SizedBox(height: 16.h),
-              _buildFormFields(),
-              SizedBox(height: 16.h),
-              _buildApproversSection(),
-              SizedBox(height: 16.h),
-              _buildAttachmentSection(),
-              SizedBox(height: 100.h),
-            ],
+        if (controller.errorMessage.value != null && controller.formFields.isEmpty) {
+          return _ErrorView(
+            message: controller.errorMessage.value!,
+            onRetry: controller.loadFormSchema,
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: controller.loadFormSchema,
+          child: Form(
+            key: controller.formKey,
+            child: ListView(
+              padding: EdgeInsets.all(16.w),
+              children: [
+                _buildFormHeader(),
+                SizedBox(height: 16.h),
+                _buildFormFields(),
+                if (controller.formFields.isEmpty)
+                  Container(
+                    margin: EdgeInsets.symmetric(vertical: 24.h),
+                    padding: EdgeInsets.all(20.w),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade50,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Column(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.amber.shade800, size: 32.w),
+                        SizedBox(height: 8.h),
+                        Text(
+                          '该流程未配置表单字段\n请到后端 OA 系统的"流程管理 → 模块配置"添加字段',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 13.sp, color: Colors.amber.shade800),
+                        ),
+                      ],
+                    ),
+                  ),
+                SizedBox(height: 16.h),
+                _buildSubmitInfo(),
+                SizedBox(height: 100.h),
+              ],
+            ),
           ),
         );
       }),
@@ -108,7 +135,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Obx(() => Text(
-                  controller.moduleName.value,
+                  controller.moduleName.value.isEmpty ? '流程表单' : controller.moduleName.value,
                   style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                 )),
                 SizedBox(height: 2.h),
@@ -125,6 +152,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
   }
 
   Widget _buildFormFields() {
+    if (controller.formFields.isEmpty) return const SizedBox.shrink();
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -142,13 +170,13 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Obx(() => Column(
-            children: controller.formFields.map((field) {
-              return Padding(
-                padding: EdgeInsets.only(bottom: 16.h),
-                child: _buildField(field),
-              );
-            }).toList(),
-          )),
+                children: controller.formFields.map((field) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    child: _buildField(field),
+                  );
+                }).toList(),
+              )),
         ],
       ),
     );
@@ -161,6 +189,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
       case 'number':
         return _buildNumberField(field);
       case 'date':
+      case 'datetime':
         return _buildDateField(field);
       case 'textarea':
         return _buildTextareaField(field);
@@ -366,7 +395,9 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
         _buildFieldLabel(field),
         SizedBox(height: 6.h),
         InkWell(
-          onTap: () {},
+          onTap: () {
+            Get.snackbar('提示', '附件上传功能需要后端配置', snackPosition: SnackPosition.BOTTOM);
+          },
           child: Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
@@ -442,152 +473,55 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
     );
   }
 
-  Widget _buildApproversSection() {
+  /// 提交说明（删了之前的"通知方式"硬编码三按钮）
+  Widget _buildSubmitInfo() {
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.amber.shade50,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Text(
-                '选择审批人',
-                style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-              ),
-              Text(' *', style: TextStyle(color: AppTheme.danger, fontSize: 14.sp)),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Obx(() => Wrap(
-            spacing: 8.w,
-            runSpacing: 8.h,
-            children: _mockApprovers.map((approver) {
-              final isSelected = controller.selectedApprovers.contains(approver['name']!);
-              return GestureDetector(
-                onTap: () => controller.toggleApprover(approver['name']!),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.gray50,
-                    border: Border.all(
-                      color: isSelected ? AppTheme.primaryColor : AppTheme.gray300,
-                    ),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 12.w,
-                        backgroundColor: AppTheme.primaryColor,
-                        child: Text(
-                          approver['name']![0],
-                          style: TextStyle(fontSize: 11.sp, color: Colors.white),
-                        ),
-                      ),
-                      SizedBox(width: 6.w),
-                      Text(
-                        approver['name']!,
-                        style: TextStyle(
-                          fontSize: 13.sp,
-                          color: isSelected ? AppTheme.primaryColor : AppTheme.textPrimary,
-                        ),
-                      ),
-                      if (isSelected) ...[
-                        SizedBox(width: 4.w),
-                        Icon(Icons.check_circle, size: 14.w, color: AppTheme.primaryColor),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttachmentSection() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '通知方式',
-            style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
-          ),
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              _buildNotificationOption('站内消息', Icons.message, true),
-              SizedBox(width: 12.w),
-              _buildNotificationOption('邮件', Icons.email_outlined, true),
-              SizedBox(width: 12.w),
-              _buildNotificationOption('短信', Icons.sms_outlined, false),
-            ],
+          Icon(Icons.info_outline, color: Colors.amber.shade800, size: 18.w),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Text(
+              '提交后由后端 OA 系统按流程配置自动流转。',
+              style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade800),
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildNotificationOption(String label, IconData icon, bool selected) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h),
-        decoration: BoxDecoration(
-          color: selected ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.gray50,
-          border: Border.all(
-            color: selected ? AppTheme.primaryColor : AppTheme.gray300,
-          ),
-          borderRadius: BorderRadius.circular(8.r),
-        ),
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message, required this.onRetry});
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(24.w),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: selected ? AppTheme.primaryColor : AppTheme.gray400, size: 20.w),
-            SizedBox(height: 4.h),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: selected ? AppTheme.primaryColor : AppTheme.textSecondary,
-              ),
+            Icon(Icons.error_outline, size: 64.w, color: Colors.red.shade300),
+            SizedBox(height: 16.h),
+            Text(message, textAlign: TextAlign.center, style: TextStyle(fontSize: 14.sp)),
+            SizedBox(height: 16.h),
+            ElevatedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh),
+              label: const Text('重试'),
             ),
           ],
         ),
       ),
     );
   }
-
-  final _mockApprovers = const [
-    {'name': '张经理', 'dept': '技术部'},
-    {'name': '李总监', 'dept': '运营部'},
-    {'name': '王主管', 'dept': '财务部'},
-    {'name': '陈总', 'dept': '总经理'},
-    {'name': '刘总', 'dept': '副总'},
-  ];
 }

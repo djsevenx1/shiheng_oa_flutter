@@ -164,6 +164,9 @@ class LoginController extends GetxController {
         } else {
           clearSavedCredentials();
         }
+        // 登录成功后主动拉取一次用户信息并缓存（供首页展示用）
+        _storage.write('cachedUsername', username);
+        _fetchAndCacheCurrentUser(username);
         _showMessage(
           title: '登录成功',
           message: '欢迎回来，${result['data']?['name'] ?? username}',
@@ -190,6 +193,25 @@ class LoginController extends GetxController {
       );
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  /// 登录后从 /oa/user/current 拉取真实用户信息（name/groupName/icon）缓存到 storage。
+  /// 失败不阻塞登录。
+  Future<void> _fetchAndCacheCurrentUser(String username) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/user/current');
+      final data = response.data;
+      if (data is Map) {
+        final m = data.cast<String, dynamic>();
+        // 老 OA user/current 字段是 {id, name, groupName, groupId, roleName, ...}
+        if (m['name'] != null) _storage.write('cachedUserName', m['name'].toString());
+        if (m['groupName'] != null) _storage.write('cachedUserGroup', m['groupName'].toString());
+        if (m['icon'] != null) _storage.write('cachedUserIcon', m['icon'].toString());
+        if (m['id'] != null) _storage.write('cachedUserId', m['id'].toString());
+      }
+    } catch (e) {
+      debugPrint('fetch current user failed: $e');
     }
   }
 }

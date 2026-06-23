@@ -28,9 +28,40 @@ class ContactsView extends GetView<ContactsController> {
                 return const Center(child: CircularProgressIndicator(strokeWidth: 2));
               }
               return ListView.builder(
-                itemCount: controller.departments.length,
+                itemCount: controller.departments.length + 1, // +1 for "全部"
                 itemBuilder: (context, index) {
-                  final d = controller.departments[index];
+                  if (index == 0) {
+                    // 第一个选项：全部
+                    return Obx(() {
+                      final selected = controller.selectedDeptId.value == null;
+                      return InkWell(
+                        onTap: () => controller.selectAllDepartment(),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 12.w),
+                          decoration: BoxDecoration(
+                            color: selected ? Colors.white : Colors.transparent,
+                            border: Border(
+                              left: BorderSide(
+                                color: selected ? AppTheme.primaryColor : Colors.transparent,
+                                width: 3,
+                              ),
+                            ),
+                          ),
+                          child: Text(
+                            '全部',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: selected ? AppTheme.primaryColor : AppTheme.textSecondary,
+                              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                      );
+                    });
+                  }
+                  final d = controller.departments[index - 1];
                   final id = d['id']?.toString() ?? '';
                   final name = d['name']?.toString() ?? '';
                   return Obx(() {
@@ -140,7 +171,7 @@ class ContactsView extends GetView<ContactsController> {
             ),
             title: Text(m['name']?.toString() ?? ''),
             subtitle: Text(
-              '${m['position'] ?? ''}${m['phone'] != null ? '  ·  ${m['phone']}' : ''}',
+              '${m['userRole'] ?? m['position'] ?? ''}${m['mobile'] != null ? '  ·  ${m['mobile']}' : ''}',
               style: TextStyle(fontSize: 12.sp),
             ),
             trailing: IconButton(
@@ -178,7 +209,7 @@ class ContactsView extends GetView<ContactsController> {
             ),
             title: Text(m['name']?.toString() ?? ''),
             subtitle: Text(
-              '${m['deptName'] ?? ''}  ·  ${m['position'] ?? ''}',
+              '${m['userGroup'] ?? m['deptName'] ?? ''}  ·  ${m['userRole'] ?? m['position'] ?? ''}',
               style: TextStyle(fontSize: 12.sp),
             ),
             onTap: () => controller.callMember(m),

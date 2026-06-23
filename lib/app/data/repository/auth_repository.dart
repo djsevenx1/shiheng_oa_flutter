@@ -7,6 +7,10 @@ class AuthRepository {
   final _api = ApiProvider();
   final _storage = GetStorage();
 
+  /// 暴露给外部使用（例如 home_controller 拉取 /oa/user/current）
+  ApiProvider getApi() => _api;
+  GetStorage getStorage() => _storage;
+
   /// 用户登录 - Spring Security form login 风格
   /// 服务器: http://njsh2012.5i178.com:9090
   /// 端点: POST /login (form-encoded)
