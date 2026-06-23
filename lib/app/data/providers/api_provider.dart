@@ -2,7 +2,7 @@ import 'package:dio/dio.dart' as dio;
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
-import '../core/app_config.dart';
+import '../../core/app_config.dart';
 
 /// 统一的业务错误结构，避免把 [dio.DioException] 整段抛到 UI。
 class ApiError {
@@ -228,6 +228,7 @@ class ApiProvider {
         case dio.DioExceptionType.cancel:
           return ApiError(message: '请求已取消', statusCode: code, kind: ApiErrorKind.canceled);
         case dio.DioExceptionType.connectionError:
+        case dio.DioExceptionType.badCertificate:
         case dio.DioExceptionType.unknown:
           return ApiError(message: '网络连接失败', statusCode: code, kind: ApiErrorKind.network);
       }
