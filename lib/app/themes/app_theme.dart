@@ -169,7 +169,7 @@ class AppTheme {
           ),
         ),
       ),
-      fontFamily: 'PingFang SC',
+      fontFamily: 'sans-serif',
       textTheme: TextTheme(
         displayLarge: TextStyle(fontSize: 32.sp, fontWeight: FontWeight.bold, color: textPrimary),
         displayMedium: TextStyle(fontSize: 28.sp, fontWeight: FontWeight.bold, color: textPrimary),
