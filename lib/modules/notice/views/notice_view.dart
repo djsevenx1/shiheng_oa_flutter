@@ -399,7 +399,7 @@ class _ReplyBoxState extends State<_ReplyBox> {
                 : () async {
                     if (_ctrl.text.trim().isEmpty) return;
                     setState(() => _submitting = true);
-                    await widget.onSubmit(_ctrl.text);
+                    widget.onSubmit(_ctrl.text);
                     if (mounted) {
                       setState(() {
                         _ctrl.clear();
