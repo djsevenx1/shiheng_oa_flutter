@@ -37,7 +37,7 @@ class WorkflowDetailController extends GetxController {
       // 老 OA 流程详情需要 formId + objectId；
       // 我们目前只从 proId 入参，假定 formId = proId 试一下；
       // 真实生产中应该从流程列表字段拿到 formId 再传
-      final result = await _repository.getWorkflowDetail(proId.value, proId.value);
+      final result = await _repository.getWorkflowDetail(proId.value.toString(), proId.value.toString());
       if (result['success'] == true) {
         final data = (result['data'] as Map?)?.cast<String, dynamic>() ?? {};
         workflowDetail.value = data;
