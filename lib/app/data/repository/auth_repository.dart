@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/foundation.dart';
-import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import '../providers/api_provider.dart';
 
@@ -8,96 +7,90 @@ class AuthRepository {
   final _api = ApiProvider();
   final _storage = GetStorage();
 
+  /// 用户登录 - Spring Security form login 风格
+  /// 服务器: http://njsh2012.5i178.com:9090
+  /// 端点: POST /login (form-encoded)
+  /// 字段: username + password
+  /// 成功: 302 重定向到 / 或首页
+  /// 失败: 302 重定向到 /login.jsp?error=true
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
-      // 用户登录
+      debugPrint('=== Login attempt: user=$username, baseUrl=${_api.baseUrl} ===');
+
+      // 1. POST /login (form-encoded) - Spring Security form login
       final response = await _api.dioInstance.post(
-        '/oa/login',
+        '/login',
         data: {
-          'loginName': username,
+          'username': username,
           'password': password,
         },
         options: dio.Options(
-          responseType: dio.ResponseType.plain, // 先用 plain 拿到原始文本
+          responseType: dio.ResponseType.plain,
           contentType: 'application/x-www-form-urlencoded',
+          followRedirects: false, // 关键：不要跟随重定向，我们要看 302 状态码
+          validateStatus: (status) {
+            // 接受 2xx, 3xx, 4xx 但不接受 5xx
+            return status != null && status < 500;
+          },
           headers: {
-            'Accept': 'application/json, text/plain, */*',
+            'Accept': 'text/html, application/json, */*',
           },
         ),
       );
 
-      // 打印原始响应，方便调试
-      debugPrint('Login HTTP status: ${response.statusCode}');
-      debugPrint('Login response headers: ${response.headers}');
-      debugPrint('Login response type: ${response.data.runtimeType}');
-      debugPrint('Login response: ${response.data}');
+      debugPrint('Login status: ${response.statusCode}');
+      debugPrint('Login location header: ${response.headers.value('location')}');
+      debugPrint('Login set-cookie: ${response.headers.value('set-cookie')}');
 
-      // 处理响应数据：可能是 JSON 字符串、已经是 Map、或其他类型
-      dynamic data = response.data;
-      if (data is String) {
-        final trimmed = data.trim();
-        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
-          // 尝试解析为 JSON
-          try {
-            data = jsonDecode(trimmed);
-          } catch (e) {
-            // 不是 JSON
-            return {
-              'success': false,
-              'message': '服务器返回非JSON: ${trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed}'
-            };
-          }
-        } else {
-          // 纯文本/HTML
-          return {
-        'success': false,
-        'message': 'HTTP ${response.statusCode}: ${trimmed.isEmpty ? "(空响应)" : (trimmed.length > 300 ? trimmed.substring(0, 300) : trimmed)}'
-      };
-        }
+      final status = response.statusCode ?? 0;
+      final location = response.headers.value('location') ?? '';
+      final cookieFromResponse = response.headers.value('set-cookie') ?? '';
+
+      // 提取 JSESSIONID
+      String? jsessionId = _storage.read('JSESSIONID');
+      final cookieMatch = RegExp(r'JSESSIONID=([^;]+)').firstMatch(cookieFromResponse);
+      if (cookieMatch != null) {
+        jsessionId = 'JSESSIONID=${cookieMatch.group(1)}';
+        await _storage.write('JSESSIONID', jsessionId);
+        debugPrint('Stored JSESSIONID: $jsessionId');
       }
 
-      if (data != null && data is Map) {
-        // 兼容不同返回结构
-        // 格式1: {success: true, data: {user}, token: 'xxx'}
-        // 格式2: {code: 0, msg: 'ok', data: {user}, token: 'xxx'}
-        // 格式3: {user: {...}, token: 'xxx'} (直接返回用户)
-        Map<String, dynamic> userData = {'id': 0, 'name': username, 'loginName': username};
-        String? token;
-        bool success = true;
-
-        if (data['success'] == false || data['code'] == 500 || data['code'] == 401) {
-          success = false;
-        } else if (data['data'] is Map) {
-          userData = Map<String, dynamic>.from(data['data'] as Map);
-          token = data['token']?.toString();
-        } else if (data['data'] == null && (data.containsKey('loginName') || data.containsKey('name'))) {
-          // 格式3: 直接返回用户对象
-          userData = Map<String, dynamic>.from(data);
-          token = data['token']?.toString();
-        }
-
-        if (success) {
-          // 把所有 String 类型的 id 字段尝试转为 int
-          if (userData['id'] is String) {
-            userData['id'] = int.tryParse(userData['id'].toString()) ?? 0;
-          }
+      // 判断登录结果
+      if (status == 302) {
+        // Spring Security form login 风格: 用 Location 头判断
+        if (location.contains('error') || location.contains('login')) {
+          // 失败 - 重定向到登录错误页
+          return {'success': false, 'message': '用户名或密码错误'};
+        } else {
+          // 成功 - 重定向到非 login 路径
+          final userData = {
+            'id': 0,
+            'name': username,
+            'loginName': username,
+            'username': username,
+          };
           await _storage.write('userInfo', userData);
-          if (token != null && token.isNotEmpty) {
-            await _storage.write('token', token);
-          } else {
-            await _storage.write('token', username);
-          }
+          await _storage.write('token', jsessionId ?? username);
           return {'success': true, 'data': userData};
-        } else {
-          return {'success': false, 'message': (data['message'] ?? data['msg'] ?? '登录失败').toString()};
         }
-      }
+      } else if (status == 200) {
+        // 直接返回 200，看 body
+        final body = response.data?.toString() ?? '';
+        debugPrint('Login body (200): ${body.substring(0, body.length > 500 ? 500 : body.length)}');
 
-      // 打印完整的服务器响应内容（前 500 字符），方便调试
-      final rawData = data.toString();
-      debugPrint('Login response raw data type: ${data.runtimeType}');
-      debugPrint('Login response raw data (first 500 chars): ${rawData.length > 500 ? rawData.substring(0, 500) : rawData}');
-      return {'success': false, 'message': '返回数据格式错误: ${rawData.length > 200 ? rawData.substring(0, 200) : rawData}'};
+        if (body.contains('error') || body.contains('登录失败') || body.contains('密码')) {
+          return {'success': false, 'message': '用户名或密码错误'};
+        }
+        // 200 + 没有错误提示 -> 假设成功
+        final userData = {'id': 0, 'name': username, 'loginName': username, 'username': username};
+        await _storage.write('userInfo', userData);
+        await _storage.write('token', jsessionId ?? username);
+        return {'success': true, 'data': userData};
+      } else if (status == 401 || status == 403) {
+        return {'success': false, 'message': '认证失败 (HTTP $status)'};
+      } else {
+        return {'success': false, 'message': 'HTTP $status: ${response.data.toString().substring(0, response.data.toString().length > 200 ? 200 : response.data.toString().length)}'};
+      }
     } catch (e, st) {
       debugPrint('Login error: $e\n$st');
       return {'success': false, 'message': '网络错误: $e'};

@@ -99,6 +99,12 @@ class ApiProvider {
           options.headers['token'] = token;
         }
 
+        // 添加 JSESSIONID cookie
+        final jsessionId = _storage.read('JSESSIONID');
+        if (jsessionId != null && options.headers['Cookie'] == null) {
+          options.headers['Cookie'] = jsessionId.toString();
+        }
+
         // 添加用户信息
         final userInfo = _storage.read('userInfo');
         if (userInfo != null && userInfo['id'] != null) {
