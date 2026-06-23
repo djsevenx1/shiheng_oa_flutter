@@ -11,12 +11,14 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        maven { setUrl("https://maven.aliyun.com/repository/public") }
-        maven { setUrl("https://maven.aliyun.com/repository/google") }
-        maven { setUrl("https://maven.aliyun.com/repository/gradle-plugin") }
+        // 关键改动：把官方源放最前面，避免 Aliyun 镜像 502 时阻塞 CI。
+        // Aliyun mirror 仍保留为 fallback。
         google()
         mavenCentral()
         gradlePluginPortal()
+        maven { setUrl("https://maven.aliyun.com/repository/public") }
+        maven { setUrl("https://maven.aliyun.com/repository/google") }
+        maven { setUrl("https://maven.aliyun.com/repository/gradle-plugin") }
     }
 }
 
