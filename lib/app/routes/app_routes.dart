@@ -14,6 +14,8 @@ abstract class Routes {
   static const ATTENDANCE = _Paths.ATTENDANCE;
   static const CRM = _Paths.CRM;
   static const CRM_CLIENT_DETAIL = _Paths.CRM_CLIENT_DETAIL;
+  static const PROJECT = _Paths.PROJECT;
+  static const PROJECT_DETAIL = _Paths.PROJECT_DETAIL;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -32,6 +34,8 @@ abstract class _Paths {
   static const ATTENDANCE = '/attendance';
   static const CRM = '/crm';
   static const CRM_CLIENT_DETAIL = '/crm/client/detail';
+  static const PROJECT = '/project';
+  static const PROJECT_DETAIL = '/project/detail';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }

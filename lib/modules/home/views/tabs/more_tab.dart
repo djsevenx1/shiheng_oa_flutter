@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 import '../../controllers/home_controller.dart';
 
@@ -17,10 +18,10 @@ class MoreTab extends GetView<HomeController> {
         padding: EdgeInsets.all(16.w),
         children: [
           _buildMenuSection('业务模块', [
-            _MenuItem(Icons.people_outline, 'CRM', Colors.blue, '/crm'),
-            _MenuItem(Icons.location_on_outlined, '考勤签到', Colors.orange, '/attendance'),
-            _MenuItem(Icons.map_outlined, '地图', Colors.green, '/map'),
-            _MenuItem(Icons.folder_copy_outlined, '项目管理', Colors.purple, '/project'),
+            _MenuItem(Icons.people_outline, 'CRM', Colors.blue, Routes.CRM),
+            _MenuItem(Icons.location_on_outlined, '考勤签到', Colors.orange, Routes.ATTENDANCE),
+            _MenuItem(Icons.map_outlined, '地图', Colors.green, Routes.MAP),
+            _MenuItem(Icons.folder_copy_outlined, '项目管理', Colors.purple, Routes.PROJECT),
           ]),
           SizedBox(height: 16.h),
           _buildMenuSection('系统', [

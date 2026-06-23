@@ -21,6 +21,10 @@ import '../../modules/crm/bindings/crm_binding.dart';
 import '../../modules/crm/views/crm_view.dart';
 import '../../modules/crm/bindings/crm_client_detail_binding.dart';
 import '../../modules/crm/views/crm_client_detail_view.dart';
+import '../../modules/project/bindings/project_binding.dart';
+import '../../modules/project/bindings/project_detail_binding.dart';
+import '../../modules/project/views/project_view.dart';
+import '../../modules/project/views/project_detail_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -97,6 +101,18 @@ class AppPages {
       name: _Paths.CRM_CLIENT_DETAIL,
       page: () => const CrmClientDetailView(),
       binding: CrmClientDetailBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.PROJECT,
+      page: () => const ProjectView(),
+      binding: ProjectBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.PROJECT_DETAIL,
+      page: () => const ProjectDetailView(),
+      binding: ProjectDetailBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
