@@ -33,6 +33,10 @@ import '../../modules/task/views/task_detail_view.dart';
 import '../../modules/task/views/task_create_view.dart';
 import '../../modules/topic/bindings/topic_binding.dart';
 import '../../modules/topic/views/topic_view.dart';
+import '../../modules/archive/bindings/archive_binding.dart';
+import '../../modules/archive/views/archive_view.dart';
+import '../../modules/company_file/bindings/company_file_binding.dart';
+import '../../modules/company_file/views/company_file_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -145,6 +149,18 @@ class AppPages {
       name: _Paths.TOPIC,
       page: () => const TopicView(),
       binding: TopicBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.ARCHIVE,
+      page: () => const ArchiveView(),
+      binding: ArchiveBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.COMPANY_FILE,
+      page: () => const CompanyFileView(),
+      binding: CompanyFileBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(

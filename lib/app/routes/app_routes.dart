@@ -20,6 +20,8 @@ abstract class Routes {
   static const TASK_DETAIL = _Paths.TASK_DETAIL;
   static const TASK_CREATE = _Paths.TASK_CREATE;
   static const TOPIC = _Paths.TOPIC;
+  static const ARCHIVE = _Paths.ARCHIVE;
+  static const COMPANY_FILE = _Paths.COMPANY_FILE;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -44,6 +46,8 @@ abstract class _Paths {
   static const TASK_DETAIL = '/task/detail';
   static const TASK_CREATE = '/task/create';
   static const TOPIC = '/topic';
+  static const ARCHIVE = '/archive';
+  static const COMPANY_FILE = '/company_file';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }
