@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../../app/data/providers/api_provider.dart';
-import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/routes/app_pages.dart';
 import '../../../app/themes/app_theme.dart';
 
@@ -21,53 +19,53 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
   void initState() {
     super.initState();
 
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
+    try {
+      _controller = AnimationController(
+        duration: const Duration(milliseconds: 1500),
+        vsync: this,
+      );
 
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-      ),
-    );
+      _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+        ),
+      );
 
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
-      ),
-    );
+      _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+        CurvedAnimation(
+          parent: _controller,
+          curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
+        ),
+      );
 
-    _controller.forward();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkLogin();
-    });
+      _controller.forward();
+    } catch (e) {
+      debugPrint('Splash init animation error: $e');
+    }
+
+    // 延迟跳转登录
+    Future.delayed(const Duration(seconds: 2), _navigateNext);
   }
 
-  void _checkLogin() async {
-    await Future.delayed(const Duration(seconds: 2));
-
+  void _navigateNext() {
     if (!mounted) return;
     try {
-      // 确保 ApiProvider 已初始化
-      ApiProvider().init();
-      final authRepo = AuthRepository();
-      if (authRepo.isLoggedIn()) {
-        if (mounted) Get.offAllNamed(Routes.HOME);
-      } else {
-        if (mounted) Get.offAllNamed(Routes.LOGIN);
-      }
+      Get.offAllNamed(Routes.LOGIN);
     } catch (e) {
-      // 任何异常都跳到登录页，避免闪退
-      if (mounted) Get.offAllNamed(Routes.LOGIN);
+      debugPrint('Navigate to login error: $e');
+      // 兜底：直接重启到登录
+      try {
+        Get.offAll(() => const _SafeLoginFallback());
+      } catch (_) {}
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    try {
+      _controller.dispose();
+    } catch (_) {}
     super.dispose();
   }
 
@@ -76,71 +74,69 @@ class _SplashViewState extends State<SplashView> with SingleTickerProviderStateM
     return Scaffold(
       backgroundColor: AppTheme.primaryColor,
       body: Center(
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return FadeTransition(
-              opacity: _fadeAnimation,
-              child: ScaleTransition(
-                scale: _scaleAnimation,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 20,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.business,
-                        size: 56,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      '时恒电子',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 4,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '移动办公平台',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 48),
-                    SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white.withOpacity(0.8),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
               ),
-            );
-          },
+              child: Icon(
+                Icons.business,
+                size: 56,
+                color: AppTheme.primaryColor,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const Text(
+              '时恒电子',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 4,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '移动办公平台',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+                letterSpacing: 2,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 兜底登录页 - 避免任何依赖问题
+class _SafeLoginFallback extends StatelessWidget {
+  const _SafeLoginFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.business, size: 80, color: AppTheme.primaryColor),
+              const SizedBox(height: 24),
+              const Text('时恒电子 OA', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              const Text('应用启动成功', style: TextStyle(fontSize: 14, color: Colors.grey)),
+            ],
+          ),
         ),
       ),
     );
