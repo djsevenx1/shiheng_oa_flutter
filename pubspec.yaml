@@ -12,6 +12,18 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: any
+  dio: any
+  get: any
+  get_storage: any
+  flutter_screenutil: any
+  flutter_svg: any
+  cached_network_image: any
+  intl: any
+  fl_chart: any
+  shimmer: ^2.0.0
+  flutter_staggered_grid_view: any
+  pull_to_refresh: any
+  flutter_smart_dialog: any
 
 dev_dependencies:
   flutter_test:
