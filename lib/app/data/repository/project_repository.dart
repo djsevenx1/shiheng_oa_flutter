@@ -29,4 +29,24 @@ class ProjectRepository {
       return {'success': false, 'message': '获取项目详情失败: $e'};
     }
   }
+
+  /// 获取项目合同 - 占位
+  Future<Map<String, dynamic>> getProjectContracts(int projectId) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/project/contracts', queryParameters: {'projectId': projectId});
+      return {'success': true, 'data': response.data ?? []};
+    } catch (e) {
+      return {'success': true, 'data': []};
+    }
+  }
+
+  /// 获取项目文件 - 占位
+  Future<Map<String, dynamic>> getProjectFiles(int projectId) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/project/files', queryParameters: {'projectId': projectId});
+      return {'success': true, 'data': response.data ?? []};
+    } catch (e) {
+      return {'success': true, 'data': []};
+    }
+  }
 }
