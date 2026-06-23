@@ -27,6 +27,8 @@ class AuthRepository {
       );
 
       // 打印原始响应，方便调试
+      debugPrint('Login HTTP status: ${response.statusCode}');
+      debugPrint('Login response headers: ${response.headers}');
       debugPrint('Login response type: ${response.data.runtimeType}');
       debugPrint('Login response: ${response.data}');
 
@@ -48,9 +50,9 @@ class AuthRepository {
         } else {
           // 纯文本/HTML
           return {
-            'success': false,
-            'message': '服务器返回: ${trimmed.length > 200 ? trimmed.substring(0, 200) : trimmed}'
-          };
+        'success': false,
+        'message': 'HTTP ${response.statusCode}: ${trimmed.isEmpty ? "(空响应)" : (trimmed.length > 300 ? trimmed.substring(0, 300) : trimmed)}'
+      };
         }
       }
 
