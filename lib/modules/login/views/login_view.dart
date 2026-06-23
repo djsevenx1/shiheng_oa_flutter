@@ -119,82 +119,89 @@ class LoginView extends GetView<LoginController> {
                       // Server Address
                       TextField(
                         controller: controller.serverController,
+                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                         decoration: InputDecoration(
                           hintText: '服务器地址',
-                          prefixIcon: const Icon(Icons.cloud_outlined, color: AppTheme.gray400),
+                          hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
+                          prefixIcon: const Icon(Icons.cloud_outlined, color: AppTheme.gray400, size: 22),
                           filled: true,
-                          fillColor: AppTheme.gray50,
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
                           ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                       ),
                       SizedBox(height: 16.h),
                       // Username
                       TextField(
                         controller: controller.usernameController,
+                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                         decoration: InputDecoration(
                           hintText: '用户名',
-                          prefixIcon: const Icon(Icons.person_outline, color: AppTheme.gray400),
+                          hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
+                          prefixIcon: const Icon(Icons.person_outline, color: AppTheme.gray400, size: 22),
                           filled: true,
-                          fillColor: AppTheme.gray50,
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
                           ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                       ),
                       SizedBox(height: 16.h),
                       // Password
                       Obx(() => TextField(
                         controller: controller.passwordController,
+                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                         obscureText: !controller.isPasswordVisible.value,
                         decoration: InputDecoration(
                           hintText: '密码',
-                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray400),
+                          hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
+                          prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray400, size: 22),
                           suffixIcon: IconButton(
                             icon: Icon(
                               controller.isPasswordVisible.value
                                   ? Icons.visibility_outlined
                                   : Icons.visibility_off_outlined,
                               color: AppTheme.gray400,
+                              size: 22,
                             ),
                             onPressed: controller.togglePasswordVisibility,
                           ),
                           filled: true,
-                          fillColor: AppTheme.gray50,
+                          fillColor: Colors.white,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: BorderSide.none,
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12.r),
+                            borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
                           ),
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                         ),
                       )),
                       SizedBox(height: 16.h),
