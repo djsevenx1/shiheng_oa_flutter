@@ -28,6 +28,8 @@ dependencies:
   flutter_bmflocation: ^3.8.4
   amap_flutter_location: ^3.0.0
   permission_handler: ^11.0.0
+  getuiflut: ^0.2.31
+  emoji_picker_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:
