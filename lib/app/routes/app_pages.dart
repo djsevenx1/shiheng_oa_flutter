@@ -18,6 +18,10 @@ import '../../modules/payslip/bindings/payslip_binding.dart';
 import '../../modules/payslip/views/payslip_view.dart';
 import '../../modules/knowledge/bindings/knowledge_binding.dart';
 import '../../modules/knowledge/views/knowledge_view.dart';
+import '../../modules/work_report/bindings/work_report_binding.dart';
+import '../../modules/work_report/views/work_report_view.dart';
+import '../../modules/work_report/views/work_report_submit_view.dart';
+import '../../modules/chat/views/chat_list_view.dart';
 import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
 import '../../modules/workflow/bindings/workflow_detail_binding.dart';
@@ -261,6 +265,23 @@ class AppPages {
       name: _Paths.KNOWLEDGE,
       page: () => const KnowledgeView(),
       binding: KnowledgeBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.WORK_REPORT,
+      page: () => const WorkReportView(),
+      binding: WorkReportBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.WORK_REPORT_SUBMIT,
+      page: () => const WorkReportSubmitView(),
+      binding: WorkReportSubmitBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.CHAT_LIST,
+      page: () => const ChatListView(),
       transition: Transition.cupertino,
     ),
   ];

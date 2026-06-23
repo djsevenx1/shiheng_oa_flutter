@@ -34,6 +34,11 @@ abstract class Routes {
   static const CONTACTS = _Paths.CONTACTS;
   static const MY_APPLICATION = _Paths.MY_APPLICATION;
   static const QR_SCAN = _Paths.QR_SCAN;
+  static const PAYSLIP = _Paths.PAYSLIP;
+  static const KNOWLEDGE = _Paths.KNOWLEDGE;
+  static const WORK_REPORT = _Paths.WORK_REPORT;
+  static const WORK_REPORT_SUBMIT = _Paths.WORK_REPORT_SUBMIT;
+  static const CHAT_LIST = _Paths.CHAT_LIST;
 }
 
 abstract class _Paths {
