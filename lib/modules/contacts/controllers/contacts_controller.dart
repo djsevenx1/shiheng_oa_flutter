@@ -75,6 +75,13 @@ class ContactsController extends GetxController {
     members.value = filtered;
   }
 
+  /// 选"全部" — 显示全员
+  void selectAllDepartment() {
+    selectedDeptId.value = null;
+    selectedDeptName.value = '全部';
+    members.value = allMembers.toList();
+  }
+
   Timer? _searchDebounce;
   Future<void> search(String keyword) async {
     searchKeyword.value = keyword;

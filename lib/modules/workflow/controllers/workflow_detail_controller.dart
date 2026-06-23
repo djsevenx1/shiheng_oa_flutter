@@ -13,6 +13,7 @@ class WorkflowDetailController extends GetxController {
   final formData = <String, dynamic>{}.obs;
   final commentController = TextEditingController();
   final approvalAction = ''.obs; // 'approve', 'reject', 'read'
+  final errorMessage = RxnString();
 
   @override
   void onInit() {
@@ -33,16 +34,20 @@ class WorkflowDetailController extends GetxController {
   Future<void> loadDetail() async {
     isLoading.value = true;
     try {
-      final result = await _repository.getWorkflowDetail(proId.value);
+      // 老 OA 流程详情需要 formId + objectId；
+      // 我们目前只从 proId 入参，假定 formId = proId 试一下；
+      // 真实生产中应该从流程列表字段拿到 formId 再传
+      final result = await _repository.getWorkflowDetail(proId.value, proId.value);
       if (result['success'] == true) {
-        workflowDetail.value = result['data'] ?? {};
-        logs.value = result['data']?['logs'] ?? [];
-        formData.value = result['data']?['formData'] ?? {};
+        final data = (result['data'] as Map?)?.cast<String, dynamic>() ?? {};
+        workflowDetail.value = data;
+        logs.value = (data['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        formData.value = (data['formData'] as Map?)?.cast<String, dynamic>() ?? {};
       } else {
-        // /* MOCK-DISABLED */;  // mock disabled
+        errorMessage.value = result['message']?.toString() ?? '加载详情失败';
       }
     } catch (e) {
-      // /* MOCK-DISABLED */;  // mock disabled
+      errorMessage.value = '加载详情异常: $e';
     } finally {
       isLoading.value = false;
     }
@@ -55,16 +60,17 @@ class WorkflowDetailController extends GetxController {
     }
     isLoading.value = true;
     try {
-      final result = await _repository.approveWorkflow(proId.value, {
-        'flagPositive': true,
-        'message': commentController.text.trim(),
-      });
+      final result = await _repository.approveWorkflow(
+        processId: proId.value,
+        result: 'pass',
+        comment: commentController.text.trim(),
+      );
       if (result['success'] == true) {
         Get.snackbar('成功', '审批已通过', snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
         Get.back(result: {'refresh': true});
       } else {
-        Get.snackbar('失败', result['message'] ?? '审批失败', snackPosition: SnackPosition.BOTTOM,
+        Get.snackbar('失败', result['message']?.toString() ?? '审批失败', snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.danger, colorText: Colors.white);
       }
     } catch (e) {
@@ -81,16 +87,17 @@ class WorkflowDetailController extends GetxController {
     }
     isLoading.value = true;
     try {
-      final result = await _repository.approveWorkflow(proId.value, {
-        'flagPositive': false,
-        'message': commentController.text.trim(),
-      });
+      final result = await _repository.approveWorkflow(
+        processId: proId.value,
+        result: 'reject',
+        comment: commentController.text.trim(),
+      );
       if (result['success'] == true) {
         Get.snackbar('成功', '已拒绝', snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.warning, colorText: Colors.white);
         Get.back(result: {'refresh': true});
       } else {
-        Get.snackbar('失败', result['message'] ?? '操作失败', snackPosition: SnackPosition.BOTTOM);
+        Get.snackbar('失败', result['message']?.toString() ?? '操作失败', snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
       Get.snackbar('错误', '网络错误', snackPosition: SnackPosition.BOTTOM);

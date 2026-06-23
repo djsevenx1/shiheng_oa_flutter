@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../../app/data/repository/dashboard_repository.dart';
+import '../../../../app/data/repository/auth_repository.dart';
+import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 import '../../controllers/home_controller.dart';
 
