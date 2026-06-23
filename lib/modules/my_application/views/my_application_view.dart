@@ -23,7 +23,7 @@ class MyApplicationView extends GetView<MyApplicationController> {
             child: Obx(() => Row(
                   children: List.generate(3, (i) {
                     final selected = controller.selectedTabIndex.value == i;
-                    final label = MyApplicationController.statusLabels[i];
+                    final label = MyApplicationController.tabLabels[i];
                     return Expanded(
                       child: InkWell(
                         onTap: () => controller.switchTab(i),
@@ -55,64 +55,97 @@ class MyApplicationView extends GetView<MyApplicationController> {
           ),
         ),
       ),
-      body: Obx(() {
-        if (controller.isLoading.value && controller.applications.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (controller.applications.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.assignment, size: 64.w, color: AppTheme.gray300),
-                SizedBox(height: 16.h),
-                Text('暂无申请', style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
-              ],
-            ),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: controller.refreshList,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (scrollInfo) {
-              if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 100) {
-                controller.loadMore();
-              }
-              return false;
-            },
-            child: ListView.separated(
-              padding: EdgeInsets.all(16.w),
-              itemCount: controller.applications.length + 1,
-              separatorBuilder: (_, __) => SizedBox(height: 12.h),
-              itemBuilder: (context, index) {
-                if (index == controller.applications.length) {
-                  return Obx(() => Padding(
-                        padding: EdgeInsets.all(16.w),
-                        child: Center(
-                          child: Text(
-                            controller.hasMore.value ? '加载中...' : '没有更多了',
-                            style: TextStyle(color: AppTheme.textTertiary, fontSize: 13.sp),
-                          ),
+      body: Column(
+        children: [
+          // 错误条
+          Obx(() => controller.errorMessage.value == null
+              ? const SizedBox.shrink()
+              : Container(
+                  width: double.infinity,
+                  color: Colors.red.shade50,
+                  padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 18),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          controller.errorMessage.value ?? '',
+                          style: TextStyle(fontSize: 12.sp, color: Colors.red.shade700),
                         ),
-                      ));
-                }
-                final app = controller.applications[index];
-                final id = app['id']?.toString() ?? '';
-                return _buildAppCard(app, id);
-              },
-            ),
+                      ),
+                      TextButton(
+                        onPressed: controller.refreshList,
+                        child: const Text('重试', style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                )),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value && controller.applications.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (controller.applications.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.assignment, size: 64.w, color: AppTheme.gray300),
+                      SizedBox(height: 16.h),
+                      Text('暂无申请', style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: controller.refreshList,
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (scrollInfo) {
+                    if (scrollInfo.metrics.pixels >= scrollInfo.metrics.maxScrollExtent - 100) {
+                      controller.loadMore();
+                    }
+                    return false;
+                  },
+                  child: ListView.separated(
+                    padding: EdgeInsets.all(16.w),
+                    itemCount: controller.applications.length + 1,
+                    separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                    itemBuilder: (context, index) {
+                      if (index == controller.applications.length) {
+                        return Obx(() => Padding(
+                              padding: EdgeInsets.all(16.w),
+                              child: Center(
+                                child: Text(
+                                  controller.isLoadingMore.value
+                                      ? '加载中...'
+                                      : (controller.hasMore.value ? '上拉加载更多' : '没有更多了'),
+                                  style: TextStyle(color: AppTheme.textTertiary, fontSize: 13.sp),
+                                ),
+                              ),
+                            ));
+                      }
+                      final app = controller.applications[index];
+                      final id = app['id']?.toString() ?? '';
+                      return _buildAppCard(app, id);
+                    },
+                  ),
+                ),
+              );
+            }),
           ),
-        );
-      }),
+        ],
+      ),
     );
   }
 
   Widget _buildAppCard(Map<String, dynamic> app, String id) {
     final type = app['type']?.toString() ?? '流程';
-    final title = app['title']?.toString() ?? '';
+    final title = app['title']?.toString() ?? app['name']?.toString() ?? '';
     final status = app['status']?.toString() ?? '';
-    final time = controller.formatTime(app['createTime']);
-    final isRunning = controller.currentStatus == 'running';
+    final time = controller.formatTime(app['createTime'] ?? app['createdDate']);
+    final isRunning = controller.currentTabKey == 'running';
+    final isTodo = controller.currentTabKey == 'todo';
     return Container(
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
@@ -141,20 +174,33 @@ class MyApplicationView extends GetView<MyApplicationController> {
           ),
           SizedBox(height: 8.h),
           Text(title, style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
-          SizedBox(height: 8.h),
           if (isRunning) ...[
+            SizedBox(height: 8.h),
             Row(
               children: [
-                TextButton.icon(
-                  onPressed: () => controller.urge(id),
-                  icon: const Icon(Icons.notifications_active, size: 16),
-                  label: const Text('催办'),
-                ),
                 const Spacer(),
                 TextButton.icon(
-                  onPressed: () => controller.cancel(id),
+                  onPressed: () => controller.withdraw(id),
                   icon: const Icon(Icons.close, size: 16, color: Colors.red),
-                  label: const Text('撤销', style: TextStyle(color: Colors.red)),
+                  label: const Text('撤回', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+          if (isTodo) ...[
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => controller.approve(id, pass: true),
+                  icon: const Icon(Icons.check, size: 16, color: Colors.green),
+                  label: const Text('同意', style: TextStyle(color: Colors.green)),
+                ),
+                TextButton.icon(
+                  onPressed: () => controller.approve(id, pass: false),
+                  icon: const Icon(Icons.close, size: 16, color: Colors.red),
+                  label: const Text('驳回', style: TextStyle(color: Colors.red)),
                 ),
               ],
             ),

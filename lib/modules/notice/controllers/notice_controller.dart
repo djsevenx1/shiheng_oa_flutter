@@ -148,15 +148,16 @@ class NoticeDetailController extends GetxController {
     }
   }
 
-  Future<void> submitReply(String content) async {
+  void submitReply(String content) {
     final id = args['id']?.toString() ?? '';
     if (id.isEmpty || content.trim().isEmpty) return;
-    final result = await _repo.reply(id: id, content: content.trim());
-    if (result['success'] == true) {
-      Get.snackbar('提示', '回复成功', snackPosition: SnackPosition.BOTTOM);
-      loadDetail();
-    } else {
-      Get.snackbar('失败', result['message']?.toString() ?? '回复失败', snackPosition: SnackPosition.BOTTOM);
-    }
+    _repo.reply(id: id, content: content.trim()).then((result) {
+      if (result['success'] == true) {
+        Get.snackbar('提示', '回复成功', snackPosition: SnackPosition.BOTTOM);
+        loadDetail();
+      } else {
+        Get.snackbar('失败', result['message']?.toString() ?? '回复失败', snackPosition: SnackPosition.BOTTOM);
+      }
+    });
   }
 }

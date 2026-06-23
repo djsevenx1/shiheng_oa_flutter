@@ -7,7 +7,6 @@ import '../../modules/login/views/login_view.dart';
 import '../../modules/splash/views/splash_view.dart';
 import '../../modules/notice/bindings/notice_binding.dart';
 import '../../modules/notice/views/notice_view.dart';
-import '../../modules/notice/views/notice_detail_view.dart';
 import '../../modules/contacts/bindings/contacts_binding.dart';
 import '../../modules/contacts/views/contacts_view.dart';
 import '../../modules/my_application/bindings/my_application_binding.dart';
