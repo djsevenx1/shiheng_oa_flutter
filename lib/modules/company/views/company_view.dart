@@ -77,8 +77,8 @@ class CompanyView extends StatelessWidget {
                 children: [
                   Text('联系信息', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                   SizedBox(height: 12.h),
-                  _buildInfoRow(Icons.location_on, '公司地址', '福建省厦门市思明区软件园二期'),
-                  _buildInfoRow(Icons.phone, '联系电话', '0592-12345678'),
+                  _buildInfoRow(Icons.location_on, '公司地址', '江苏省南京市'),
+                  _buildInfoRow(Icons.phone, '联系电话', '025-12345678'),
                   _buildInfoRow(Icons.email, '邮箱', 'info@shiheng.com'),
                   _buildInfoRow(Icons.web, '官网', 'www.shiheng.com'),
                   _buildInfoRow(Icons.schedule, '工作时间', '周一至周五 9:00-18:00'),

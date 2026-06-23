@@ -29,14 +29,14 @@ class MapController extends GetxController {
   void _initMockData() {
     latitude.value = mockLat;
     longitude.value = mockLng;
-    currentAddress.value = '福建省厦门市思明区软件园二期';
+    currentAddress.value = '江苏省南京市';
     isMapReady.value = true;
 
     markers.value = [
       {
         'id': 'company',
         'title': '时恒电子',
-        'address': '福建省厦门市思明区软件园二期',
+        'address': '江苏省南京市',
         'lat': mockLat,
         'lng': mockLng,
         'type': 'company',
@@ -44,7 +44,7 @@ class MapController extends GetxController {
       {
         'id': 'warehouse1',
         'title': '原材料仓库',
-        'address': '福建省厦门市湖里区火炬园',
+        'address': '江苏省南京市',
         'lat': 24.4850,
         'lng': 118.0950,
         'type': 'warehouse',
@@ -52,7 +52,7 @@ class MapController extends GetxController {
       {
         'id': 'warehouse2',
         'title': '成品仓库',
-        'address': '福建省厦门市集美区杏林湾',
+        'address': '江苏省南京市',
         'lat': 24.5650,
         'lng': 118.1050,
         'type': 'warehouse',
@@ -60,7 +60,7 @@ class MapController extends GetxController {
       {
         'id': 'client1',
         'title': '客户A - 华联科技',
-        'address': '福建省厦门市思明区观音山',
+        'address': '江苏省南京市',
         'lat': 24.4900,
         'lng': 118.1100,
         'type': 'client',

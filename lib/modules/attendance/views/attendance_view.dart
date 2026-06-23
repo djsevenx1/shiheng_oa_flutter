@@ -163,7 +163,7 @@ class AttendanceView extends GetView<AttendanceController> {
           SizedBox(width: 8.w),
           Expanded(
             child: Text(
-              '福建省厦门市思明区软件园二期',
+              '江苏省南京市',
               style: TextStyle(fontSize: 13.sp, color: Colors.white),
             ),
           ),

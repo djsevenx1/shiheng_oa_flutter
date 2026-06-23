@@ -66,7 +66,7 @@ class CrmClientDetailController extends GetxController {
       'contact': '王经理',
       'phone': '13800138001',
       'email': 'wang@huallian.com',
-      'address': '福建省厦门市思明区观音山商务中心 8 楼',
+      'address': '江苏省南京市',
       'industry': '电子制造',
       'level': 'A',
       'website': 'www.huallian.com',

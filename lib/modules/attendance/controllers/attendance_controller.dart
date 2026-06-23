@@ -78,7 +78,7 @@ class AttendanceController extends GetxController {
       hasCheckedIn.value = true;
       todayStatus.value = {
         'checkIn': DateTime.now().toString().substring(0, 19),
-        'checkInAddress': '福建省厦门市思明区软件园二期',
+        'checkInAddress': '江苏省南京市',
       };
       Get.snackbar('签到成功', '今日已签到', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.success, colorText: Colors.white);
@@ -124,7 +124,7 @@ class AttendanceController extends GetxController {
     todayStatus.value = {
       'date': DateTime.now().toString().substring(0, 10),
       'checkIn': '08:55:32',
-      'checkInAddress': '福建省厦门市思明区软件园二期',
+      'checkInAddress': '江苏省南京市',
       'checkOut': null,
       'status': '正常',
     };

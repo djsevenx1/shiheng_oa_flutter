@@ -56,7 +56,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 8.h),
             Text(
-              '厦门时恒电子科技有限公司',
+              '南京时恒电子科技有限公司',
               style: TextStyle(fontSize: 11.sp, color: AppTheme.textTertiary),
             ),
           ],
