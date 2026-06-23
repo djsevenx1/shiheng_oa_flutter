@@ -20,7 +20,7 @@ dependencies:
   cached_network_image: any
   intl: any
   fl_chart: any
-  shimmer: any
+  shimmer: ^2.0.0
   flutter_staggered_grid_view: any
   pull_to_refresh: any
   flutter_smart_dialog: any

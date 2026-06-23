@@ -9,6 +9,12 @@ import 'app/themes/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 全局异常捕获，避免闪退
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+  };
+
   try {
     await GetStorage.init();
   } catch (e) {
