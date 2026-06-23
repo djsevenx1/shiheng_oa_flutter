@@ -25,6 +25,12 @@ import '../../modules/project/bindings/project_binding.dart';
 import '../../modules/project/bindings/project_detail_binding.dart';
 import '../../modules/project/views/project_view.dart';
 import '../../modules/project/views/project_detail_view.dart';
+import '../../modules/task/bindings/task_binding.dart';
+import '../../modules/task/bindings/task_detail_binding.dart';
+import '../../modules/task/bindings/task_create_binding.dart';
+import '../../modules/task/views/task_view.dart';
+import '../../modules/task/views/task_detail_view.dart';
+import '../../modules/task/views/task_create_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
 import '../../modules/map/bindings/map_binding.dart';
@@ -113,6 +119,24 @@ class AppPages {
       name: _Paths.PROJECT_DETAIL,
       page: () => const ProjectDetailView(),
       binding: ProjectDetailBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.TASK,
+      page: () => const TaskView(),
+      binding: TaskBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.TASK_DETAIL,
+      page: () => const TaskDetailView(),
+      binding: TaskDetailBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.TASK_CREATE,
+      page: () => const TaskCreateView(),
+      binding: TaskCreateBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(

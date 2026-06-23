@@ -22,6 +22,7 @@ class MoreTab extends GetView<HomeController> {
             _MenuItem(Icons.location_on_outlined, '考勤签到', Colors.orange, Routes.ATTENDANCE),
             _MenuItem(Icons.map_outlined, '地图', Colors.green, Routes.MAP),
             _MenuItem(Icons.folder_copy_outlined, '项目管理', Colors.purple, Routes.PROJECT),
+            _MenuItem(Icons.task_alt, '任务管理', Colors.teal, Routes.TASK),
           ]),
           SizedBox(height: 16.h),
           _buildMenuSection('系统', [

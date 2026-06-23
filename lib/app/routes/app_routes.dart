@@ -16,6 +16,9 @@ abstract class Routes {
   static const CRM_CLIENT_DETAIL = _Paths.CRM_CLIENT_DETAIL;
   static const PROJECT = _Paths.PROJECT;
   static const PROJECT_DETAIL = _Paths.PROJECT_DETAIL;
+  static const TASK = _Paths.TASK;
+  static const TASK_DETAIL = _Paths.TASK_DETAIL;
+  static const TASK_CREATE = _Paths.TASK_CREATE;
   static const SETTINGS = _Paths.SETTINGS;
   static const MAP = _Paths.MAP;
 }
@@ -36,6 +39,9 @@ abstract class _Paths {
   static const CRM_CLIENT_DETAIL = '/crm/client/detail';
   static const PROJECT = '/project';
   static const PROJECT_DETAIL = '/project/detail';
+  static const TASK = '/task';
+  static const TASK_DETAIL = '/task/detail';
+  static const TASK_CREATE = '/task/create';
   static const SETTINGS = '/settings';
   static const MAP = '/map';
 }
