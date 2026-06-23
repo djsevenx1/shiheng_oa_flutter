@@ -7,36 +7,71 @@ class ApiProvider {
   factory ApiProvider() => _instance;
   ApiProvider._internal();
 
-  late dio.Dio _dio;
   final _storage = GetStorage();
-  bool _initialized = false;
 
-  // 基础配置 - 时恒电子服务器（默认地址，可在登录页修改）
-  String baseUrl = 'http://xmyjsss.gnway.cc:22178';
+  // 基础配置 - 默认服务器地址（用户可在登录页修改并自动保存）
+  static const String _defaultBaseUrl = 'http://njsh2012.5i178.com:9090';
   static const String apiPrefix = '/oa';
+  static const String _storageBaseUrlKey = 'serverBaseUrl';
 
-  /// 切换服务器地址（如用户在登录页输入）
+  // 初始化为默认地址（init() 中会从存储读取覆盖）
+  String _baseUrl = _defaultBaseUrl;
+  late final dio.Dio _dio;
+
+  String get baseUrl => _baseUrl;
+  String get fullBaseUrl {
+    try {
+      return _dio.options.baseUrl;
+    } catch (_) {
+      return '$_baseUrl$apiPrefix';
+    }
+  }
+
+  /// 切换服务器地址（如用户在登录页输入）并持久化
   void setBaseUrl(String url) {
     if (url.isEmpty) return;
     String normalized = url.trim();
     if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
       normalized = 'http://$normalized';
     }
-    baseUrl = normalized;
-    _dio.options.baseUrl = normalized + apiPrefix;
+    _baseUrl = normalized;
+    // 初始化 _dio（如果还没初始化）
+    _ensureInitialized();
+    // 更新 baseUrl
+    try {
+      _dio.options.baseUrl = normalized + apiPrefix;
+    } catch (_) {}
+    // 持久化
+    try {
+      _storage.write(_storageBaseUrlKey, normalized);
+    } catch (_) {}
   }
 
-  String get fullBaseUrl => _dio.options.baseUrl;
-
-  dio.Dio get dioInstance {
-    if (!_initialized) init();
-    return _dio;
+  void _ensureInitialized() {
+    try {
+      // 触发一次访问，如果未初始化会抛 LateInitializationError
+      _dio.options.baseUrl;
+    } catch (_) {
+      init();
+    }
   }
 
+  /// 初始化（自动从存储读取上次保存的地址）
   void init() {
-    if (_initialized) return;
+    // 读取保存的地址
+    try {
+      final saved = _storage.read(_storageBaseUrlKey);
+      if (saved != null && saved.toString().isNotEmpty) {
+        _baseUrl = saved.toString();
+      } else {
+        _baseUrl = _defaultBaseUrl;
+      }
+    } catch (_) {
+      _baseUrl = _defaultBaseUrl;
+    }
+
     _dio = dio.Dio(dio.BaseOptions(
-      baseUrl: baseUrl + apiPrefix,
+      baseUrl: _baseUrl + apiPrefix,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
@@ -82,26 +117,29 @@ class ApiProvider {
         return handler.next(error);
       },
     ));
-    _initialized = true;
   }
 
   // GET 请求
   Future<dio.Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+    _ensureInitialized();
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
   // POST 请求
   Future<dio.Response> post(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+    _ensureInitialized();
     return await _dio.post(path, data: data, queryParameters: queryParameters);
   }
 
   // PUT 请求
   Future<dio.Response> put(String path, {dynamic data}) async {
+    _ensureInitialized();
     return await _dio.put(path, data: data);
   }
 
   // DELETE 请求
   Future<dio.Response> delete(String path, {dynamic data}) async {
+    _ensureInitialized();
     return await _dio.delete(path, data: data);
   }
 }
