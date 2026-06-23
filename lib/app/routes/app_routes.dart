@@ -13,6 +13,7 @@ abstract class Routes {
   static const ATTENDANCE = _Paths.ATTENDANCE;
   static const CRM = _Paths.CRM;
   static const SETTINGS = _Paths.SETTINGS;
+  static const MAP = _Paths.MAP;
 }
 
 abstract class _Paths {
@@ -28,4 +29,5 @@ abstract class _Paths {
   static const ATTENDANCE = '/attendance';
   static const CRM = '/crm';
   static const SETTINGS = '/settings';
+  static const MAP = '/map';
 }

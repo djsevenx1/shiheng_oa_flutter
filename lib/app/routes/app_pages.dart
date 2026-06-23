@@ -19,6 +19,8 @@ import '../../modules/crm/bindings/crm_binding.dart';
 import '../../modules/crm/views/crm_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
+import '../../modules/map/bindings/map_binding.dart';
+import '../../modules/map/views/map_view.dart';
 
 part 'app_routes.dart';
 
@@ -85,6 +87,12 @@ class AppPages {
       name: _Paths.SETTINGS,
       page: () => const SettingsView(),
       binding: SettingsBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.MAP,
+      page: () => const MapView(),
+      binding: MapBinding(),
       transition: Transition.cupertino,
     ),
   ];

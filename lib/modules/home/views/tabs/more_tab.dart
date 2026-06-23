@@ -99,7 +99,7 @@ class MoreTab extends GetView<HomeController> {
             trailing: Icon(Icons.chevron_right, color: AppTheme.gray400, size: 20.w),
             onTap: () {
               if (item.route != null) {
-                // Get.toNamed(item.route!);
+                Get.toNamed(item.route!);
               }
             },
           )),
