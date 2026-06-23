@@ -9,6 +9,8 @@ import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
 import '../../modules/workflow/bindings/workflow_detail_binding.dart';
 import '../../modules/workflow/views/workflow_detail_view.dart';
+import '../../modules/workflow/bindings/workflow_form_binding.dart';
+import '../../modules/workflow/views/workflow_form_view.dart';
 import '../../modules/report/bindings/report_binding.dart';
 import '../../modules/report/views/report_view.dart';
 import '../../modules/report/views/stock_report_view.dart';
@@ -59,6 +61,12 @@ class AppPages {
       name: _Paths.WORKFLOW_DETAIL,
       page: () => const WorkflowDetailView(),
       binding: WorkflowDetailBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.WORKFLOW_FORM,
+      page: () => const WorkflowFormView(),
+      binding: WorkflowFormBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(

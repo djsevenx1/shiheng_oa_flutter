@@ -57,4 +57,25 @@ class WorkflowRepository {
       return {'success': false, 'message': '审批流程失败: $e'};
     }
   }
+
+  Future<Map<String, dynamic>> getFormSchema(int modId) async {
+    try {
+      final response = await _api.dioInstance.get('/pro/getFormSchema/$modId');
+      return {'success': true, 'data': response.data};
+    } catch (e) {
+      return {'success': false, 'message': '获取表单失败: $e'};
+    }
+  }
+
+  Future<Map<String, dynamic>> getApprovers() async {
+    try {
+      final response = await _api.dioInstance.get('/user/approvers');
+      return {
+        'success': true,
+        'data': response.data is List ? response.data : (response.data?['list'] ?? []),
+      };
+    } catch (e) {
+      return {'success': false, 'message': '获取审批人失败: $e'};
+    }
+  }
 }

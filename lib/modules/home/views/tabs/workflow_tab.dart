@@ -44,7 +44,7 @@ class WorkflowTab extends StatelessWidget {
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {},
+          onPressed: () => Get.toNamed(Routes.WORKFLOW_FORM, arguments: {'modId': 1}),
           icon: const Icon(Icons.add),
           label: const Text('发起流程'),
           backgroundColor: AppTheme.primaryColor,
