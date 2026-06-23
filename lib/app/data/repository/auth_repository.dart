@@ -7,8 +7,9 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
+      // 用户登录
       final response = await _api.dioInstance.post(
-        '/login',
+        '/oa/login',
         data: {
           'loginName': username,
           'password': password,

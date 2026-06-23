@@ -11,7 +11,6 @@ class ApiProvider {
 
   // 基础配置 - 默认服务器地址（用户可在登录页修改并自动保存）
   static const String _defaultBaseUrl = 'http://njsh2012.5i178.com:9090';
-  static const String apiPrefix = '/oa';
   static const String _storageBaseUrlKey = 'serverBaseUrl';
 
   // 初始化为默认地址（init() 中会从存储读取覆盖）
@@ -23,7 +22,7 @@ class ApiProvider {
     try {
       return _dio.options.baseUrl;
     } catch (_) {
-      return '$_baseUrl$apiPrefix';
+      return _baseUrl;
     }
   }
 
@@ -45,7 +44,7 @@ class ApiProvider {
     _ensureInitialized();
     // 更新 baseUrl
     try {
-      _dio.options.baseUrl = normalized + apiPrefix;
+      _dio.options.baseUrl = normalized;
     } catch (_) {}
     // 持久化
     try {
@@ -77,10 +76,15 @@ class ApiProvider {
     }
 
     _dio = dio.Dio(dio.BaseOptions(
-      baseUrl: _baseUrl + apiPrefix,
+      baseUrl: _baseUrl,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
+      followRedirects: true,
+      maxRedirects: 5,
+      validateStatus: (status) {
+        return status != null && status < 500;
+      },
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
