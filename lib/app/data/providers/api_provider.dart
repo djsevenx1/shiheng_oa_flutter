@@ -27,6 +27,12 @@ class ApiProvider {
     }
   }
 
+  /// Dio 实例（保持向后兼容，自动确保已初始化）
+  dio.Dio get dioInstance {
+    _ensureInitialized();
+    return _dio;
+  }
+
   /// 切换服务器地址（如用户在登录页输入）并持久化
   void setBaseUrl(String url) {
     if (url.isEmpty) return;
