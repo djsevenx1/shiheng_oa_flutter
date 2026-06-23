@@ -58,11 +58,24 @@ class AttendanceRepository {
   final GetStorage _storage;
   final LocationService _location;
 
-  /// 今日打卡状态
+  /// 今日打卡状态（从 initList 里筛今天的）
   Future<Map<String, dynamic>> getTodayStatus() async {
     try {
-      final response = await _api.dioInstance.get('/oa/attendance/today');
-      return {'success': true, 'data': response.data};
+      // 老 OA 没有 today 接口；拉一页 list 前端筛
+      final response = await _api.dioInstance.get(
+        '/oa/attendance/initList',
+        queryParameters: {'limit': 50, 'offset': 0},
+      );
+      final data = response.data;
+      final list = (data is Map && data['list'] is List) ? data['list'] as List : (data is List ? data : []);
+      final today = DateTime.now();
+      final todayStr = '${today.year.toString().padLeft(4, "0")}-${today.month.toString().padLeft(2, "0")}-${today.day.toString().padLeft(2, "0")}';
+      final todays = list.where((e) {
+        if (e is! Map) return false;
+        final d = (e['createdDate'] ?? e['date'] ?? '').toString();
+        return d.startsWith(todayStr);
+      }).toList();
+      return {'success': true, 'data': todays};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
@@ -70,14 +83,39 @@ class AttendanceRepository {
     }
   }
 
-  /// 月度统计
+  /// 月度统计（后端没专门接口，前端聚合）
   Future<Map<String, dynamic>> getMonthStats(int month) async {
     try {
       final response = await _api.dioInstance.get(
-        '/oa/attendance/monthStats',
-        queryParameters: {'month': month},
+        '/oa/attendance/initList',
+        queryParameters: {'limit': 200, 'offset': 0},
       );
-      return {'success': true, 'data': response.data};
+      final data = response.data;
+      final list = (data is Map && data['list'] is List) ? data['list'] as List : (data is List ? data : []);
+      final monthStr = month.toString().padLeft(2, '0');
+      int workDays = 0, late = 0, early = 0, leave = 0, absent = 0;
+      for (final e in list) {
+        if (e is! Map) continue;
+        final d = (e['createdDate'] ?? e['date'] ?? '').toString();
+        if (!d.contains('-${monthStr}-')) continue;
+        workDays++;
+        final status = (e['status'] ?? e['type'] ?? '').toString();
+        if (status.contains('迟')) late++;
+        else if (status.contains('早')) early++;
+        else if (status.contains('假')) leave++;
+        else if (status.contains('旷')) absent++;
+      }
+      return {
+        'success': true,
+        'data': {
+          'workDays': workDays,
+          'actualDays': workDays - absent,
+          'lateCount': late,
+          'earlyCount': early,
+          'leaveCount': leave,
+          'absentCount': absent,
+        },
+      };
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
@@ -85,14 +123,22 @@ class AttendanceRepository {
     }
   }
 
-  /// 月度打卡明细
+  /// 月度打卡明细（GET /oa/attendance/initList）
   Future<Map<String, dynamic>> getAttendanceList({required int month, int page = 1, int pageSize = 30}) async {
     try {
       final response = await _api.dioInstance.get(
-        '/oa/attendance/list',
-        queryParameters: {'month': month, 'page': page, 'pageSize': pageSize},
+        '/oa/attendance/initList',
+        queryParameters: {'limit': pageSize, 'offset': (page - 1) * pageSize},
       );
-      return {'success': true, 'data': response.data};
+      final data = response.data;
+      final list = (data is Map && data['list'] is List) ? data['list'] as List : (data is List ? data : []);
+      final monthStr = month.toString().padLeft(2, '0');
+      final filtered = list.where((e) {
+        if (e is! Map) return false;
+        final d = (e['createdDate'] ?? e['date'] ?? '').toString();
+        return d.contains('-${monthStr}-');
+      }).toList();
+      return {'success': true, 'data': filtered, 'count': filtered.length};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
@@ -136,24 +182,27 @@ class AttendanceRepository {
   }
 
   /// 上班打卡 / 下班打卡
-  /// [type] 'in' / 'out'
+  /// [type] 'in' / 'out' / 'outdoor'
   /// 真实流程：申请权限 -> 拉取定位 -> 提交到后端
   Future<Map<String, dynamic>> punch({required String type, String remark = ''}) async {
     try {
       // 1) 拉取真实定位
-      final loc = await _location.getCurrentLocation();
-      // 2) 提交到后端
+      Map<String, dynamic> loc = {'latitude': 0.0, 'longitude': 0.0, 'address': '', 'source': 'fallback'};
+      try {
+        loc = await _location.getCurrentLocation();
+      } catch (_) {}
+      // 2) 提交到后端（老 OA 通用 add）
       final response = await _api.dioInstance.post(
-        '/oa/attendance/punch',
+        '/oa/attendance/add',
         data: {
           'type': type,
           'latitude': loc['latitude'],
           'longitude': loc['longitude'],
           'address': loc['address'],
-          'city': loc['city'],
-          'source': loc['source'] ?? 'baidu',
+          'city': loc['city'] ?? '',
+          'source': loc['source'] ?? 'geolocator',
           'remark': remark,
-          'clientTime': DateTime.now().toIso8601String(),
+          'createdDate': DateTime.now().toIso8601String(),
         },
       );
       if (response.data is Map) {
@@ -167,26 +216,7 @@ class AttendanceRepository {
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
-      // 定位失败也允许后端根据时间 + IP 兜底
-      try {
-        final response = await _api.dioInstance.post(
-          '/oa/attendance/punch',
-          data: {
-            'type': type,
-            'latitude': 0.0,
-            'longitude': 0.0,
-            'address': '',
-            'source': 'fallback',
-            'remark': '定位失败: $e',
-            'clientTime': DateTime.now().toIso8601String(),
-          },
-        );
-        return {'success': true, 'data': response.data, 'warn': '定位失败，已使用网络定位'};
-      } on dio.DioException catch (e2) {
-        return {'success': false, 'message': ApiProvider.normalize(e2).message};
-      } catch (_) {
-        return {'success': false, 'message': '打卡失败: $e'};
-      }
+      return {'success': false, 'message': '打卡失败: $e'};
     }
   }
 }

@@ -8,7 +8,7 @@ class FavoriteController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _loadMock();
+    // /* MOCK-DISABLED */;  // mock disabled
   }
 
   @override

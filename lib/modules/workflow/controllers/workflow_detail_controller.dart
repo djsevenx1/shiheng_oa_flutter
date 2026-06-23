@@ -39,10 +39,10 @@ class WorkflowDetailController extends GetxController {
         logs.value = result['data']?['logs'] ?? [];
         formData.value = result['data']?['formData'] ?? {};
       } else {
-        _loadMockDetail();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMockDetail();
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }

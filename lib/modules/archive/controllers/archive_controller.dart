@@ -34,10 +34,10 @@ class ArchiveController extends GetxController {
         archiveList.value = result['data'] ?? [];
         totalCount.value = result['count'] ?? 0;
       } else {
-        _loadMock();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMock();
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }

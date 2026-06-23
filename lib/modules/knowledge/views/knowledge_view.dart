@@ -19,6 +19,23 @@ class KnowledgeView extends GetView<KnowledgeController> {
       ),
       body: Column(
         children: [
+          Container(
+            width: double.infinity,
+            color: Colors.amber.shade50,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16.w, color: Colors.amber.shade800),
+                SizedBox(width: 6.w),
+                Expanded(
+                  child: Text(
+                    '演示模块：老 OA 未提供知识库接口，显示示例条目。',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade800),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Padding(
             padding: EdgeInsets.all(16.w),
             child: TextField(

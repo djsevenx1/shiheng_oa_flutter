@@ -2,79 +2,126 @@ import 'package:dio/dio.dart' as dio;
 
 import '../providers/api_provider.dart';
 
-/// 我的申请仓库（流程发起后的列表）
+/// 工作流/我的申请仓库
+/// 老 OA 的工作流通过 `/oa/flow/*` + `/oa/wf/*` 暴露
 class MyApplicationRepository {
   MyApplicationRepository({ApiProvider? api}) : _api = api ?? ApiProvider();
 
   final ApiProvider _api;
 
-  /// 我发起的流程
-  /// [status] 可选：'running' 进行中、'finished' 已完成、'rejected' 已驳回
-  Future<Map<String, dynamic>> getMyApplications({
-    int page = 1,
-    int pageSize = 20,
-    String status = 'running',
-  }) async {
+  /// 我发起的流程（GET /oa/flow/initList/running）
+  Future<Map<String, dynamic>> getMyRunning({int limit = 20, int offset = 0}) async {
     try {
       final response = await _api.dioInstance.get(
-        '/oa/workflow/myApplications',
-        queryParameters: {'page': page, 'pageSize': pageSize, 'status': status},
+        '/oa/flow/initList/running',
+        queryParameters: {'limit': limit, 'offset': offset},
       );
-      if (response.data is Map) {
-        final data = response.data as Map;
-        return {
-          'success': true,
-          'data': data['data'] ?? data,
-          'total': data['total'] ?? 0,
-        };
-      }
-      return {'success': true, 'data': [], 'total': 0};
+      return _parseListResponse(response.data);
     } on dio.DioException catch (e) {
-      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'total': 0};
+      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
     } catch (e) {
-      return {'success': false, 'message': '获取我的申请失败', 'data': [], 'total': 0};
+      return {'success': false, 'message': '获取进行中流程失败: $e', 'data': [], 'count': 0};
     }
   }
 
-  /// 流程详情
-  Future<Map<String, dynamic>> getApplicationDetail(String id) async {
+  /// 待我审批（GET /oa/flow/initList/todo）
+  Future<Map<String, dynamic>> getTodo({int limit = 20, int offset = 0}) async {
     try {
-      final response = await _api.dioInstance.get('/oa/workflow/myApplicationDetail', queryParameters: {'id': id});
-      if (response.data != null) {
-        return {'success': true, 'data': response.data};
-      }
-      return {'success': false, 'message': '申请不存在'};
+      final response = await _api.dioInstance.get(
+        '/oa/flow/initList/todo',
+        queryParameters: {'limit': limit, 'offset': offset},
+      );
+      return _parseListResponse(response.data);
     } on dio.DioException catch (e) {
-      return {'success': false, 'message': ApiProvider.normalize(e).message};
+      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
     } catch (e) {
-      return {'success': false, 'message': '获取申请详情失败'};
+      return {'success': false, 'message': '获取待办失败: $e', 'data': [], 'count': 0};
     }
   }
 
-  /// 撤销申请
-  Future<Map<String, dynamic>> cancelApplication(String id, {String reason = ''}) async {
+  /// 我已审批/已完成（GET /oa/flow/initList/done）
+  Future<Map<String, dynamic>> getDone({int limit = 20, int offset = 0}) async {
     try {
-      final response = await _api.dioInstance.post(
-        '/oa/workflow/cancel',
-        data: {'id': id, 'reason': reason},
+      final response = await _api.dioInstance.get(
+        '/oa/flow/initList/done',
+        queryParameters: {'limit': limit, 'offset': offset},
       );
+      return _parseListResponse(response.data);
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
+    } catch (e) {
+      return {'success': false, 'message': '获取已完成失败: $e', 'data': [], 'count': 0};
+    }
+  }
+
+  /// 流程详情（GET /oa/flow/getDetail/{formId}/{objectId}）
+  Future<Map<String, dynamic>> getFlowDetail(String formId, String objectId) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/flow/getDetail/$formId/$objectId');
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
-      return {'success': false, 'message': '撤销失败'};
+      return {'success': false, 'message': '获取流程详情失败: $e'};
     }
   }
 
-  /// 催办
-  Future<Map<String, dynamic>> urge(String id) async {
+  /// 审批（POST /oa/flow/approve/）
+  /// [result]: 'pass' / 'reject'
+  Future<Map<String, dynamic>> approve({
+    required String id,
+    required String result,
+    String comment = '',
+  }) async {
     try {
-      final response = await _api.dioInstance.post('/oa/workflow/urge', data: {'id': id});
+      final response = await _api.dioInstance.post('/oa/flow/approve/', data: {
+        'id': id,
+        'result': result,
+        'comment': comment,
+      });
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
-      return {'success': false, 'message': '催办失败'};
+      return {'success': false, 'message': '审批失败: $e'};
     }
+  }
+
+  /// 撤回（POST /oa/flow/withdraw/）
+  Future<Map<String, dynamic>> withdraw(String id) async {
+    try {
+      final response = await _api.dioInstance.post('/oa/flow/withdraw/', data: {'id': id});
+      return {'success': true, 'data': response.data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '撤回失败: $e'};
+    }
+  }
+
+  /// 通用：根据 tab key 拉对应列表
+  Future<Map<String, dynamic>> getListByTab(String tabKey, {int limit = 20, int offset = 0}) async {
+    switch (tabKey) {
+      case 'todo':
+        return getTodo(limit: limit, offset: offset);
+      case 'done':
+        return getDone(limit: limit, offset: offset);
+      case 'running':
+      default:
+        return getMyRunning(limit: limit, offset: offset);
+    }
+  }
+
+  Map<String, dynamic> _parseListResponse(dynamic data) {
+    if (data is Map) {
+      final list = (data['list'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      final count = (data['count'] as num?)?.toInt() ?? list.length;
+      return {'success': true, 'data': list, 'count': count};
+    }
+    if (data is List) {
+      final list = data.cast<Map<String, dynamic>>();
+      return {'success': true, 'data': list, 'count': list.length};
+    }
+    return {'success': true, 'data': [], 'count': 0};
   }
 }

@@ -13,11 +13,14 @@ class MyApplicationController extends GetxController {
   final hasMore = true.obs;
   final currentPage = 1.obs;
   final selectedTabIndex = 0.obs;
+  final errorMessage = RxnString();
 
-  static const statuses = ['running', 'finished', 'rejected'];
-  static const statusLabels = ['进行中', '已完成', '已驳回'];
+  /// 三个 tab：待我审批、进行中、已完成
+  /// 对应后端: todo / running / done
+  static const tabKeys = ['todo', 'running', 'done'];
+  static const tabLabels = ['待我审批', '进行中', '已完成'];
 
-  String get currentStatus => statuses[selectedTabIndex.value];
+  String get currentTabKey => tabKeys[selectedTabIndex.value];
 
   @override
   void onInit() {
@@ -30,6 +33,7 @@ class MyApplicationController extends GetxController {
     currentPage.value = 1;
     hasMore.value = true;
     applications.clear();
+    errorMessage.value = null;
     await _load();
     isLoading.value = false;
   }
@@ -38,6 +42,7 @@ class MyApplicationController extends GetxController {
     currentPage.value = 1;
     hasMore.value = true;
     applications.clear();
+    errorMessage.value = null;
     await _load();
   }
 
@@ -50,16 +55,20 @@ class MyApplicationController extends GetxController {
   }
 
   Future<void> _load() async {
-    final result = await _repo.getMyApplications(
-      page: currentPage.value,
-      pageSize: 20,
-      status: currentStatus,
+    final result = await _repo.getListByTab(
+      currentTabKey,
+      limit: 20,
+      offset: (currentPage.value - 1) * 20,
     );
     if (result['success'] == true) {
       final list = (result['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       applications.addAll(list);
-      final total = (result['total'] as int?) ?? 0;
-      hasMore.value = applications.length < total;
+      final count = (result['count'] as int?) ?? 0;
+      hasMore.value = applications.length < count;
+      errorMessage.value = null;
+    } else {
+      errorMessage.value = result['message']?.toString();
+      hasMore.value = false;
     }
   }
 
@@ -68,11 +77,25 @@ class MyApplicationController extends GetxController {
     loadInitial();
   }
 
-  Future<void> cancel(String id) async {
+  Future<void> approve(String id, {required bool pass, String comment = ''}) async {
+    final result = await _repo.approve(
+      id: id,
+      result: pass ? 'pass' : 'reject',
+      comment: comment,
+    );
+    if (result['success'] == true) {
+      Get.snackbar('提示', pass ? '已同意' : '已驳回', snackPosition: SnackPosition.BOTTOM);
+      refreshList();
+    } else {
+      Get.snackbar('操作失败', result['message']?.toString() ?? '', snackPosition: SnackPosition.BOTTOM);
+    }
+  }
+
+  Future<void> withdraw(String id) async {
     final confirm = await Get.dialog<bool>(
       AlertDialog(
-        title: const Text('撤销申请'),
-        content: const Text('确定要撤销该申请吗？'),
+        title: const Text('撤回流程'),
+        content: const Text('确定要撤回该流程吗？'),
         actions: [
           TextButton(onPressed: () => Get.back(result: false), child: const Text('取消')),
           TextButton(onPressed: () => Get.back(result: true), child: const Text('确定')),
@@ -80,21 +103,12 @@ class MyApplicationController extends GetxController {
       ),
     );
     if (confirm != true) return;
-    final result = await _repo.cancelApplication(id);
+    final result = await _repo.withdraw(id);
     if (result['success'] == true) {
-      Get.snackbar('提示', '已撤销', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('提示', '已撤回', snackPosition: SnackPosition.BOTTOM);
       refreshList();
     } else {
-      Get.snackbar('撤销失败', result['message'] ?? '', snackPosition: SnackPosition.BOTTOM);
-    }
-  }
-
-  Future<void> urge(String id) async {
-    final result = await _repo.urge(id);
-    if (result['success'] == true) {
-      Get.snackbar('提示', '已催办', snackPosition: SnackPosition.BOTTOM);
-    } else {
-      Get.snackbar('催办失败', result['message'] ?? '', snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('撤回失败', result['message']?.toString() ?? '', snackPosition: SnackPosition.BOTTOM);
     }
   }
 

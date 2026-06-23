@@ -35,10 +35,10 @@ class TaskDetailController extends GetxController {
       if (result['success'] == true) {
         task.value = result['data'] ?? {};
       } else {
-        _loadMock();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMock();
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }

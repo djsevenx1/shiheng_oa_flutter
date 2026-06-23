@@ -8,6 +8,8 @@ import 'package:getuiflut/getuiflut.dart';
 import 'package:get/get.dart';
 
 import '../../modules/notice/controllers/notice_controller.dart';
+import '../providers/api_provider.dart';
+import '../routes/app_pages.dart';
 
 /// 个推推送服务封装。
 /// - Android: 集成 getui SDK（需要 appid/appkey/secret）
@@ -44,9 +46,16 @@ class PushService {
       if (cid == null || cid.isEmpty) return;
       await _storage.write('push_cid', cid);
       // 通知后端：把 cid 绑定到 userId
-      // 后端需要暴露 /oa/push/bind 接口
-      // 这里只把信息存到本地，业务侧在登录成功后再调用
-      debugPrint('push cid: $cid');
+      // 老 OA 提供 `/oa/wechat/pushText` 是群发；bind 由后端维护 user<->cid 映射。
+      // 这里用通用 edit 接口先存一份
+      try {
+        await ApiProvider().dioInstance.post('/oa/user/edit', data: {
+          'id': userId,
+          'pushCid': cid,
+          'platform': 'android',
+        }).catchError((_) => null);
+      } catch (_) {}
+      debugPrint('push cid: $cid, bound to userId=$userId');
     } catch (e) {
       debugPrint('push bindUser failed: $e');
     }

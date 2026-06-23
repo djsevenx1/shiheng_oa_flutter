@@ -33,22 +33,22 @@ class CrmClientDetailController extends GetxController {
       if (results[0]['success'] == true) {
         client.value = results[0]['data'] ?? {};
       } else {
-        _loadMockDetail();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
       if (results[1]['success'] == true) {
         businessList.value = results[1]['data'] ?? [];
       } else {
-        _loadMockBusiness();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
       if (results[2]['success'] == true) {
         salesOrderList.value = results[2]['data'] ?? [];
       } else {
-        _loadMockSalesOrder();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMockDetail();
-      _loadMockBusiness();
-      _loadMockSalesOrder();
+      // /* MOCK-DISABLED */;  // mock disabled
+      // /* MOCK-DISABLED */;  // mock disabled
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }

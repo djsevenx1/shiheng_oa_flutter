@@ -23,6 +23,16 @@ class WorkReportSubmitView extends GetView<WorkReportSubmitController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Container(
+              width: double.infinity,
+              color: Colors.amber.shade50,
+              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+              child: Text(
+                '演示模块：后端未提供汇报提交接口，提交后只在本地保存。',
+                style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade800),
+              ),
+            ),
+            SizedBox(height: 12.h),
             _typeSelector(),
             SizedBox(height: 16.h),
             TextField(

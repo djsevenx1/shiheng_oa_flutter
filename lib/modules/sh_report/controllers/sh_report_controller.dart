@@ -26,13 +26,13 @@ class ShReportController extends GetxController {
       if (result['success'] == true) {
         summary.value = result['data'] ?? {};
       } else {
-        _loadMockSummary();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMockSummary();
+      // /* MOCK-DISABLED */;  // mock disabled
     }
-    _loadMockProduction();
-    _loadMockSales();
+    // /* MOCK-DISABLED */;  // mock disabled
+    // /* MOCK-DISABLED */;  // mock disabled
     isLoading.value = false;
   }
 

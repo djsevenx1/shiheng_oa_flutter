@@ -44,7 +44,7 @@ class StockReportController extends GetxController {
     } catch (e) {
       print('加载库存数据失败: $e');
       // 加载模拟数据用于演示
-      _loadMockData();
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }

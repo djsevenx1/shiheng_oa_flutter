@@ -21,6 +21,23 @@ class PayslipView extends GetView<PayslipController> {
       body: Column(
         children: [
           Container(
+            width: double.infinity,
+            color: Colors.amber.shade50,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16.w, color: Colors.amber.shade800),
+                SizedBox(width: 6.w),
+                Expanded(
+                  child: Text(
+                    '演示模块：老 OA 未提供工资条接口，显示示例数据。',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade800),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
             color: Colors.white,
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
             child: SizedBox(

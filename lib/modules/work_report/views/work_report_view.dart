@@ -36,29 +36,52 @@ class WorkReportView extends GetView<WorkReportController> {
         label: const Text('写汇报'),
         backgroundColor: AppTheme.primaryColor,
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final list = controller.selectedTab.value == 0 ? controller.myReports : controller.receivedReports;
-        if (list.isEmpty) {
-          return Center(
-            child: Text('暂无汇报', style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: controller.loadList,
-          child: ListView.separated(
-            padding: EdgeInsets.all(16.w),
-            itemCount: list.length,
-            separatorBuilder: (_, __) => SizedBox(height: 12.h),
-            itemBuilder: (context, index) {
-              final r = list[index];
-              return _buildCard(r);
-            },
+      body: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            color: Colors.amber.shade50,
+            padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+            child: Row(
+              children: [
+                Icon(Icons.info_outline, size: 16.w, color: Colors.amber.shade800),
+                SizedBox(width: 6.w),
+                Expanded(
+                  child: Text(
+                    '演示模块：老 OA 未提供工作汇报接口，显示示例数据。',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.amber.shade800),
+                  ),
+                ),
+              ],
+            ),
           ),
-        );
-      }),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              final list = controller.selectedTab.value == 0 ? controller.myReports : controller.receivedReports;
+              if (list.isEmpty) {
+                return Center(
+                  child: Text('暂无汇报', style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
+                );
+              }
+              return RefreshIndicator(
+                onRefresh: controller.loadList,
+                child: ListView.separated(
+                  padding: EdgeInsets.all(16.w),
+                  itemCount: list.length,
+                  separatorBuilder: (_, __) => SizedBox(height: 12.h),
+                  itemBuilder: (context, index) {
+                    final r = list[index];
+                    return _buildCard(r);
+                  },
+                ),
+              );
+            }),
+          ),
+        ],
+      ),
     );
   }
 

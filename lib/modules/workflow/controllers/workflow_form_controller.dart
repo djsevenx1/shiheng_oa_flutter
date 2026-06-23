@@ -69,10 +69,10 @@ class WorkflowFormController extends GetxController {
           );
         }).toList();
       } else {
-        _loadMockForm();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMockForm();
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }

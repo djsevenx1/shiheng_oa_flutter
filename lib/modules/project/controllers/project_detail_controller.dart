@@ -33,22 +33,22 @@ class ProjectDetailController extends GetxController {
       if (results[0]['success'] == true) {
         project.value = results[0]['data'] ?? {};
       } else {
-        _loadMockProject();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
       if (results[1]['success'] == true) {
         contracts.value = results[1]['data'] ?? [];
       } else {
-        _loadMockContracts();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
       if (results[2]['success'] == true) {
         files.value = results[2]['data'] ?? [];
       } else {
-        _loadMockFiles();
+        // /* MOCK-DISABLED */;  // mock disabled
       }
     } catch (e) {
-      _loadMockProject();
-      _loadMockContracts();
-      _loadMockFiles();
+      // /* MOCK-DISABLED */;  // mock disabled
+      // /* MOCK-DISABLED */;  // mock disabled
+      // /* MOCK-DISABLED */;  // mock disabled
     } finally {
       isLoading.value = false;
     }
