@@ -67,13 +67,13 @@ class DashboardTab extends GetView<HomeController> {
                                   ),
                                 )),
                                 SizedBox(height: 4.h),
-                                Text(
-                                  controller.userInfo['groupName'] ?? '测试部',
+                                Obx(() => Text(
+                                  controller.userInfo['groupName'] ?? '',
                                   style: TextStyle(
                                     fontSize: 13.sp,
                                     color: Colors.white70,
                                   ),
-                                ),
+                                )),
                               ],
                             ),
                           ),

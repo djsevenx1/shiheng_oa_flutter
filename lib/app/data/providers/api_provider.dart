@@ -119,9 +119,10 @@ class ApiProvider {
       followRedirects: true,
       maxRedirects: 5,
       validateStatus: (status) {
-        // 关键改动：让所有非 2xx 都走业务分支，而不是直接 throw 一段 DioException。
-        // 这样上层能拿到 response 自行决定怎么提示。
-        return status != null && status >= 200 && status < 300;
+        // 关键改动：老 OA 用 Spring Security form login，登录和很多业务接口都返 302
+        // (location: /#/main/home 才是真成功；location: /login.jsp 是 session 失效)
+        // 我们让 2xx 和 3xx 都不抛，业务层根据 status + location 自己判断
+        return status != null && status < 400;
       },
       headers: {
         'Content-Type': 'application/json',
@@ -155,17 +156,31 @@ class ApiProvider {
         return handler.next(options);
       },
       onResponse: (response, handler) {
+        // 关键修复：老 OA Spring Security 在 session 失效时返回 302 + location:/login.jsp
+        // 之前 dio validateStatus 只接受 2xx，会直接抛异常；
+        // 现在我们改成 < 400 接受，业务层继续处理 — 但这里额外做一次自动处理
+        // （如果后续响应是 /login.jsp，直接转成 401 让业务层知道要重新登录）
+        if (response.statusCode != null &&
+            response.statusCode! >= 300 &&
+            response.statusCode! < 400) {
+          final loc = response.headers.value('location') ?? '';
+          if (loc.contains('login') || loc.contains('error')) {
+            // 模拟一个 401 让业务层知道
+            return handler.reject(dio.DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              type: dio.DioExceptionType.badResponse,
+            ));
+          }
+        }
         return handler.next(response);
       },
       onError: (error, handler) {
+        // 关键修复：401 时只清 token，保留 JSESSIONID（不影响下次重试）；
+        // UI 跳转交给业务 controller 处理。
         if (error.response?.statusCode == 401) {
-          _storage.erase();
-          Get.offAllNamed('/login');
-          Get.snackbar(
-            '登录已过期',
-            '请重新登录',
-            snackPosition: SnackPosition.BOTTOM,
-          );
+          _storage.remove('token');
+          _storage.remove('userInfo');
         }
 
         return handler.next(error);

@@ -155,6 +155,16 @@ class LoginController extends GetxController {
       // 切换服务器地址
       _api.setBaseUrl(serverController.text);
 
+      // 关键修复：登录前清掉旧 session，避免 dio 自动加上旧 Cookie 头
+      // 导致后端返回 302 时被 dio 误判为异常（"只能登录一次"的根因）
+      _storage.remove('JSESSIONID');
+      _storage.remove('token');
+      _storage.remove('userInfo');
+      _storage.remove('cachedUserName');
+      _storage.remove('cachedUserGroup');
+      _storage.remove('cachedUserIcon');
+      _storage.remove('cachedUserId');
+
       final result = await _authRepository.login(username, password);
 
       if (result['success'] == true) {
