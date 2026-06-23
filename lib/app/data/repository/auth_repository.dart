@@ -31,7 +31,7 @@ class AuthRepository {
         // 格式1: {success: true, data: {user}, token: 'xxx'}
         // 格式2: {code: 0, msg: 'ok', data: {user}, token: 'xxx'}
         // 格式3: {user: {...}, token: 'xxx'} (直接返回用户)
-        Map<String, dynamic> userData;
+        Map<String, dynamic> userData = {'id': 0, 'name': username, 'loginName': username};
         String? token;
         bool success = true;
 
@@ -44,9 +44,6 @@ class AuthRepository {
           // 格式3: 直接返回用户对象
           userData = Map<String, dynamic>.from(data);
           token = data['token']?.toString();
-        } else {
-          // 默认成功
-          userData = {'id': 0, 'name': username, 'loginName': username};
         }
 
         if (success) {
