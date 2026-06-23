@@ -11,9 +11,22 @@ class ApiProvider {
   final _storage = GetStorage();
   bool _initialized = false;
 
-  // 基础配置 - 时恒电子服务器
-  static const String baseUrl = 'http://xmyjsss.gnway.cc:22178';
+  // 基础配置 - 时恒电子服务器（默认地址，可在登录页修改）
+  String baseUrl = 'http://xmyjsss.gnway.cc:22178';
   static const String apiPrefix = '/oa';
+
+  /// 切换服务器地址（如用户在登录页输入）
+  void setBaseUrl(String url) {
+    if (url.isEmpty) return;
+    String normalized = url.trim();
+    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+      normalized = 'http://$normalized';
+    }
+    baseUrl = normalized;
+    _dio.options.baseUrl = normalized + apiPrefix;
+  }
+
+  String get fullBaseUrl => _dio.options.baseUrl;
 
   dio.Dio get dioInstance {
     if (!_initialized) init();

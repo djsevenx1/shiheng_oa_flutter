@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../app/data/providers/api_provider.dart';
 import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/routes/app_pages.dart';
 
 class LoginController extends GetxController {
   final AuthRepository _authRepository = AuthRepository();
+  final ApiProvider _api = ApiProvider();
 
   final serverController = TextEditingController();
   final usernameController = TextEditingController();
@@ -20,7 +22,7 @@ class LoginController extends GetxController {
     // 预填充测试账号
     usernameController.text = 'admin';
     // 默认服务器地址
-    serverController.text = 'http://xmyjsss.gnway.cc:22178';
+    serverController.text = _api.baseUrl;
   }
 
   @override
@@ -68,6 +70,9 @@ class LoginController extends GetxController {
     isLoading.value = true;
 
     try {
+      // 切换服务器地址
+      _api.setBaseUrl(serverController.text);
+
       final result = await _authRepository.login(username, password);
 
       if (result['success'] == true) {
@@ -91,7 +96,7 @@ class LoginController extends GetxController {
     } catch (e) {
       Get.snackbar(
         '错误',
-        '网络连接失败，请检查网络设置',
+        '网络连接失败: $e',
         snackPosition: SnackPosition.BOTTOM,
         backgroundColor: Colors.red,
         colorText: Colors.white,
