@@ -13,13 +13,6 @@ import '../../modules/my_application/bindings/my_application_binding.dart';
 import '../../modules/my_application/views/my_application_view.dart';
 import '../../modules/qr_scan/bindings/qr_scan_binding.dart';
 import '../../modules/qr_scan/views/qr_scan_view.dart';
-import '../../modules/payslip/bindings/payslip_binding.dart';
-import '../../modules/payslip/views/payslip_view.dart';
-import '../../modules/knowledge/bindings/knowledge_binding.dart';
-import '../../modules/knowledge/views/knowledge_view.dart';
-import '../../modules/work_report/bindings/work_report_binding.dart';
-import '../../modules/work_report/views/work_report_view.dart';
-import '../../modules/work_report/views/work_report_submit_view.dart';
 import '../../modules/chat/views/chat_list_view.dart';
 import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
@@ -33,10 +26,6 @@ import '../../modules/report/views/stock_report_view.dart';
 import '../../modules/report/bindings/stock_report_binding.dart';
 import '../../modules/attendance/bindings/attendance_binding.dart';
 import '../../modules/attendance/views/attendance_view.dart';
-import '../../modules/crm/bindings/crm_binding.dart';
-import '../../modules/crm/views/crm_view.dart';
-import '../../modules/crm/bindings/crm_client_detail_binding.dart';
-import '../../modules/crm/views/crm_client_detail_view.dart';
 import '../../modules/project/bindings/project_binding.dart';
 import '../../modules/project/bindings/project_detail_binding.dart';
 import '../../modules/project/views/project_view.dart';
@@ -49,14 +38,8 @@ import '../../modules/task/views/task_detail_view.dart';
 import '../../modules/task/views/task_create_view.dart';
 import '../../modules/topic/bindings/topic_binding.dart';
 import '../../modules/topic/views/topic_view.dart';
-import '../../modules/archive/bindings/archive_binding.dart';
-import '../../modules/archive/views/archive_view.dart';
-import '../../modules/company_file/bindings/company_file_binding.dart';
-import '../../modules/company_file/views/company_file_view.dart';
 import '../../modules/sh_report/bindings/sh_report_binding.dart';
 import '../../modules/sh_report/views/sh_report_view.dart';
-import '../../modules/favorite/bindings/favorite_binding.dart';
-import '../../modules/favorite/views/favorite_view.dart';
 import '../../modules/help/views/help_view.dart';
 import '../../modules/company/views/company_view.dart';
 import '../../modules/version/views/version_view.dart';
@@ -128,13 +111,11 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.CRM,
-      page: () => const CrmView(),
       binding: CrmBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
       name: _Paths.CRM_CLIENT_DETAIL,
-      page: () => const CrmClientDetailView(),
       binding: CrmClientDetailBinding(),
       transition: Transition.cupertino,
     ),
@@ -176,13 +157,11 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.ARCHIVE,
-      page: () => const ArchiveView(),
       binding: ArchiveBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
       name: _Paths.COMPANY_FILE,
-      page: () => const CompanyFileView(),
       binding: CompanyFileBinding(),
       transition: Transition.cupertino,
     ),
@@ -194,7 +173,6 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.FAVORITE,
-      page: () => const FavoriteView(),
       binding: FavoriteBinding(),
       transition: Transition.cupertino,
     ),
@@ -256,25 +234,21 @@ class AppPages {
     ),
     GetPage(
       name: _Paths.PAYSLIP,
-      page: () => const PayslipView(),
       binding: PayslipBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
       name: _Paths.KNOWLEDGE,
-      page: () => const KnowledgeView(),
       binding: KnowledgeBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
       name: _Paths.WORK_REPORT,
-      page: () => const WorkReportView(),
       binding: WorkReportBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
       name: _Paths.WORK_REPORT_SUBMIT,
-      page: () => const WorkReportSubmitView(),
       binding: WorkReportSubmitBinding(),
       transition: Transition.cupertino,
     ),

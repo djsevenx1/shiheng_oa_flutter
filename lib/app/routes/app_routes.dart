@@ -12,18 +12,13 @@ abstract class Routes {
   static const REPORT = _Paths.REPORT;
   static const STOCK_REPORT = _Paths.STOCK_REPORT;
   static const ATTENDANCE = _Paths.ATTENDANCE;
-  static const CRM = _Paths.CRM;
-  static const CRM_CLIENT_DETAIL = _Paths.CRM_CLIENT_DETAIL;
   static const PROJECT = _Paths.PROJECT;
   static const PROJECT_DETAIL = _Paths.PROJECT_DETAIL;
   static const TASK = _Paths.TASK;
   static const TASK_DETAIL = _Paths.TASK_DETAIL;
   static const TASK_CREATE = _Paths.TASK_CREATE;
   static const TOPIC = _Paths.TOPIC;
-  static const ARCHIVE = _Paths.ARCHIVE;
-  static const COMPANY_FILE = _Paths.COMPANY_FILE;
   static const SH_REPORT = _Paths.SH_REPORT;
-  static const FAVORITE = _Paths.FAVORITE;
   static const HELP = _Paths.HELP;
   static const COMPANY = _Paths.COMPANY;
   static const VERSION = _Paths.VERSION;
@@ -34,10 +29,6 @@ abstract class Routes {
   static const CONTACTS = _Paths.CONTACTS;
   static const MY_APPLICATION = _Paths.MY_APPLICATION;
   static const QR_SCAN = _Paths.QR_SCAN;
-  static const PAYSLIP = _Paths.PAYSLIP;
-  static const KNOWLEDGE = _Paths.KNOWLEDGE;
-  static const WORK_REPORT = _Paths.WORK_REPORT;
-  static const WORK_REPORT_SUBMIT = _Paths.WORK_REPORT_SUBMIT;
   static const CHAT_LIST = _Paths.CHAT_LIST;
 }
 
@@ -53,18 +44,13 @@ abstract class _Paths {
   static const REPORT = '/report';
   static const STOCK_REPORT = '/report/stock';
   static const ATTENDANCE = '/attendance';
-  static const CRM = '/crm';
-  static const CRM_CLIENT_DETAIL = '/crm/client/detail';
   static const PROJECT = '/project';
   static const PROJECT_DETAIL = '/project/detail';
   static const TASK = '/task';
   static const TASK_DETAIL = '/task/detail';
   static const TASK_CREATE = '/task/create';
   static const TOPIC = '/topic';
-  static const ARCHIVE = '/archive';
-  static const COMPANY_FILE = '/company_file';
   static const SH_REPORT = '/sh_report';
-  static const FAVORITE = '/favorite';
   static const HELP = '/help';
   static const COMPANY = '/company';
   static const VERSION = '/version';
@@ -75,9 +61,5 @@ abstract class _Paths {
   static const CONTACTS = '/contacts';
   static const MY_APPLICATION = '/my_application';
   static const QR_SCAN = '/qr_scan';
-  static const PAYSLIP = '/payslip';
-  static const KNOWLEDGE = '/knowledge';
-  static const WORK_REPORT = '/work_report';
-  static const WORK_REPORT_SUBMIT = '/work_report/submit';
   static const CHAT_LIST = '/chat';
 }

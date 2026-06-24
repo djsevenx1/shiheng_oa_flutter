@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart' as dio;
-import 'dart:convert' as _json;
+import 'dart:convert';
 
 import '../providers/api_provider.dart';
 
@@ -171,7 +171,7 @@ class WorkflowRepository {
   List<dynamic> _parseJsonString(dynamic s) {
     if (s is! String || s.isEmpty) return [];
     try {
-      final v = _json.decode(s);
+      final v = json.decode(s);
       if (v is List) return v;
     } catch (_) {}
     return [];
