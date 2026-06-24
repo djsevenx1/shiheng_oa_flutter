@@ -111,8 +111,8 @@ class WorkflowView extends GetView<WorkflowController> {
     final state = item['state']?.toString() ?? '';
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-        child: Icon(Icons.assignment, color: AppTheme.primary, size: 20.w),
+        backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+        child: Icon(Icons.assignment, color: AppTheme.primaryColor, size: 20.w),
       ),
       title: Text(name, maxLines: 2, overflow: TextOverflow.ellipsis,
         style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
@@ -122,7 +122,7 @@ class WorkflowView extends GetView<WorkflowController> {
           ? Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
               decoration: BoxDecoration(
-                color: _stateColor(state).withValues(alpha: 0.1),
+                color: _stateColor(state).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(_stateText(state),
@@ -131,7 +131,7 @@ class WorkflowView extends GetView<WorkflowController> {
           : null,
       onTap: () {
         if (id.isNotEmpty) {
-          Get.toNamed(AppRoutes.workflowDetail, arguments: {'id': id});
+          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'id': id});
         }
       },
     );

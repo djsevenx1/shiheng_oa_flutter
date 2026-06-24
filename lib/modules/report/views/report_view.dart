@@ -73,7 +73,7 @@ class ReportView extends GetView<ReportController> {
           ),
         ),
         ...mods.map((m) => ListTile(
-              leading: Icon(Icons.bar_chart, color: AppTheme.primary, size: 20.w),
+              leading: Icon(Icons.bar_chart, color: AppTheme.primaryColor, size: 20.w),
               title: Text(m['name']?.toString() ?? m['moduleName']?.toString() ?? '(无标题)',
                 style: TextStyle(fontSize: 14.sp)),
               trailing: Icon(Icons.chevron_right, color: AppTheme.gray400),
