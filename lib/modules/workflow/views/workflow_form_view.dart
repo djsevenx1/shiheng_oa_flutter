@@ -169,21 +169,18 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
           ),
         ],
       ),
-      child: Form(
-        key: controller.formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Obx(() => Column(
-                  children: controller.formFields.map((field) {
-                    return Padding(
-                      padding: EdgeInsets.only(bottom: 16.h),
-                      child: _buildField(field),
-                    );
-                  }).toList(),
-                )),
-          ],
-        ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Obx(() => Column(
+                children: controller.formFields.map((field) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: 16.h),
+                    child: _buildField(field),
+                  );
+                }).toList(),
+              )),
+        ],
       ),
     );
   }
