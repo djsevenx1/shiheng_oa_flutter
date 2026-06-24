@@ -159,10 +159,6 @@ class ApiProvider {
           options.headers['X-Requested-With'] = 'XMLHttpRequest';
         }
 
-        // 调试日志
-        DiagLog.write('REQ', '${options.method} ${options.uri} '
-            'headers=${options.headers} qs=${options.queryParameters}');
-
         // 添加 token
         final token = _storage.read('token');
         if (token != null) {
@@ -191,6 +187,10 @@ class ApiProvider {
             options.queryParameters['userId'] = id;
           }
         }
+
+        // 调试日志：放在最后，看到最终所有 headers
+        DiagLog.write('REQ', '${options.method} ${options.uri} '
+            'headers=${options.headers} qs=${options.queryParameters}');
 
         return handler.next(options);
       },
