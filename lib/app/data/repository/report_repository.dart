@@ -5,7 +5,8 @@ class ReportRepository {
 
   Future<Map<String, dynamic>> getReportCategories() async {
     try {
-      final response = await _api.dioInstance.get('/access/getAccess/1');
+      // 老 App 真实接口：/oa/access/getAccess/1 (curl 200，/access/getAccess/1 404)
+      final response = await _api.dioInstance.get('/oa/access/getAccess/1');
       return {'success': true, 'data': response.data ?? {}};
     } catch (e) {
       return {'success': false, 'message': '获取报表分类失败: $e'};

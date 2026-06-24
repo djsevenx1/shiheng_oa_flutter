@@ -3,34 +3,30 @@ import 'package:dio/dio.dart' as dio;
 import '../providers/api_provider.dart';
 
 /// 工作流仓库
-/// 真实接口（老 OA inspinia）：
-/// - /oa/common/workflows        流程模板列表
-/// - /oa/flow/config/{id}        流程表单 schema（含 fields 列表）
-/// - /oa/flow/initList/{key}     流程实例列表（todo/running/done）
-/// - /oa/flow/submit/{id}        提交流程
-/// - /oa/flow/approve/           审批
-/// - /oa/flow/withdraw/          撤回
+/// 老 App 反编译真实接口：
+/// - /oa/access/getAccess/0                       流程模板列表（cats/catsMap/mods）
+/// - /oa/mod/init/:modId                          加载模块定义（含 schema/fields）
+/// - /oa/pro/init/:proId                          流程实例初始化
+/// - /oa/pro/handle                               提交流程/审批（POST）
+/// - /oa/pro/withdraw                             撤回
+/// - /oa/handle/initList?state=                   流程列表（state=0/1/2）
+/// - /oa/flow/form/:formId/view/:objectId/process/:processId  自由流程表单
+/// - /oa/flow/approve/:processId                  自由流程审批
 class WorkflowRepository {
   WorkflowRepository({ApiProvider? api}) : _api = api ?? ApiProvider();
 
   final ApiProvider _api;
 
   /// 流程模板列表（GET /oa/access/getAccess/0）
-  /// 真实接口来自老 App 反编译：domain + '/oa/access/getAccess/0'
-  /// 返回 {cats:[...], catsMap: {catId: [mod,...]}, mods:[...]}
-  /// 业务接口: 老 App 的"发起工作流"sheet 调的就是这个。
-  /// 之前错用 /oa/common/workflows（接口存在但返空）所以 sheet 显示"后端未配置"。
   Future<Map<String, dynamic>> getWorkflowTemplates() async {
     try {
       final response = await _api.dioInstance.get('/oa/access/getAccess/0');
       final data = response.data;
       if (data is Map) {
-        // 兼容老 App 格式 {cats, catsMap, mods}
         final cats = (data['cats'] is List) ? List<Map<String, dynamic>>.from(data['cats']) : <Map<String, dynamic>>[];
         final catsMap = (data['catsMap'] is Map) ? Map<String, dynamic>.from(data['catsMap']) : <String, dynamic>{};
         final mods = (data['mods'] is List) ? List<Map<String, dynamic>>.from(data['mods']) : <Map<String, dynamic>>[];
 
-        // 把 catsMap 的所有 mod 展平到 mods（兜底，老 App 也这么做）
         if (mods.isEmpty) {
           final flat = <Map<String, dynamic>>[];
           catsMap.forEach((k, v) {
@@ -59,20 +55,22 @@ class WorkflowRepository {
     }
   }
 
-  /// 流程表单 schema（GET /oa/flow/config/{id}）
-  /// 返回 {name, config: {...}, fields, steps, currentStep, schema}
-  /// 真实响应很复杂；我们挑出 view 需要的：moduleName + schema 字段
+  /// 流程表单 schema（GET /oa/mod/init/:modId）
+  /// 老 App 真实接口：domain + '/oa/mod/init/' + modId
+  /// 之前错用 /oa/flow/config/:modId (返 2B 空)，应改 mod/init
   Future<Map<String, dynamic>> getFormSchema(int modId) async {
     try {
-      final response = await _api.dioInstance.get('/oa/flow/config/$modId');
+      // 老 App 真实：/oa/mod/init/:modId (curl 200)，/oa/flow/config/:modId 返空
+      final response = await _api.dioInstance.get('/oa/mod/init/$modId');
       final data = response.data;
       if (data is Map) {
-        // 解析老 OA 格式
+        // 老 OA 流程 schema 在 data.module 里
+        final module = data['module'] is Map ? data['module'] : data;
         final result = <String, dynamic>{
-          'moduleName': data['name']?.toString() ?? '流程表单',
-          'appKey': data['app_key']?.toString() ?? '',
-          'tableName': data['name']?.toString() ?? '',
-          'fields': _parseSchema(data),
+          'moduleName': module['name']?.toString() ?? module['moduleName']?.toString() ?? '流程表单',
+          'appKey': module['appKey']?.toString() ?? module['app_key']?.toString() ?? '',
+          'tableName': module['tableName']?.toString() ?? module['name']?.toString() ?? '',
+          'fields': _parseSchema(module),
         };
         return {'success': true, 'data': result};
       }
@@ -84,16 +82,20 @@ class WorkflowRepository {
     }
   }
 
-  /// 流程实例列表（GET /oa/flow/initList/{todo|running|done}）
+  /// 流程实例列表（GET /oa/handle/initList）
   Future<Map<String, dynamic>> getWorkflowList({
     required String status, // 'todo' / 'running' / 'done'
     int limit = 20,
     int offset = 0,
   }) async {
     try {
+      // state: 0=待办 1=进行中 2=已完成
+      int state = 1;
+      if (status == 'todo') state = 0;
+      if (status == 'done') state = 2;
       final response = await _api.dioInstance.get(
-        '/oa/flow/initList/$status',
-        queryParameters: {'limit': limit, 'offset': offset},
+        '/oa/handle/initList',
+        queryParameters: {'limit': limit, 'offset': offset, 'state': state},
       );
       return _parseListResponse(response.data);
     } on dio.DioException catch (e) {
@@ -103,10 +105,10 @@ class WorkflowRepository {
     }
   }
 
-  /// 流程详情（GET /oa/flow/getDetail/{formId}/{objectId}）
-  Future<Map<String, dynamic>> getWorkflowDetail(String formId, String objectId) async {
+  /// 流程详情（GET /oa/pro/init/:proId）
+  Future<Map<String, dynamic>> getWorkflowDetail(int proId) async {
     try {
-      final response = await _api.dioInstance.get('/oa/flow/getDetail/$formId/$objectId');
+      final response = await _api.dioInstance.get('/oa/pro/init/$proId');
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
@@ -115,18 +117,20 @@ class WorkflowRepository {
     }
   }
 
-  /// 提交流程（POST /oa/flow/submit/{id}）
-  /// [formData] 实际参数是 {formData: {...}, nextStep, appKey, isDraft, groupId, ...}
+  /// 提交流程（POST /oa/pro/handle）
   Future<Map<String, dynamic>> submitWorkflow({
     required int modId,
     required Map<String, dynamic> formData,
     String appKey = '',
   }) async {
     try {
-      final response = await _api.dioInstance.post('/oa/flow/submit/$modId', data: {
+      // 老 App 真实：POST /oa/pro/handle  body=formData
+      // 之前错用 /oa/flow/submit/:modId (400)
+      final response = await _api.dioInstance.post('/oa/pro/handle', data: {
         'formData': formData,
         'appKey': appKey,
         'isDraft': false,
+        'modId': modId,
       });
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
@@ -136,17 +140,18 @@ class WorkflowRepository {
     }
   }
 
-  /// 审批（POST /oa/flow/approve/）
+  /// 审批（POST /oa/pro/handle）
   Future<Map<String, dynamic>> approveWorkflow({
-    required String processId,
+    required int proId,
     required String result, // 'pass' / 'reject'
     String comment = '',
   }) async {
     try {
-      final response = await _api.dioInstance.post('/oa/flow/approve/', data: {
-        'id': processId,
+      final response = await _api.dioInstance.post('/oa/pro/handle', data: {
+        'id': proId,
         'result': result,
         'comment': comment,
+        'isApprove': true,
       });
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
@@ -156,10 +161,10 @@ class WorkflowRepository {
     }
   }
 
-  /// 撤回（POST /oa/flow/withdraw/）
-  Future<Map<String, dynamic>> withdrawWorkflow(String processId) async {
+  /// 撤回（POST /oa/pro/withdraw）
+  Future<Map<String, dynamic>> withdrawWorkflow(int proId) async {
     try {
-      final response = await _api.dioInstance.post('/oa/flow/withdraw/', data: {'id': processId});
+      final response = await _api.dioInstance.post('/oa/pro/withdraw', data: {'id': proId});
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
@@ -169,11 +174,9 @@ class WorkflowRepository {
   }
 
   /// 解析老 OA schema 为 Flutter 端 FormFieldSchema 列表
-  /// 老 OA 的 schema 字段：{type, label, required, options, defaultValue, placeholder, ...}
   List<Map<String, dynamic>> _parseSchema(dynamic data) {
     final out = <Map<String, dynamic>>[];
     try {
-      // 老 OA 数据结构：data.config.init.schema.{fieldName: {type, label, ...}}
       final config = (data is Map) ? data['config'] : null;
       if (config is! Map) return out;
       final init = config['init'];
@@ -183,7 +186,6 @@ class WorkflowRepository {
 
       schema.forEach((key, value) {
         if (value is! Map) return;
-        // 跳过非字段类型
         final type = (value['type'] ?? 'text').toString();
         if (['label', 'group', 'divider', 'html'].contains(type)) return;
 

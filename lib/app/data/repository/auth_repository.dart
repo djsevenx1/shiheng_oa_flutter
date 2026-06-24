@@ -137,7 +137,8 @@ class AuthRepository {
 
   Future<Map<String, dynamic>> getCurrentUser() async {
     try {
-      final response = await _api.dioInstance.get('/user/current');
+      // 老 App 真实接口：/oa/user/current (curl 200，/user/current 404)
+      final response = await _api.dioInstance.get('/oa/user/current');
       if (response.data != null) {
         await _storage.write('userInfo', response.data);
         return {'success': true, 'data': response.data};
