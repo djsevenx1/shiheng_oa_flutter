@@ -126,8 +126,15 @@ class WorkflowFormController extends GetxController {
       final res = await auth.getCurrentUser();
       if (res['success'] == true && res['data'] is Map) {
         final u = res['data'] as Map;
-        currentUserName = u['name']?.toString() ?? u['userName']?.toString() ?? u['user']?.toString();
-        currentUserDept = u['department']?.toString() ?? u['deptName']?.toString() ?? u['dept']?.toString();
+        // 实际后端字段：name/loginName/groupName/groupId
+        currentUserName = u['name']?.toString()
+            ?? u['loginName']?.toString()
+            ?? u['userName']?.toString()
+            ?? u['user']?.toString();
+        currentUserDept = u['groupName']?.toString()
+            ?? u['department']?.toString()
+            ?? u['deptName']?.toString()
+            ?? u['dept']?.toString();
       }
     } catch (_) {}
 
@@ -157,6 +164,10 @@ class WorkflowFormController extends GetxController {
           formData[f.name] = '';
           break;
       }
+    }
+    // 触发 formFields 重建（formData 改了 view 才会刷新）
+    if (formFields.isNotEmpty) {
+      formFields.refresh();
     }
   }
 

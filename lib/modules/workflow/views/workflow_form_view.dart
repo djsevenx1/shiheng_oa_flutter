@@ -495,6 +495,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
   }
 
   Widget _buildDateField(FormFieldSchema field) {
+    if (field.isAutoFill) return _buildReadonlyField(field);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
