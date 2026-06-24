@@ -201,8 +201,14 @@ class ApiProvider {
         String sc = '';
         try {
           final list = response.headers['set-cookie'];
-          if (list is List) sc = list.join(' | ');
-          if (sc.isEmpty) sc = response.headers.value('set-cookie') ?? '';
+          if (list != null && list.isNotEmpty) {
+            sc = list.join(' | ');
+          }
+          if (sc.isEmpty) {
+            try {
+              sc = response.headers.value('set-cookie') ?? '';
+            } catch (_) {}
+          }
         } catch (_) {}
         String body = '';
         try {

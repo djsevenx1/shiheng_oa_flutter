@@ -59,16 +59,16 @@ class AuthRepository {
       try {
         // dio 5.x 的 response.headers 是 Headers(Map<String, List<String>>),
         // 优先用 ['set-cookie'] 拿 List<String>(每个元素一条 cookie)
-        final dynamic list = response.headers['set-cookie'];
-        if (list is List) {
-          final items = list.map<String>((e) => e.toString()).toList();
-          if (items.isNotEmpty) {
-            raw = items.join('\n');
-          }
+        final list = response.headers['set-cookie'];
+        if (list != null && list.isNotEmpty) {
+          final items = list.map((e) => e?.toString() ?? '').toList();
+          raw = items.join('\n');
         }
         // 兜底用 value()
         if (raw.isEmpty) {
-          raw = response.headers.value('set-cookie') ?? '';
+          try {
+            raw = response.headers.value('set-cookie') ?? '';
+          } catch (_) {}
         }
       } catch (e) {
         debugPrint('set-cookie parse error: $e');
