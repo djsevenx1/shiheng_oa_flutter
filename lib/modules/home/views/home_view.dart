@@ -5,9 +5,11 @@ import '../../../app/themes/app_theme.dart';
 import '../controllers/home_controller.dart';
 import 'tabs/dashboard_tab.dart';
 import 'tabs/workflow_tab.dart';
-import 'tabs/report_tab.dart';
 import 'tabs/more_tab.dart';
 
+/// 老 App 主页布局：3 个 tab（最新 / 流程 / 更多）
+/// 老 App 实际是 5 个 tab（最新/邮件/流程/任务/更多），但新 App 屏幕宽度不够，
+/// 合并：邮件+任务+联系人+... 都进"更多"页
 class HomeView extends GetView<HomeController> {
   const HomeView({super.key});
 
@@ -20,7 +22,6 @@ class HomeView extends GetView<HomeController> {
         children: const [
           DashboardTab(),
           WorkflowTab(),
-          ReportTab(),
           MoreTab(),
         ],
       ),
@@ -41,10 +42,9 @@ class HomeView extends GetView<HomeController> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(Icons.home_rounded, '首页', 0),
+                _buildNavItem(Icons.home_rounded, '最新', 0),
                 _buildNavItem(Icons.assignment_rounded, '流程', 1),
-                _buildNavItem(Icons.insert_chart_rounded, '报表', 2),
-                _buildNavItem(Icons.apps_rounded, '更多', 3),
+                _buildNavItem(Icons.apps_rounded, '更多', 2),
               ],
             ),
           ),

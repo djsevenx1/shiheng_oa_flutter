@@ -12,7 +12,7 @@ class WorkflowView extends GetView<WorkflowController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('流程审批'),
+        title: const Text('流程'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

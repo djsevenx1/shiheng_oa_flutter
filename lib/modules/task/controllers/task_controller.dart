@@ -12,10 +12,9 @@ class TaskController extends GetxController {
   final selectedTab = 0.obs; // 0: all, 1: todo, 2: doing, 3: done
 
   final List<Map<String, String>> tabs = [
-    {'key': 'all', 'label': '全部', 'icon': 'list_alt'},
-    {'key': 'todo', 'label': '待办', 'icon': 'pending_actions'},
-    {'key': 'doing', 'label': '进行中', 'icon': 'autorenew'},
-    {'key': 'done', 'label': '已完成', 'icon': 'check_circle_outline'},
+    {'key': 'Recent', 'label': '全部', 'icon': 'list_alt'},
+    {'key': 'Todo', 'label': '待办', 'icon': 'pending_actions'},
+    {'key': 'Done', 'label': '已完成', 'icon': 'check_circle_outline'},
   ];
 
   String get _status {
