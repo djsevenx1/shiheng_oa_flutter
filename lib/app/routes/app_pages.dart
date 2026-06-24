@@ -208,26 +208,6 @@ class AppPages {
       transition: Transition.cupertino,
     ),
     GetPage(
-      name: _Paths.PAYSLIP,
-      binding: PayslipBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.KNOWLEDGE,
-      binding: KnowledgeBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.WORK_REPORT,
-      binding: WorkReportBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.WORK_REPORT_SUBMIT,
-      binding: WorkReportSubmitBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
       name: _Paths.CHAT_LIST,
       page: () => const ChatListView(),
       transition: Transition.cupertino,
