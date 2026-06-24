@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import '../../../app/core/app_config.dart';
 import '../../../app/themes/app_theme.dart';
 import '../controllers/login_controller.dart';
+import 'diag_view.dart';
 
 class LoginView extends GetView<LoginController> {
   const LoginView({super.key});
@@ -281,13 +282,19 @@ class LoginView extends GetView<LoginController> {
                           ),
                         ),
                         SizedBox(height: 32.h),
-                        // Version
+                        // Version — 长按进入网络诊断
                         Center(
-                          child: Text(
-                            '版本 2.0.3',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              color: Colors.white.withAlpha(128),
+                          child: GestureDetector(
+                            onLongPress: () => Get.to(() => const DiagView()),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                              child: Text(
+                                '版本 2.0.4 (长按进入诊断)',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.white.withAlpha(128),
+                                ),
+                              ),
                             ),
                           ),
                         ),

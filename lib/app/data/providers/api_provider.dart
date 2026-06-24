@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
 import '../../core/app_config.dart';
+import '../services/diag_log.dart';
 
 /// 统一的业务错误结构，避免把 [dio.DioException] 整段抛到 UI。
 class ApiError {
@@ -144,6 +145,10 @@ class ApiProvider {
           options.headers['X-Requested-With'] = 'XMLHttpRequest';
         }
 
+        // 调试日志
+        DiagLog.write('REQ', '${options.method} ${options.uri} '
+            'headers=${options.headers} qs=${options.queryParameters}');
+
         // 添加 token
         final token = _storage.read('token');
         if (token != null) {
@@ -168,6 +173,23 @@ class ApiProvider {
         return handler.next(options);
       },
       onResponse: (response, handler) {
+        // 调试日志：记录 status + location + content-type + body 前 500 字符
+        final loc = response.headers.value('location') ?? '';
+        final ct = response.headers.value('content-type') ?? '';
+        String body = '';
+        try {
+          final d = response.data;
+          if (d is String) {
+            body = d.length > 500 ? '${d.substring(0, 500)}...' : d;
+          } else if (d != null) {
+            body = d.toString().length > 500
+                ? '${d.toString().substring(0, 500)}...'
+                : d.toString();
+          }
+        } catch (_) {}
+        DiagLog.write('RES', '${response.requestOptions.method} ${response.requestOptions.uri} '
+            '→ ${response.statusCode} ct=$ct loc=$loc body=$body');
+
         // 关键修复：老 OA Spring Security 在 session 失效时返回 302 + location:/login.jsp
         // 之前 dio validateStatus 只接受 2xx，会直接抛异常；
         // 现在我们改成 < 400 接受，业务层继续处理 — 但这里额外做一次自动处理
@@ -197,6 +219,8 @@ class ApiProvider {
 
         // 调试模式：把异常信息打印到 console，便于排查
         debugPrint('[API ERROR] ${error.requestOptions.method} ${error.requestOptions.uri} '
+            '→ ${error.response?.statusCode ?? error.type} | ${error.message}');
+        DiagLog.write('ERR', '${error.requestOptions.method} ${error.requestOptions.uri} '
             '→ ${error.response?.statusCode ?? error.type} | ${error.message}');
 
         return handler.next(error);
