@@ -195,6 +195,36 @@ class ApiProvider {
         return handler.next(options);
       },
       onResponse: (response, handler) {
+        // 自动提取 set-cookie 中的 JSESSIONID 存到 storage（关键修复：dio 5.x 在 Android 上
+        // headers.value('set-cookie') 在多 cookie 时会抛，且 auth_repository 解析易失败。
+        // 我们在这里统一处理，所有响应（包括 200/302）都扫描 set-cookie，找到 JSESSIONID 就存）
+        try {
+          final list = response.headers['set-cookie'];
+          String raw = '';
+          if (list != null && list.isNotEmpty) {
+            raw = list.map((e) => e?.toString() ?? '').join('\n');
+          }
+          if (raw.isEmpty) {
+            try {
+              raw = response.headers.value('set-cookie') ?? '';
+            } catch (_) {}
+          }
+          if (raw.isNotEmpty) {
+            final m = RegExp(r'JSESSIONID=([^;,\s]+)').firstMatch(raw);
+            if (m != null) {
+              final jsid = 'JSESSIONID=${m.group(1)}';
+              final old = _storage.read('JSESSIONID');
+              if (old != jsid) {
+                _storage.write('JSESSIONID', jsid);
+                debugPrint('[AUTO] stored JSESSIONID: $jsid (was: $old)');
+                DiagLog.write('AUTO', 'stored JSESSIONID: $jsid (was: $old)');
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('[AUTO] set-cookie scan error: $e');
+        }
+
         // 调试日志：记录 status + location + content-type + set-cookie + body 前 500 字符
         final loc = response.headers.value('location') ?? '';
         final ct = response.headers.value('content-type') ?? '';
