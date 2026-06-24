@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart' as dio;
+import 'dart:convert' as _json;
 
 import '../providers/api_provider.dart';
 
@@ -56,9 +57,9 @@ class WorkflowRepository {
   }
 
   /// 流程表单 schema（GET /oa/mod/init/:modId）
-  /// 老 App 真实：/oa/mod/init/:modId (curl 200)，返 {formView: '<table>...</table>', fields: [...]}
-  /// formView 是 HTML 模板字符串，包含 {{fieldName}} 占位符 + form-label/ctrl
-  /// fields 是 [{name, type, ...}] 字段定义（如果后端返了）
+  /// 老 App 真实：/oa/mod/init/:modId (curl 200)，返 {formView, tableSchema, module, flowConfig}
+  /// tableSchema 才是真字段定义：[{id, name, ctrl, required, fields, flagDetail}]
+  /// formView 是 HTML 模板（仅用于显示）
   Future<Map<String, dynamic>> getFormSchema(int modId) async {
     try {
       final response = await _api.dioInstance.get('/oa/mod/init/$modId');
@@ -67,24 +68,28 @@ class WorkflowRepository {
         return {'success': false, 'message': '表单 schema 返回数据格式不正确'};
       }
       final module = (data['module'] is Map) ? data['module'] : data;
-      // 优先用后端给的 fields
-      List<Map<String, dynamic>> fields = [];
-      final rawFields = data['fields'];
-      if (rawFields is List && rawFields.isNotEmpty) {
-        fields = rawFields.whereType<Map>().map((f) => Map<String, dynamic>.from(f)).toList();
+      final List<dynamic> rawSchema =
+          (data['tableSchema'] is List) ? data['tableSchema'] :
+          (data['tableSchema'] is String ? _parseJsonString(data['tableSchema']) : []);
+
+      final fields = rawSchema.whereType<Map>().map((f) => _parseTableSchemaField(f)).toList();
+      final detailFields = <String, List<Map<String, dynamic>>>{};
+      for (final f in fields) {
+        if (f['flagDetail'] == true && f['fields'] is List) {
+          detailFields[f['name']?.toString() ?? ''] =
+              (f['fields'] as List).cast<Map<String, dynamic>>();
+        }
       }
-      // 兜底：从 formView HTML 提取字段
-      if (fields.isEmpty) {
-        final formView = data['formView']?.toString() ?? '';
-        fields = _parseFormViewHtml(formView);
-      }
+
       final result = <String, dynamic>{
         'moduleName': module['name']?.toString() ?? module['moduleName']?.toString() ?? '流程表单',
-        'appKey': module['appKey']?.toString() ?? module['app_key']?.toString() ?? '',
-        'tableName': module['tableName']?.toString() ?? module['name']?.toString() ?? '',
+        'appKey': module['tableKey']?.toString() ?? module['appKey']?.toString() ?? '',
+        'tableName': module['tableKey']?.toString() ?? module['tableName']?.toString() ?? '',
         'fields': fields,
+        'detailFields': detailFields,
         'formView': data['formView']?.toString() ?? '',
         'module': module,
+        'flowConfig': data['flowConfig'] is String ? _parseJsonString(data['flowConfig']) : data['flowConfig'],
       };
       return {'success': true, 'data': result};
     } on dio.DioException catch (e) {
@@ -92,6 +97,84 @@ class WorkflowRepository {
     } catch (e) {
       return {'success': false, 'message': '获取表单失败: $e'};
     }
+  }
+
+  /// 解析单个 tableSchema 字段为 Flutter 端字段定义
+  Map<String, dynamic> _parseTableSchemaField(Map f) {
+    final id = f['id']?.toString() ?? '';
+    final name = f['name']?.toString() ?? id;
+    final ctrl = f['ctrl']?.toString() ?? 'text';
+    final required = f['required'] == true;
+    final flagDetail = f['flagDetail'] == true;
+    final flagNew = f['flagNew'] == true;
+    final config = f['config']?.toString();
+    final subFields = (f['fields'] is List)
+        ? (f['fields'] as List).whereType<Map>().map((sf) => _parseTableSchemaField(Map<String, dynamic>.from(sf))).toList()
+        : <Map<String, dynamic>>[];
+
+    return {
+      'name': id,
+      'label': name,
+      'type': _mapCtrl(ctrl),
+      'ctrl': ctrl,
+      'required': required,
+      'flagDetail': flagDetail,
+      'flagNew': flagNew,
+      'config': config,
+      'fields': subFields,
+      'defaultValue': f['defaultValue'] ?? f['default'],
+    };
+  }
+
+  /// 解析老 OA ctrl 字段类型 → Flutter 端类型
+  String _mapCtrl(String ctrl) {
+    switch (ctrl) {
+      case 'text':
+      case 'sequence':
+      case 'info':
+      case 'logs':
+      case 'name':
+      case 'department':
+        return 'text';
+      case 'number':
+      case 'num':
+      case 'money':
+        return 'number';
+      case 'date':
+        return 'date';
+      case 'datetime':
+      case 'current':
+        return 'datetime';
+      case 'longtext':
+      case 'textarea':
+        return 'textarea';
+      case 'select':
+      case 'dict':
+      case 'dictionary':
+        return 'select';
+      case 'radio':
+        return 'radio';
+      case 'checkbox':
+        return 'checkbox';
+      case 'user':
+      case 'users':
+        return 'user';
+      case 'file':
+      case 'attachment':
+        return 'file';
+      default:
+        return 'text';
+    }
+  }
+
+  /// 解析 JSON 字符串（老 OA 后端有时返 JSON 字符串）
+  List<dynamic> _parseJsonString(dynamic s) {
+    if (s is! String || s.isEmpty) return [];
+    try {
+      final v = _json.decode(s);
+      if (v is List) return v;
+    } catch (_) {}
+    return [];
   }
 
   /// 流程实例列表（GET /oa/handle/initList）
@@ -130,6 +213,9 @@ class WorkflowRepository {
   }
 
   /// 提交流程（POST /oa/pro/handle）
+  /// 老 App 真实：POST /oa/pro/handle body=formData
+  /// 之前错用 /oa/flow/submit/:modId (400)
+  /// 老 OA 实际需要 formData + appKey (tableKey) + modId
   Future<Map<String, dynamic>> submitWorkflow({
     required int modId,
     required Map<String, dynamic> formData,

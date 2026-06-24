@@ -6,13 +6,14 @@ import '../../../app/themes/app_theme.dart';
 class FormFieldSchema {
   final String name;
   final String label;
-  final String type; // text, number, date, datetime, textarea, select, radio, checkbox, file
+  final String type; // text, number, date, datetime, textarea, select, radio, checkbox, file, user, detail
   final bool required;
   final String? placeholder;
   final List<Map<String, dynamic>>? options;
   final dynamic defaultValue;
   final String? helpText;
   final String? validation;
+  final List<Map<String, dynamic>>? fields; // 明细子表子字段
 
   FormFieldSchema({
     required this.name,
@@ -24,6 +25,7 @@ class FormFieldSchema {
     this.defaultValue,
     this.helpText,
     this.validation,
+    this.fields,
   });
 }
 
@@ -39,6 +41,7 @@ class WorkflowFormController extends GetxController {
   final formKey = GlobalKey<FormState>();
   final isSubmitting = false.obs;
   final selectedApprovers = <String>{}.obs;
+  final detailRows = <String, List<Map<String, dynamic>>>{}.obs;
   final errorMessage = RxnString();
 
   @override
@@ -69,20 +72,24 @@ class WorkflowFormController extends GetxController {
         appKey.value = data['appKey']?.toString() ?? '';
         final fieldsJson = (data['fields'] as List?)?.cast<Map<String, dynamic>>() ?? [];
         formFields.value = fieldsJson.map((json) {
+          // 老 OA: flagDetail=true 是明细表，需用 'detail' 类型渲染
+          String type = json['type']?.toString() ?? 'text';
+          if (json['flagDetail'] == true) type = 'detail';
           return FormFieldSchema(
             name: json['name'] ?? '',
             label: json['label'] ?? '',
-            type: json['type'] ?? 'text',
+            type: type,
             required: json['required'] ?? false,
             placeholder: json['placeholder']?.toString(),
             options: (json['options'] as List?)?.cast<Map<String, dynamic>>(),
             defaultValue: json['defaultValue'],
             helpText: json['helpText']?.toString(),
+            fields: (json['fields'] is List) ? (json['fields'] as List).cast<Map<String, dynamic>>() : null,
           );
         }).toList();
         if (formFields.isEmpty) {
-          errorMessage.value = '该流程未配置表单字段（后端 schema 为空）';
-        }
+        errorMessage.value = '该流程未配置表单字段（后端 schema 为空）';
+      }
       } else {
         errorMessage.value = result['message']?.toString() ?? '加载表单失败';
       }
@@ -105,6 +112,31 @@ class WorkflowFormController extends GetxController {
     }
   }
 
+  /// 明细行操作
+  void addDetailRow(String parentName) {
+    final list = List<Map<String, dynamic>>.from(detailRows[parentName] ?? []);
+    list.add({});
+    detailRows[parentName] = list;
+  }
+
+  void removeDetailRow(String parentName, int index) {
+    final list = List<Map<String, dynamic>>.from(detailRows[parentName] ?? []);
+    if (index < list.length) {
+      list.removeAt(index);
+      detailRows[parentName] = list;
+    }
+  }
+
+  void updateDetailCell(String parentName, int rowIndex, String key, dynamic value) {
+    final list = List<Map<String, dynamic>>.from(detailRows[parentName] ?? []);
+    if (rowIndex < list.length) {
+      final row = Map<String, dynamic>.from(list[rowIndex]);
+      row[key] = value;
+      list[rowIndex] = row;
+      detailRows[parentName] = list;
+    }
+  }
+
   Future<void> submit() async {
     if (formKey.currentState != null && !formKey.currentState!.validate()) {
       Get.snackbar('提示', '请填写完整表单', snackPosition: SnackPosition.BOTTOM,
@@ -118,9 +150,14 @@ class WorkflowFormController extends GetxController {
 
     isSubmitting.value = true;
     try {
+      // 把明细合并到 formData
+      final data = Map<String, dynamic>.from(formData);
+      detailRows.forEach((key, rows) {
+        data[key] = rows;
+      });
       final result = await _repository.submitWorkflow(
         modId: modId.value,
-        formData: Map<String, dynamic>.from(formData),
+        formData: data,
         appKey: appKey.value,
       );
       if (result['success'] == true) {

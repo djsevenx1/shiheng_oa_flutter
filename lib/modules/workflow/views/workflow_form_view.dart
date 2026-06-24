@@ -199,9 +199,211 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
         return _buildRadioField(field);
       case 'file':
         return _buildFileField(field);
+      case 'user':
+        return _buildUserField(field);
+      case 'detail':
+        return _buildDetailField(field);
       default:
         return _buildTextField(field);
     }
+  }
+
+  /// 用户选择器（审批人/申请人/抄送人等）
+  Widget _buildUserField(FormFieldSchema field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(field),
+        SizedBox(height: 6.h),
+        Obx(() => InkWell(
+          onTap: () async {
+            // TODO: 弹用户选择器，先简单把当前用户名填上
+            final picked = await Get.toNamed('/contacts', arguments: {'pickMode': true});
+            if (picked is Map && picked['name'] != null) {
+              controller.updateField(field.name, picked['name']);
+            }
+          },
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+            decoration: BoxDecoration(
+              color: AppTheme.gray50,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.person, color: AppTheme.gray400, size: 18),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    controller.formData[field.name]?.toString() ?? '请选择${field.label}',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: controller.formData[field.name] == null ? AppTheme.textTertiary : AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: AppTheme.gray400, size: 18),
+              ],
+            ),
+          ),
+        )),
+        if (field.helpText != null) _buildFieldHelp(field.helpText!),
+      ],
+    );
+  }
+
+  /// 明细子表（如材料临时请购单的"材料明细"）
+  Widget _buildDetailField(FormFieldSchema field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            _buildFieldLabel(field),
+            const Spacer(),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
+                minimumSize: Size.zero,
+                elevation: 0,
+              ),
+              icon: Icon(Icons.add, size: 14.w),
+              label: Text('添加', style: TextStyle(fontSize: 12.sp)),
+              onPressed: () => controller.addDetailRow(field.name),
+            ),
+          ],
+        ),
+        SizedBox(height: 6.h),
+        Obx(() {
+          final rows = controller.detailRows[field.name] ?? [];
+          if (rows.isEmpty) {
+            return Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: AppTheme.gray50,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppTheme.gray300, style: BorderStyle.solid),
+              ),
+              child: Center(
+                child: Text('点击"添加"按钮添加明细行',
+                    style: TextStyle(fontSize: 13.sp, color: AppTheme.textTertiary)),
+              ),
+            );
+          }
+          return Column(
+            children: rows.asMap().entries.map((entry) {
+              final idx = entry.key;
+              final row = entry.value;
+              return Card(
+                margin: EdgeInsets.only(bottom: 8.h),
+                elevation: 0,
+                color: AppTheme.gray50,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  side: BorderSide(color: AppTheme.gray300),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(12.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text('第 ${idx + 1} 行', style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary)),
+                          const Spacer(),
+                          IconButton(
+                            icon: Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                            onPressed: () => controller.removeDetailRow(field.name, idx),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                      ...((field.fields ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>()).map((sub) {
+                        return Padding(
+                          padding: EdgeInsets.only(top: 8.h),
+                          child: _buildDetailSubField(field.name, idx, sub, row),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }),
+      ],
+    );
+  }
+
+  Widget _buildDetailSubField(String parentName, int rowIdx, Map<String, dynamic> sub, Map<String, dynamic> row) {
+    final name = sub['name']?.toString() ?? '';
+    final label = sub['label']?.toString() ?? name;
+    final type = sub['type']?.toString() ?? 'text';
+    final key = '${parentName}_${rowIdx}_$name';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary)),
+        SizedBox(height: 4.h),
+        if (type == 'date' || type == 'datetime')
+          InkWell(
+            onTap: () async {
+              final date = await showDatePicker(
+                context: Get.context!,
+                initialDate: DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+              );
+              if (date != null) {
+                controller.updateDetailCell(parentName, rowIdx, name,
+                    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}');
+              }
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(6.r),
+                border: Border.all(color: AppTheme.gray300),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.calendar_today, color: AppTheme.gray400, size: 14),
+                  SizedBox(width: 6.w),
+                  Text(row[name]?.toString() ?? '请选择',
+                      style: TextStyle(fontSize: 13.sp,
+                          color: row[name] == null ? AppTheme.textTertiary : AppTheme.textPrimary)),
+                ],
+              ),
+            ),
+          )
+        else
+          TextFormField(
+            initialValue: row[name]?.toString() ?? '',
+            style: TextStyle(fontSize: 13.sp),
+            decoration: InputDecoration(
+              isDense: true,
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.r),
+                borderSide: BorderSide(color: AppTheme.gray300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(6.r),
+                borderSide: BorderSide(color: AppTheme.gray300),
+              ),
+            ),
+            keyboardType: type == 'number' ? TextInputType.number : TextInputType.text,
+            onChanged: (v) => controller.updateDetailCell(parentName, rowIdx, name, v),
+          ),
+      ],
+    );
   }
 
   Widget _buildTextField(FormFieldSchema field) {
