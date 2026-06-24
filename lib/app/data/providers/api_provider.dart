@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart' as dio;
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'dart:io';
 
 import '../../core/app_config.dart';
 import '../services/diag_log.dart';
@@ -136,6 +138,18 @@ class ApiProvider {
       },
     ));
 
+    // 关键修复：dio 5.x 在 Android 上 dart:io 的 HttpClient 不会自动把 set-cookie
+    // 暴露到 response.headers。这是 HttpClient 的历史行为。
+    // 我们用 onHttpClientCreate 配置 HttpClient 让它接受所有 cookies。
+    _dio.httpClientAdapter = IOHttpClientAdapter(
+      createHttpClient: () {
+        final client = HttpClient();
+        // 允许 set-cookie 中任何 cookie 头被解析
+        client.badCertificateCallback = (cert, host, port) => false;
+        return client;
+      },
+    );
+
     _dio.interceptors.add(dio.InterceptorsWrapper(
       onRequest: (options, handler) {
         // 关键修复：老 OA Spring Security 几乎所有 GET 接口都要求带 XHR 头
@@ -161,21 +175,35 @@ class ApiProvider {
           options.headers['Cookie'] = jsessionId.toString();
         }
 
-        // 添加用户信息
+        // 添加 userId（仅当真实登录后 id > 0 才注入；userInfo['id']=0 是占位值）
         final userInfo = _storage.read('userInfo');
         if (userInfo != null && userInfo['id'] != null) {
-          if (options.queryParameters.isEmpty) {
-            options.queryParameters = {};
+          final id = userInfo['id'];
+          if (id is int && id > 0) {
+            if (options.queryParameters.isEmpty) {
+              options.queryParameters = {};
+            }
+            options.queryParameters['userId'] = id;
+          } else if (id is String && id.isNotEmpty && id != '0') {
+            if (options.queryParameters.isEmpty) {
+              options.queryParameters = {};
+            }
+            options.queryParameters['userId'] = id;
           }
-          options.queryParameters['userId'] = userInfo['id'];
         }
 
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        // 调试日志：记录 status + location + content-type + body 前 500 字符
+        // 调试日志：记录 status + location + content-type + set-cookie + body 前 500 字符
         final loc = response.headers.value('location') ?? '';
         final ct = response.headers.value('content-type') ?? '';
+        String sc = '';
+        try {
+          final list = response.headers['set-cookie'];
+          if (list is List) sc = list.join(' | ');
+          if (sc.isEmpty) sc = response.headers.value('set-cookie') ?? '';
+        } catch (_) {}
         String body = '';
         try {
           final d = response.data;
@@ -188,7 +216,7 @@ class ApiProvider {
           }
         } catch (_) {}
         DiagLog.write('RES', '${response.requestOptions.method} ${response.requestOptions.uri} '
-            '→ ${response.statusCode} ct=$ct loc=$loc body=$body');
+            '→ ${response.statusCode} ct=$ct loc=$loc sc=$sc body=$body');
 
         // 关键修复：老 OA Spring Security 在 session 失效时返回 302 + location:/login.jsp
         // 之前 dio validateStatus 只接受 2xx，会直接抛异常；

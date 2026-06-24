@@ -43,20 +43,48 @@ class AuthRepository {
       );
 
       debugPrint('Login status: ${response.statusCode}');
+      DiagLog.write('LOGIN', 'status=${response.statusCode}');
       debugPrint('Login location header: ${response.headers.value('location')}');
       debugPrint('Login set-cookie: ${response.headers.value('set-cookie')}');
+      DiagLog.write('LOGIN', 'set-cookie header value = ${response.headers.value('set-cookie')}');
 
       final status = response.statusCode ?? 0;
       final location = response.headers.value('location') ?? '';
       final cookieFromResponse = response.headers.value('set-cookie') ?? '';
 
       // 提取 JSESSIONID
-      String? jsessionId = _storage.read('JSESSIONID');
-      final cookieMatch = RegExp(r'JSESSIONID=([^;]+)').firstMatch(cookieFromResponse);
+      String? jsessionId;
+      String raw = '';
+      try {
+        // dio 5.x 的 response.headers 是 Headers(Map<String, List<String>>),
+        // 优先用 ['set-cookie'] 拿 List<String>(每个元素一条 cookie)
+        final list = response.headers['set-cookie'];
+        if (list is List && list.isNotEmpty) {
+          raw = list.map((e) => e.toString()).join('\n');
+        }
+        // 兜底用 value()
+        if (raw.isEmpty) {
+          raw = response.headers.value('set-cookie') ?? '';
+        }
+      } catch (e) {
+        debugPrint('set-cookie parse error: $e');
+        DiagLog.write('LOGIN', 'set-cookie parse error: $e');
+      }
+      debugPrint('Login set-cookie raw: $raw');
+      DiagLog.write('LOGIN', 'set-cookie raw=[$raw]');
+      debugPrint('Login all headers: ${response.headers}');
+      DiagLog.write('LOGIN', 'all headers=${response.headers}');
+
+      final cookieMatch = RegExp(r'JSESSIONID=([^;]+)').firstMatch(raw);
       if (cookieMatch != null) {
         jsessionId = 'JSESSIONID=${cookieMatch.group(1)}';
         await _storage.write('JSESSIONID', jsessionId);
         debugPrint('Stored JSESSIONID: $jsessionId');
+        DiagLog.write('LOGIN', 'Stored JSESSIONID: $jsessionId');
+      } else {
+        jsessionId = _storage.read('JSESSIONID') as String?;
+        debugPrint('JSESSIONID not found in set-cookie! Will rely on storage: $jsessionId');
+        DiagLog.write('LOGIN', 'JSESSIONID not in set-cookie! storage=$jsessionId');
       }
 
       // 判断登录结果
