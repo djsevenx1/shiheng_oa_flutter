@@ -129,12 +129,7 @@ class ApiProvider {
         return status != null && status < 400;
       },
       headers: {
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
-        // 关键修复：老 OA Spring Security 在很多 GET 接口上要求带 XHR 头
-        // 否则返 400 错误（"HTTP Status 400 - Required request parameter is not present"）
-        // 不带这个头会导致 bulletin/task 等接口全军覆没
-        'X-Requested-With': 'XMLHttpRequest',
       },
     ));
 
@@ -152,40 +147,14 @@ class ApiProvider {
 
     _dio.interceptors.add(dio.InterceptorsWrapper(
       onRequest: (options, handler) {
-        // 关键修复：老 OA Spring Security 几乎所有 GET 接口都要求带 XHR 头
-        // 否则返 400 错误。即使 base headers 里加了，options.headers 会被覆盖，
-        // 所以在拦截器里强制补一个（业务代码如果显式传了 XHR 头就跳过）
-        if (options.headers['X-Requested-With'] == null) {
-          options.headers['X-Requested-With'] = 'XMLHttpRequest';
-        }
-
-        // 添加 token
-        final token = _storage.read('token');
-        if (token != null) {
-          options.headers['token'] = token;
-        }
+        // 关键：只加 JSESSIONID cookie，其它什么都不加。
+        // 老 App 用 AngularJS $http 默认行为（不带 XHR/token/userId），curl 实测 200 + 数据。
+        // 之前加的 X-Requested-With / token / userId 全是干扰——但其中 userId=0 还导致 500。
 
         // 添加 JSESSIONID cookie
         final jsessionId = _storage.read('JSESSIONID');
         if (jsessionId != null && options.headers['Cookie'] == null) {
           options.headers['Cookie'] = jsessionId.toString();
-        }
-
-        // 添加 userId（仅当真实登录后 id > 0 才注入；userInfo['id']=0 是占位值）
-        final userInfo = _storage.read('userInfo');
-        if (userInfo != null && userInfo['id'] != null) {
-          final id = userInfo['id'];
-          if (id is int && id > 0) {
-            if (options.queryParameters.isEmpty) {
-              options.queryParameters = {};
-            }
-            options.queryParameters['userId'] = id;
-          } else if (id is String && id.isNotEmpty && id != '0') {
-            if (options.queryParameters.isEmpty) {
-              options.queryParameters = {};
-            }
-            options.queryParameters['userId'] = id;
-          }
         }
 
         // 调试日志：放在最后，看到最终所有 headers
