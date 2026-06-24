@@ -110,16 +110,6 @@ class AppPages {
       transition: Transition.cupertino,
     ),
     GetPage(
-      name: _Paths.CRM,
-      binding: CrmBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.CRM_CLIENT_DETAIL,
-      binding: CrmClientDetailBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
       name: _Paths.PROJECT,
       page: () => const ProjectView(),
       binding: ProjectBinding(),
@@ -156,24 +146,9 @@ class AppPages {
       transition: Transition.cupertino,
     ),
     GetPage(
-      name: _Paths.ARCHIVE,
-      binding: ArchiveBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.COMPANY_FILE,
-      binding: CompanyFileBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
       name: _Paths.SH_REPORT,
       page: () => const ShReportView(),
       binding: ShReportBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.FAVORITE,
-      binding: FavoriteBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(
