@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../app/data/repository/contacts_repository.dart';
 import '../../../app/themes/app_theme.dart';
 import '../controllers/workflow_form_controller.dart';
 
@@ -217,9 +220,14 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
         SizedBox(height: 6.h),
         Obx(() => InkWell(
           onTap: () async {
-            // TODO: 弹用户选择器，先简单把当前用户名填上
-            final picked = await Get.toNamed('/contacts', arguments: {'pickMode': true});
-            if (picked is Map && picked['name'] != null) {
+            // 底部弹 sheet 选人
+            final picked = await showModalBottomSheet<Map<String, dynamic>>(
+              context: Get.context!,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => _UserPickerSheet(fieldLabel: field.label),
+            );
+            if (picked != null) {
               controller.updateField(field.name, picked['name']);
             }
           },
@@ -407,6 +415,11 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
   }
 
   Widget _buildTextField(FormFieldSchema field) {
+    if (field.isAutoFill) return _buildReadonlyField(field);
+    return _buildEditableTextField(field);
+  }
+
+  Widget _buildEditableTextField(FormFieldSchema field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -419,6 +432,42 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
               ? (v) => v == null || v.isEmpty ? '请输入${field.label}' : null
               : null,
           onChanged: (v) => controller.updateField(field.name, v),
+        ),
+        if (field.helpText != null) _buildFieldHelp(field.helpText!),
+      ],
+    );
+  }
+
+  /// 只读字段（自动填：sequence/current/info/logs/...）
+  Widget _buildReadonlyField(FormFieldSchema field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldLabel(field),
+        SizedBox(height: 6.h),
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: AppTheme.gray100,
+            borderRadius: BorderRadius.circular(8.r),
+            border: Border.all(color: AppTheme.gray200),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.lock_outline, color: AppTheme.gray400, size: 16),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  controller.formData[field.name]?.toString() ?? '系统自动',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: controller.formData[field.name] == null ? AppTheme.textTertiary : AppTheme.textSecondary,
+                  ),
+                ),
+              ),
+              Text('自动', style: TextStyle(fontSize: 11.sp, color: AppTheme.gray400)),
+            ],
+          ),
         ),
         if (field.helpText != null) _buildFieldHelp(field.helpText!),
       ],
@@ -724,6 +773,147 @@ class _ErrorView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 选人底部 sheet（从 /oa/u/initList 拉）
+class _UserPickerSheet extends StatefulWidget {
+  final String fieldLabel;
+  const _UserPickerSheet({required this.fieldLabel});
+
+  @override
+  State<_UserPickerSheet> createState() => _UserPickerSheetState();
+}
+
+class _UserPickerSheetState extends State<_UserPickerSheet> {
+  final _repo = ContactsRepository();
+  final _keyword = TextEditingController();
+  List<Map<String, dynamic>> _allUsers = [];
+  List<Map<String, dynamic>> _filtered = [];
+  bool _isLoading = true;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    final res = await _repo.getAllMembers(limit: 200);
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (res['success'] == true) {
+          _allUsers = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          _filtered = _allUsers;
+        }
+      });
+    }
+  }
+
+  void _onSearch(String k) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      if (k.trim().isEmpty) {
+        setState(() => _filtered = _allUsers);
+      } else {
+        setState(() {
+          _filtered = _allUsers.where((u) {
+            final n = u['name']?.toString() ?? '';
+            return n.toLowerCase().contains(k.toLowerCase());
+          }).toList();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _keyword.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, controller) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 8.h),
+                width: 36.w,
+                height: 4.h,
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2.r)),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Row(
+                  children: [
+                    Text('选择${widget.fieldLabel}', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600)),
+                    const Spacer(),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: TextField(
+                  controller: _keyword,
+                  onChanged: _onSearch,
+                  decoration: InputDecoration(
+                    hintText: '搜索姓名',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    filled: true,
+                    fillColor: AppTheme.gray50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
+                    contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filtered.isEmpty
+                        ? const Center(child: Text('暂无成员'))
+                        : ListView.separated(
+                            controller: controller,
+                            itemCount: _filtered.length,
+                            separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                            itemBuilder: (_, i) {
+                              final u = _filtered[i];
+                              final name = u['name']?.toString() ?? '(无姓名)';
+                              final dept = u['deptName']?.toString() ?? u['groupName']?.toString() ?? '';
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                                  child: Text(name.isNotEmpty ? name[0] : '?',
+                                      style: TextStyle(color: AppTheme.primaryColor)),
+                                ),
+                                title: Text(name),
+                                subtitle: dept.isNotEmpty ? Text(dept, style: TextStyle(fontSize: 12.sp)) : null,
+                                onTap: () => Get.back(result: u),
+                              );
+                            },
+                          ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
