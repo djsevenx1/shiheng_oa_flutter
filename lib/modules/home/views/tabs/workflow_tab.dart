@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import '../../../../app/data/repository/task_repository.dart';
 import '../../../../app/data/repository/workflow_repository.dart';
 import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 
+/// 老 App 主流程 tab：待办(state=0) + 已完成(state=2)
+/// 老 App 实际是 3 个 tab：待办 / 进行中 / 已完成
 class WorkflowTab extends StatefulWidget {
   const WorkflowTab({super.key});
 
@@ -14,47 +15,54 @@ class WorkflowTab extends StatefulWidget {
 }
 
 class _WorkflowTabState extends State<WorkflowTab> {
-  final _taskRepository = TaskRepository();
   final _workflowRepository = WorkflowRepository();
 
-  List<dynamic> todoList = [];
-  List<dynamic> doneList = [];
+  List<dynamic> todoList = [];       // state=0 待我审批
+  List<dynamic> runningList = [];    // state=1 进行中（我发起的）
+  List<dynamic> doneList = [];       // state=2 已完成
   bool isLoadingTodo = true;
+  bool isLoadingRunning = true;
   bool isLoadingDone = true;
 
   @override
   void initState() {
     super.initState();
-    _loadTodo();
-    _loadDone();
+    _loadAll();
+  }
+
+  Future<void> _loadAll() async {
+    await Future.wait([_loadTodo(), _loadRunning(), _loadDone()]);
   }
 
   Future<void> _loadTodo() async {
     setState(() => isLoadingTodo = true);
-    final result = await _taskRepository.getTaskList(status: 'Todo', pageSize: 50);
+    final result = await _workflowRepository.getWorkflowList(status: 'todo', limit: 50);
     if (mounted) {
       setState(() {
         isLoadingTodo = false;
-        if (result['success'] == true) {
-          todoList = List<dynamic>.from(result['data'] ?? []);
-        } else {
-          todoList = [];
-        }
+        todoList = (result['success'] == true) ? List<dynamic>.from(result['data'] ?? []) : [];
+      });
+    }
+  }
+
+  Future<void> _loadRunning() async {
+    setState(() => isLoadingRunning = true);
+    final result = await _workflowRepository.getWorkflowList(status: 'running', limit: 50);
+    if (mounted) {
+      setState(() {
+        isLoadingRunning = false;
+        runningList = (result['success'] == true) ? List<dynamic>.from(result['data'] ?? []) : [];
       });
     }
   }
 
   Future<void> _loadDone() async {
     setState(() => isLoadingDone = true);
-    final result = await _taskRepository.getTaskList(status: 'Done', pageSize: 50);
+    final result = await _workflowRepository.getWorkflowList(status: 'done', limit: 50);
     if (mounted) {
       setState(() {
         isLoadingDone = false;
-        if (result['success'] == true) {
-          doneList = List<dynamic>.from(result['data'] ?? []);
-        } else {
-          doneList = [];
-        }
+        doneList = (result['success'] == true) ? List<dynamic>.from(result['data'] ?? []) : [];
       });
     }
   }
@@ -71,23 +79,27 @@ class _WorkflowTabState extends State<WorkflowTab> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('流程审批'),
+          title: const Text('流程'),
           bottom: TabBar(
             tabs: [
-              Tab(text: '待处理 (${todoList.length})'),
-              Tab(text: '已处理 (${doneList.length})'),
+              Tab(text: '待办 (${todoList.length})'),
+              Tab(text: '进行中 (${runningList.length})'),
+              Tab(text: '已完成 (${doneList.length})'),
             ],
-            labelStyle: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
-            unselectedLabelStyle: TextStyle(fontSize: 15.sp),
+            labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+            unselectedLabelStyle: TextStyle(fontSize: 14.sp),
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
           ),
         ),
         body: TabBarView(
           children: [
-            _buildTaskList(todoList, isLoadingTodo, '暂无待办任务', _loadTodo),
-            _buildTaskList(doneList, isLoadingDone, '暂无已办任务', _loadDone),
+            _buildFlowList(todoList, isLoadingTodo, '暂无待办', _loadTodo),
+            _buildFlowList(runningList, isLoadingRunning, '暂无进行中', _loadRunning),
+            _buildFlowList(doneList, isLoadingDone, '暂无已完成', _loadDone),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -110,7 +122,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
     );
   }
 
-  Widget _buildTaskList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh) {
+  Widget _buildFlowList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -168,41 +180,28 @@ class _WorkflowTabState extends State<WorkflowTab> {
                         borderRadius: BorderRadius.circular(6.r),
                       ),
                       child: Text(
-                        '任务',
+                        '流程',
                         style: TextStyle(fontSize: 12.sp, color: AppTheme.primaryColor, fontWeight: FontWeight.w500),
                       ),
                     ),
                     const Spacer(),
                     Text(
-                      _formatDate(item['startDate']),
+                      _formatDate(item['createdDate'] ?? item['startDate'] ?? item['date']),
                       style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
                     ),
                   ],
                 ),
                 SizedBox(height: 12.h),
                 Text(
-                  item['name']?.toString() ?? '无标题',
+                  item['name']?.toString() ?? item['title']?.toString() ?? '(无标题)',
                   style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                 ),
                 SizedBox(height: 8.h),
-                if (item['leader'] != null)
+                if (item['creator'] != null)
                   Text(
-                    '负责人: ${item['leader']}',
-                    style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
+                    '发起人：${item['creator']}',
+                    style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
                   ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    if (item['deadline'] != null) ...[
-                      Icon(Icons.schedule, size: 14.w, color: AppTheme.textTertiary),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '截止: ${_formatDate(item['deadline'])}',
-                        style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
-                      ),
-                    ],
-                  ],
-                ),
               ],
             ),
           );
@@ -212,20 +211,18 @@ class _WorkflowTabState extends State<WorkflowTab> {
   }
 }
 
-/// 发起流程 picker
-/// 后端 /oa/common/workflows 返回的列表，点了之后带 modId 跳到 workflow_form
 class _WorkflowPickerSheet extends StatefulWidget {
-  const _WorkflowPickerSheet({required this.repository});
   final WorkflowRepository repository;
+  const _WorkflowPickerSheet({required this.repository});
 
   @override
   State<_WorkflowPickerSheet> createState() => _WorkflowPickerSheetState();
 }
 
 class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
-  bool _loading = true;
-  List<dynamic> _templates = [];
-  String? _errorMsg;
+  bool isLoading = true;
+  List<dynamic> mods = [];
+  String? error;
 
   @override
   void initState() {
@@ -234,114 +231,89 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
   }
 
   Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _errorMsg = null;
-    });
     final result = await widget.repository.getWorkflowTemplates();
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
-      if (result['success'] == true) {
-        _templates = (result['data'] as List?) ?? [];
-        if (_templates.isEmpty) {
-          _errorMsg = '后端尚未配置任何流程模板\n请联系管理员在 OA 后台添加';
+    if (mounted) {
+      setState(() {
+        isLoading = false;
+        if (result['success'] == true) {
+          mods = List<dynamic>.from(result['data'] ?? []);
+        } else {
+          error = result['message']?.toString();
         }
-      } else {
-        _errorMsg = result['message']?.toString() ?? '加载失败';
-      }
-    });
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: BoxConstraints(maxHeight: 600.h),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            margin: EdgeInsets.only(top: 12.h),
-            width: 40.w,
-            height: 4.h,
-            decoration: BoxDecoration(
-              color: AppTheme.gray300,
-              borderRadius: BorderRadius.circular(2.r),
-            ),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, controller) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
           ),
-          Padding(
-            padding: EdgeInsets.all(20.w),
-            child: Row(
-              children: [
-                Text('选择流程类型', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600)),
-                const Spacer(),
-                IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
-              ],
-            ),
-          ),
-          Divider(height: 1.h, color: AppTheme.gray200),
-          Flexible(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : _errorMsg != null
-                    ? Padding(
-                        padding: EdgeInsets.all(40.w),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.info_outline, size: 64.w, color: AppTheme.gray300),
-                            SizedBox(height: 16.h),
-                            Text(_errorMsg!, textAlign: TextAlign.center, style: TextStyle(color: AppTheme.textSecondary)),
-                            SizedBox(height: 16.h),
-                            TextButton.icon(
-                              onPressed: _load,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('重试'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : ListView.separated(
-                        shrinkWrap: true,
-                        padding: EdgeInsets.symmetric(vertical: 8.h),
-                        itemCount: _templates.length,
-                        separatorBuilder: (_, __) => Divider(height: 1.h, indent: 20.w, color: AppTheme.gray100),
-                        itemBuilder: (context, index) {
-                          final tpl = _templates[index] as Map<String, dynamic>;
-                          final id = tpl['id']?.toString() ?? '';
-                          final name = tpl['name']?.toString() ?? tpl['title']?.toString() ?? '未命名流程';
-                          final desc = tpl['description']?.toString() ?? tpl['remark']?.toString() ?? '';
-                          return ListTile(
-                            leading: Container(
-                              width: 40.w,
-                              height: 40.w,
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryColor.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(8.r),
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 8.h),
+                width: 36.w,
+                height: 4.h,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2.r),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Row(
+                  children: [
+                    Text('选择流程类型', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600)),
+                    const Spacer(),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
+                  ],
+                ),
+              ),
+              Divider(height: 1, color: Colors.grey[200]),
+              Expanded(
+                child: isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : error != null
+                        ? Center(child: Text(error!))
+                        : mods.isEmpty
+                            ? const Center(child: Text('暂无可用流程模板'))
+                            : ListView.separated(
+                                controller: controller,
+                                itemCount: mods.length,
+                                separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                                itemBuilder: (_, i) {
+                                  final m = mods[i] as Map<String, dynamic>;
+                                  final id = m['id']?.toString() ?? '';
+                                  final name = m['name']?.toString() ?? '(无标题)';
+                                  return ListTile(
+                                    leading: Icon(Icons.assignment_outlined, color: AppTheme.primaryColor),
+                                    title: Text(name),
+                                    trailing: const Icon(Icons.chevron_right),
+                                    onTap: () {
+                                      Get.back();
+                                      Get.toNamed(Routes.WORKFLOW_FORM, arguments: {
+                                        'modId': id,
+                                        'appKey': m['tableKey']?.toString() ?? m['appKey']?.toString() ?? '',
+                                        'name': name,
+                                      });
+                                    },
+                                  );
+                                },
                               ),
-                              child: Icon(Icons.assignment_outlined, color: AppTheme.primaryColor, size: 22.w),
-                            ),
-                            title: Text(name, style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500)),
-                            subtitle: desc.isNotEmpty ? Text(desc, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
-                            trailing: Icon(Icons.chevron_right, color: AppTheme.gray400, size: 20.w),
-                            onTap: () {
-                              Navigator.pop(context);
-                              Get.toNamed(
-                                Routes.WORKFLOW_FORM,
-                                arguments: {'modId': int.tryParse(id) ?? 0, 'moduleName': name},
-                              );
-                            },
-                          );
-                        },
-                      ),
+              ),
+            ],
           ),
-          SizedBox(height: MediaQuery.of(context).padding.bottom + 8.h),
-        ],
-      ),
+        );
+      },
     );
   }
 }

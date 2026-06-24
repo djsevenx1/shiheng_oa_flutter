@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/themes/app_theme.dart';
 
@@ -7,6 +8,7 @@ class FormFieldSchema {
   final String name;
   final String label;
   final String type; // text, number, date, datetime, textarea, select, radio, checkbox, file, user, detail
+  final String ctrl; // 老 OA ctrl: sequence/current/info/user/logs/...
   final bool required;
   final String? placeholder;
   final List<Map<String, dynamic>>? options;
@@ -19,6 +21,7 @@ class FormFieldSchema {
     required this.name,
     required this.label,
     required this.type,
+    this.ctrl = 'text',
     this.required = false,
     this.placeholder,
     this.options,
@@ -27,6 +30,9 @@ class FormFieldSchema {
     this.validation,
     this.fields,
   });
+
+  /// 是否自动填字段（不让用户编辑）
+  bool get isAutoFill => ['sequence', 'current', 'info', 'logs', 'name', 'department'].contains(ctrl);
 }
 
 class WorkflowFormController extends GetxController {
@@ -79,6 +85,7 @@ class WorkflowFormController extends GetxController {
             name: json['name'] ?? '',
             label: json['label'] ?? '',
             type: type,
+            ctrl: json['ctrl']?.toString() ?? 'text',
             required: json['required'] ?? false,
             placeholder: json['placeholder']?.toString(),
             options: (json['options'] as List?)?.cast<Map<String, dynamic>>(),
@@ -90,6 +97,8 @@ class WorkflowFormController extends GetxController {
         if (formFields.isEmpty) {
         errorMessage.value = '该流程未配置表单字段（后端 schema 为空）';
       }
+        // 自动填 sequence / current / info / logs 字段
+        await _autoFillFields();
       } else {
         errorMessage.value = result['message']?.toString() ?? '加载表单失败';
       }
@@ -102,6 +111,53 @@ class WorkflowFormController extends GetxController {
 
   void updateField(String name, dynamic value) {
     formData[name] = value;
+  }
+
+  /// 自动填 sequence / current / info / logs 字段
+  Future<void> _autoFillFields() async {
+    final now = DateTime.now();
+    final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final timeStr = '$dateStr ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    String? currentUserName;
+    String? currentUserDept;
+    try {
+      final auth = AuthRepository();
+      final res = await auth.getCurrentUser();
+      if (res['success'] == true && res['data'] is Map) {
+        final u = res['data'] as Map;
+        currentUserName = u['name']?.toString() ?? u['userName']?.toString() ?? u['user']?.toString();
+        currentUserDept = u['department']?.toString() ?? u['deptName']?.toString() ?? u['dept']?.toString();
+      }
+    } catch (_) {}
+
+    for (final f in formFields) {
+      if (!f.isAutoFill) continue;
+      switch (f.ctrl) {
+        case 'sequence':
+          // 订单号 — 临时用时间戳当 fake，老 App 后端会自动生成
+          formData[f.name] = 'AUTO_${now.millisecondsSinceEpoch.toString().substring(7)}';
+          break;
+        case 'current':
+        case 'date':
+        case 'datetime':
+          formData[f.name] = f.ctrl == 'date' ? dateStr : timeStr;
+          break;
+        case 'info':
+        case 'name':
+          // 拟制人 → 当前用户名；申请部门 → 用户部门
+          if (f.label.contains('部门') || f.label.contains('department')) {
+            formData[f.name] = currentUserDept ?? '';
+          } else {
+            formData[f.name] = currentUserName ?? '';
+          }
+          break;
+        case 'logs':
+          // 批准人 — 审批日志，新建时为空
+          formData[f.name] = '';
+          break;
+      }
+    }
   }
 
   void toggleApprover(String name) {
