@@ -127,11 +127,22 @@ class ApiProvider {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        // 关键修复：老 OA Spring Security 在很多 GET 接口上要求带 XHR 头
+        // 否则返 400 错误（"HTTP Status 400 - Required request parameter is not present"）
+        // 不带这个头会导致 bulletin/task 等接口全军覆没
+        'X-Requested-With': 'XMLHttpRequest',
       },
     ));
 
     _dio.interceptors.add(dio.InterceptorsWrapper(
       onRequest: (options, handler) {
+        // 关键修复：老 OA Spring Security 几乎所有 GET 接口都要求带 XHR 头
+        // 否则返 400 错误。即使 base headers 里加了，options.headers 会被覆盖，
+        // 所以在拦截器里强制补一个（业务代码如果显式传了 XHR 头就跳过）
+        if (options.headers['X-Requested-With'] == null) {
+          options.headers['X-Requested-With'] = 'XMLHttpRequest';
+        }
+
         // 添加 token
         final token = _storage.read('token');
         if (token != null) {
@@ -182,6 +193,10 @@ class ApiProvider {
           _storage.remove('token');
           _storage.remove('userInfo');
         }
+
+        // 调试模式：把异常信息打印到 console，便于排查
+        debugPrint('[API ERROR] ${error.requestOptions.method} ${error.requestOptions.uri} '
+            '→ ${error.response?.statusCode ?? error.type} | ${error.message}');
 
         return handler.next(error);
       },

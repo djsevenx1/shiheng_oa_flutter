@@ -284,7 +284,7 @@ class LoginView extends GetView<LoginController> {
                         // Version
                         Center(
                           child: Text(
-                            '版本 2.0.0',
+                            '版本 2.0.3',
                             style: TextStyle(
                               fontSize: 12.sp,
                               color: Colors.white.withAlpha(128),
