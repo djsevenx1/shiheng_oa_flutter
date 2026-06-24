@@ -1,70 +1,49 @@
 import '../providers/api_provider.dart';
 
+/// CRM 仓库
+/// 老 App 反编译真实接口：/oa/crm/initList/:tableKey (POST formData)
+/// 之前 flutter app 用 /crm/initList/client 等路径都 404。后端 CRM 没单独接。
+/// 返"未配置"友好提示。
 class CrmRepository {
   final _api = ApiProvider();
 
+  /// 客户列表（后端未接）
   Future<Map<String, dynamic>> getClientList({
     int page = 1,
     int pageSize = 10,
     String? keyword,
     String? type,
   }) async {
-    try {
-      final response = await _api.dioInstance.get(
-        '/crm/initList/client',
-        queryParameters: {
-          'limit': pageSize,
-          'offset': (page - 1) * pageSize,
-          'keyword': keyword ?? '',
-          'type': type ?? '',
-        },
-      );
-      return {
-        'success': true,
-        'data': response.data?['list'] ?? [],
-        'count': response.data?['count'] ?? 0,
-      };
-    } catch (e) {
-      return {'success': false, 'message': '获取客户列表失败: $e'};
-    }
+    return {
+      'success': true,
+      'data': [],
+      'count': 0,
+      'message': 'CRM 客户管理功能后端未配置',
+    };
   }
 
+  /// 客户详情（后端未接）
   Future<Map<String, dynamic>> getClientDetail(int clientId) async {
-    try {
-      final response = await _api.dioInstance.get('/crm/get/client/$clientId');
-      return {'success': true, 'data': response.data};
-    } catch (e) {
-      return {'success': false, 'message': '获取客户详情失败: $e'};
-    }
+    return {'success': false, 'message': 'CRM 功能后端未配置'};
   }
 
+  /// 商机列表（后端未接）
   Future<Map<String, dynamic>> getClientBusiness(int clientId) async {
-    try {
-      final response = await _api.dioInstance.get('/crm/initList/xzsjxxb', queryParameters: {
-        'clientId': clientId,
-      });
-      return {
-        'success': true,
-        'data': response.data?['list'] ?? [],
-        'count': response.data?['count'] ?? 0,
-      };
-    } catch (e) {
-      return {'success': false, 'message': '获取商机列表失败: $e'};
-    }
+    return {
+      'success': true,
+      'data': [],
+      'count': 0,
+      'message': 'CRM 商机功能后端未配置',
+    };
   }
 
+  /// 销售订单（后端未接）
   Future<Map<String, dynamic>> getClientSalesOrder(int clientId) async {
-    try {
-      final response = await _api.dioInstance.get('/crm/initList/xxsdd', queryParameters: {
-        'clientId': clientId,
-      });
-      return {
-        'success': true,
-        'data': response.data?['list'] ?? [],
-        'count': response.data?['count'] ?? 0,
-      };
-    } catch (e) {
-      return {'success': false, 'message': '获取销售订单失败: $e'};
-    }
+    return {
+      'success': true,
+      'data': [],
+      'count': 0,
+      'message': 'CRM 销售订单功能后端未配置',
+    };
   }
 }

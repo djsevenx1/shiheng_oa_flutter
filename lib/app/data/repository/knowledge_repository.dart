@@ -40,26 +40,8 @@ class KnowledgeRepository {
   final List<KnowledgeEntry> _cache = [];
 
   Future<List<KnowledgeEntry>> loadAll() async {
-    if (_cache.isNotEmpty) return _cache;
-    try {
-      final response = await _api.dioInstance.get('/oa/knowledge/list');
-      final list = (response.data is Map ? response.data['data'] : response.data) as List? ?? [];
-      _cache.clear();
-      for (final raw in list) {
-        if (raw is Map) {
-          _cache.add(KnowledgeEntry(
-            id: raw['id']?.toString() ?? '',
-            title: raw['title']?.toString() ?? '',
-            summary: raw['summary']?.toString() ?? '',
-            category: raw['category']?.toString() ?? '',
-            tags: ((raw['tags'] as List?) ?? const []).map((e) => e.toString()).toList(),
-          ));
-        }
-      }
-      return _cache;
-    } catch (_) {
-      return _cache;
-    }
+    // 老 App 反编译没有 knowledge 单独模块；后端没接，返空。
+    return _cache;
   }
 
   Future<List<KnowledgeEntry>> search(String keyword) async {

@@ -166,12 +166,13 @@ class AttendanceRepository {
     return punch(type: 'out', remark: 'checkout @ $address');
   }
 
-  /// 打卡历史
+  /// 打卡历史（后端没有 history 接口，用 initList）
   Future<Map<String, dynamic>> getHistory({String? from, String? to, int page = 1, int pageSize = 30}) async {
     try {
+      // 老 App 没有 /oa/attendance/history（curl 404），统一用 /initList
       final response = await _api.dioInstance.get(
-        '/oa/attendance/history',
-        queryParameters: {'from': from ?? '', 'to': to ?? '', 'page': page, 'pageSize': pageSize},
+        '/oa/attendance/initList',
+        queryParameters: {'limit': pageSize, 'offset': (page - 1) * pageSize},
       );
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {

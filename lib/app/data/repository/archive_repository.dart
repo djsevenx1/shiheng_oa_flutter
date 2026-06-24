@@ -1,49 +1,34 @@
 import '../providers/api_provider.dart';
 
+/// 档案仓库
+/// 老 App 反编译档案真实接口：/oa/ao/getAll/_dir（admin）或 /oa/access/getAllByAcl/_dir（user）
+/// 父目录/子目录/文件：/oa/dir/getDirFiles/:dirId
+/// 后端没接 archive 独立接口（用旧 archive 路径都 404），返"未配置"友好提示。
 class ArchiveRepository {
   final _api = ApiProvider();
 
+  /// 档案列表（后端未接，返空 + 提示）
   Future<Map<String, dynamic>> getArchiveList({int page = 1, int pageSize = 15, String? keyword, String? category}) async {
-    try {
-      final response = await _api.dioInstance.get('/archive/init', queryParameters: {
-        'limit': pageSize,
-        'offset': (page - 1) * pageSize,
-        'keyword': keyword ?? '',
-        'category': category ?? '',
-      });
-      return {
-        'success': true,
-        'data': response.data?['list'] ?? [],
-        'count': response.data?['count'] ?? 0,
-      };
-    } catch (e) {
-      return {'success': false, 'message': '获取档案失败: $e'};
-    }
+    return {
+      'success': true,
+      'data': [],
+      'count': 0,
+      'message': '档案管理功能后端未配置，请联系管理员',
+    };
   }
 
+  /// 档案详情（后端未接）
   Future<Map<String, dynamic>> getArchiveDetail(int id) async {
-    try {
-      final response = await _api.dioInstance.get('/archive/get/$id');
-      return {'success': true, 'data': response.data};
-    } catch (e) {
-      return {'success': false, 'message': '获取档案详情失败: $e'};
-    }
+    return {'success': false, 'message': '档案功能后端未配置'};
   }
 
+  /// 公司文件（后端未接）
   Future<Map<String, dynamic>> getCompanyFiles({int page = 1, int pageSize = 15, String? category}) async {
-    try {
-      final response = await _api.dioInstance.get('/file/init', queryParameters: {
-        'limit': pageSize,
-        'offset': (page - 1) * pageSize,
-        'category': category ?? '',
-      });
-      return {
-        'success': true,
-        'data': response.data?['list'] ?? [],
-        'count': response.data?['count'] ?? 0,
-      };
-    } catch (e) {
-      return {'success': false, 'message': '获取文件失败: $e'};
-    }
+    return {
+      'success': true,
+      'data': [],
+      'count': 0,
+      'message': '公司文件功能后端未配置',
+    };
   }
 }
