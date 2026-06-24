@@ -46,11 +46,15 @@ class LoginController extends GetxController {
     if (savedUsername != null && savedPasswordRaw != null) {
       try {
         usernameController.text = savedUsername.toString();
-        passwordController.text = base64Decode(savedPasswordRaw.toString()).toString();
+        // 修：base64Decode 返 Uint8List，.toString() 是 "[1, 2, 3, ...]"
+        // 应该 utf8.decode 转回原密码字符串
+        passwordController.text = utf8.decode(base64Decode(savedPasswordRaw.toString()));
         rememberMe.value = true;
       } catch (_) {
-        // 凭据损坏时忽略，回到默认
-        usernameController.text = 'admin';
+        // 旧版本写的是错误编码的密码（[1,2,3,...]），解码失败就清掉让用户重输
+        _storage.remove(_kSavedPassword);
+        passwordController.text = '';
+        usernameController.text = savedUsername.toString();
         rememberMe.value = false;
       }
     } else {
