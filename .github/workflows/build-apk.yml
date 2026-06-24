@@ -41,57 +41,25 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build Debug APK
-        run: flutter build apk --debug
-
       - name: Build Release APK (universal - all ABIs)
         run: flutter build apk --release
-
-      - name: Build Release APK (split per ABI)
-        run: flutter build apk --release --split-per-abi
-
-      - name: Build App Bundle (AAB)
-        run: flutter build appbundle --release
 
       - name: Create output directory
         run: mkdir -p output
 
-      - name: Copy APKs to output
+      - name: Copy APK to output
         run: |
-          if [ -f build/app/outputs/flutter-apk/app-debug.apk ]; then
-            cp build/app/outputs/flutter-apk/app-debug.apk output/shiheng-oa-debug.apk
-          fi
           if [ -f build/app/outputs/flutter-apk/app-release.apk ]; then
             cp build/app/outputs/flutter-apk/app-release.apk output/shiheng-oa-universal.apk
           fi
-          if [ -f build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk output/shiheng-oa-armeabi-v7a.apk
-          fi
-          if [ -f build/app/outputs/flutter-apk/app-arm64-v8a-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk output/shiheng-oa-arm64-v8a.apk
-          fi
-          if [ -f build/app/outputs/flutter-apk/app-x86_64-release.apk ]; then
-            cp build/app/outputs/flutter-apk/app-x86_64-release.apk output/shiheng-oa-x86_64.apk
-          fi
-          if [ -f build/app/outputs/bundle/release/app-release.aab ]; then
-            cp build/app/outputs/bundle/release/app-release.aab output/shiheng-oa-release.aab
-          fi
           ls -lh output/
 
-      - name: Upload APK artifacts
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: shiheng-oa-apks
-          path: output/
+          name: shiheng-oa-universal
+          path: output/shiheng-oa-universal.apk
           if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload AAB artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: shiheng-oa-aab
-          path: output/shiheng-oa-release.aab
-          if-no-files-found: warn
           retention-days: 30
 
       - name: Attach APK to release
