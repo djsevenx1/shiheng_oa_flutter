@@ -169,18 +169,21 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Obx(() => Column(
-                children: controller.formFields.map((field) {
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 16.h),
-                    child: _buildField(field),
-                  );
-                }).toList(),
-              )),
-        ],
+      child: Form(
+        key: controller.formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Obx(() => Column(
+                  children: controller.formFields.map((field) {
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 16.h),
+                      child: _buildField(field),
+                    );
+                  }).toList(),
+                )),
+          ],
+        ),
       ),
     );
   }
@@ -228,8 +231,13 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
               builder: (_) => _UserPickerSheet(fieldLabel: field.label),
             );
             if (picked != null) {
-              controller.updateField(field.name, picked['name']);
-            }
+                              // 后端要 user id 存 formData，name 显示用
+                              final userId = picked['id']?.toString() ?? '';
+                              final userName = picked['name']?.toString() ?? userId;
+                              controller.updateField(field.name, userId);
+                              // 缓存名字到显示用 key
+                              controller.updateField('${field.name}__name', userName);
+                            }
           },
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
@@ -243,7 +251,10 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
                 SizedBox(width: 8.w),
                 Expanded(
                   child: Text(
-                    controller.formData[field.name]?.toString() ?? '请选择${field.label}',
+                    // 优先显示名字，id 只在 formData 里
+                    controller.formData['${field.name}__name']?.toString()
+                        ?? controller.formData[field.name]?.toString()
+                        ?? '请选择${field.label}',
                     style: TextStyle(
                       fontSize: 14.sp,
                       color: controller.formData[field.name] == null ? AppTheme.textTertiary : AppTheme.textPrimary,

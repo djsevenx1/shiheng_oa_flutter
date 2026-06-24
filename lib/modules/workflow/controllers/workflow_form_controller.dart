@@ -119,6 +119,7 @@ class WorkflowFormController extends GetxController {
     final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     final timeStr = '$dateStr ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
 
+    String? currentUserId;
     String? currentUserName;
     String? currentUserDept;
     try {
@@ -126,7 +127,8 @@ class WorkflowFormController extends GetxController {
       final res = await auth.getCurrentUser();
       if (res['success'] == true && res['data'] is Map) {
         final u = res['data'] as Map;
-        // 实际后端字段：name/loginName/groupName/groupId
+        // 实际后端字段：id/name/loginName/groupName/groupId
+        currentUserId = u['id']?.toString();
         currentUserName = u['name']?.toString()
             ?? u['loginName']?.toString()
             ?? u['userName']?.toString()
@@ -152,11 +154,13 @@ class WorkflowFormController extends GetxController {
           break;
         case 'info':
         case 'name':
-          // 拟制人 → 当前用户名；申请部门 → 用户部门
+          // 拟制人 → 当前用户ID（后端要 id 不要 name）；
+          // 申请部门 → 用户部门（字符串）
           if (f.label.contains('部门') || f.label.contains('department')) {
             formData[f.name] = currentUserDept ?? '';
           } else {
-            formData[f.name] = currentUserName ?? '';
+            // 拟制人/申请人等 user 字段 — 后端要 id
+            formData[f.name] = currentUserId ?? currentUserName ?? '';
           }
           break;
         case 'logs':
@@ -217,8 +221,11 @@ class WorkflowFormController extends GetxController {
 
     isSubmitting.value = true;
     try {
-      // 把明细合并到 formData
-      final data = Map<String, dynamic>.from(formData);
+      // 把明细合并到 formData，移除前端显示用的 __name 缓存字段
+      final data = <String, dynamic>{};
+      formData.forEach((k, v) {
+        if (!k.endsWith('__name')) data[k] = v;
+      });
       detailRows.forEach((key, rows) {
         data[key] = rows;
       });
