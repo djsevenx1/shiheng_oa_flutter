@@ -61,7 +61,7 @@ class WorkflowDetailController extends GetxController {
     isLoading.value = true;
     try {
       final result = await _repository.approveWorkflow(
-        processId: proId.value.toString(),
+        proId: proId.value,
         result: 'pass',
         comment: commentController.text.trim(),
       );
@@ -88,7 +88,7 @@ class WorkflowDetailController extends GetxController {
     isLoading.value = true;
     try {
       final result = await _repository.approveWorkflow(
-        processId: proId.value.toString(),
+        proId: proId.value,
         result: 'reject',
         comment: commentController.text.trim(),
       );

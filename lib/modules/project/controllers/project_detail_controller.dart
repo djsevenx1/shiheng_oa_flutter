@@ -6,6 +6,7 @@ class ProjectDetailController extends GetxController {
 
   final isLoading = false.obs;
   final projectId = 0.obs;
+  final modId = 0.obs;
   final project = <String, dynamic>{}.obs;
   final contracts = <dynamic>[].obs;
   final files = <dynamic>[].obs;
@@ -17,6 +18,9 @@ class ProjectDetailController extends GetxController {
     final args = Get.arguments;
     if (args != null && args['projectId'] != null) {
       projectId.value = args['projectId'];
+      if (args['modId'] != null) {
+        modId.value = args['modId'] is int ? args['modId'] : int.tryParse(args['modId'].toString()) ?? 0;
+      }
       loadDetail();
     }
   }
@@ -25,7 +29,7 @@ class ProjectDetailController extends GetxController {
     isLoading.value = true;
     try {
       final results = await Future.wait([
-        _repository.getProjectDetail(projectId.value),
+        _repository.getProjectDetail(projectId.value, modId.value),
         _repository.getProjectContracts(projectId.value),
         _repository.getProjectFiles(projectId.value),
       ]);

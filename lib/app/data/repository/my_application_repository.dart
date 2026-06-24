@@ -116,14 +116,37 @@ class MyApplicationRepository {
   }
 
   /// 撤回（POST /oa/pro/withdraw）
-  Future<Map<String, dynamic>> withdraw(int proId) async {
+  Future<Map<String, dynamic>> withdraw(dynamic proId) async {
     try {
-      final response = await _api.dioInstance.post('/oa/pro/withdraw', data: {'id': proId});
+      final id = proId is int ? proId : int.tryParse(proId.toString()) ?? 0;
+      final response = await _api.dioInstance.post('/oa/pro/withdraw', data: {'id': id});
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
       return {'success': false, 'message': '撤回失败: $e'};
+    }
+  }
+
+  /// 审批
+  Future<Map<String, dynamic>> approveWorkflow({
+    required dynamic proId,
+    required String result, // 'pass' / 'reject'
+    String comment = '',
+  }) async {
+    try {
+      final id = proId is int ? proId : int.tryParse(proId.toString()) ?? 0;
+      final response = await _api.dioInstance.post('/oa/pro/handle', data: {
+        'id': id,
+        'result': result,
+        'comment': comment,
+        'isApprove': true,
+      });
+      return {'success': true, 'data': response.data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '审批失败: $e'};
     }
   }
 
