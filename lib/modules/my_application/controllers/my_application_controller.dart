@@ -78,8 +78,8 @@ class MyApplicationController extends GetxController {
   }
 
   Future<void> approve(String id, {required bool pass, String comment = ''}) async {
-    final result = await _repo.approve(
-      id: id,
+    final result = await _repo.approveWorkflow(
+      proId: int.tryParse(id) ?? 0,
       result: pass ? 'pass' : 'reject',
       comment: comment,
     );

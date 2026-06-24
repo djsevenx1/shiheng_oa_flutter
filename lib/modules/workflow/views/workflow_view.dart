@@ -31,7 +31,7 @@ class WorkflowView extends GetView<WorkflowController> {
                   _tabBtn('已完成 (${controller.doneList.length})', 2),
                 ],
               )),
-          Divider(height: 1.h, color: AppTheme.divider),
+          Divider(height: 1.h, color: AppTheme.dividerColor),
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
@@ -50,7 +50,7 @@ class WorkflowView extends GetView<WorkflowController> {
                 child: ListView.separated(
                   padding: EdgeInsets.symmetric(vertical: 8.h),
                   itemCount: list.length,
-                  separatorBuilder: (_, __) => Divider(height: 1.h, color: AppTheme.divider),
+                  separatorBuilder: (_, __) => Divider(height: 1.h, color: AppTheme.dividerColor),
                   itemBuilder: (_, i) => _flowItem(list[i]),
                 ),
               );
@@ -72,7 +72,7 @@ class WorkflowView extends GetView<WorkflowController> {
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: selected ? AppTheme.primary : Colors.transparent,
+                color: selected ? AppTheme.primaryColor : Colors.transparent,
                 width: 2.h,
               ),
             ),
@@ -81,7 +81,7 @@ class WorkflowView extends GetView<WorkflowController> {
             label,
             style: TextStyle(
               fontSize: 14.sp,
-              color: selected ? AppTheme.primary : AppTheme.textSecondary,
+              color: selected ? AppTheme.primaryColor : AppTheme.textSecondary,
               fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
             ),
           ),
