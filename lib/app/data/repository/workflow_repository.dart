@@ -15,18 +15,41 @@ class WorkflowRepository {
 
   final ApiProvider _api;
 
-  /// 流程模板列表（GET /oa/common/workflows）
-  /// 返回 [{id, name, description, ...}]（后端没配置时是 []）
+  /// 流程模板列表（GET /oa/access/getAccess/0）
+  /// 真实接口来自老 App 反编译：domain + '/oa/access/getAccess/0'
+  /// 返回 {cats:[...], catsMap: {catId: [mod,...]}, mods:[...]}
+  /// 业务接口: 老 App 的"发起工作流"sheet 调的就是这个。
+  /// 之前错用 /oa/common/workflows（接口存在但返空）所以 sheet 显示"后端未配置"。
   Future<Map<String, dynamic>> getWorkflowTemplates() async {
     try {
-      final response = await _api.dioInstance.get('/oa/common/workflows');
+      final response = await _api.dioInstance.get('/oa/access/getAccess/0');
       final data = response.data;
+      if (data is Map) {
+        // 兼容老 App 格式 {cats, catsMap, mods}
+        final cats = (data['cats'] is List) ? List<Map<String, dynamic>>.from(data['cats']) : <Map<String, dynamic>>[];
+        final catsMap = (data['catsMap'] is Map) ? Map<String, dynamic>.from(data['catsMap']) : <String, dynamic>{};
+        final mods = (data['mods'] is List) ? List<Map<String, dynamic>>.from(data['mods']) : <Map<String, dynamic>>[];
+
+        // 把 catsMap 的所有 mod 展平到 mods（兜底，老 App 也这么做）
+        if (mods.isEmpty) {
+          final flat = <Map<String, dynamic>>[];
+          catsMap.forEach((k, v) {
+            if (v is List) {
+              for (final m in v) {
+                if (m is Map) flat.add(Map<String, dynamic>.from(m));
+              }
+            }
+          });
+          if (flat.isNotEmpty) {
+            return {'success': true, 'data': flat, 'count': flat.length,
+                    'cats': cats, 'catsMap': catsMap};
+          }
+        }
+        return {'success': true, 'data': mods, 'count': mods.length,
+                'cats': cats, 'catsMap': catsMap};
+      }
       if (data is List) {
         return {'success': true, 'data': data, 'count': data.length};
-      }
-      if (data is Map && data['list'] is List) {
-        final list = data['list'] as List;
-        return {'success': true, 'data': list, 'count': list.length};
       }
       return {'success': true, 'data': [], 'count': 0};
     } on dio.DioException catch (e) {
