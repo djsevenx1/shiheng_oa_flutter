@@ -56,25 +56,37 @@ class WorkflowRepository {
   }
 
   /// 流程表单 schema（GET /oa/mod/init/:modId）
-  /// 老 App 真实接口：domain + '/oa/mod/init/' + modId
-  /// 之前错用 /oa/flow/config/:modId (返 2B 空)，应改 mod/init
+  /// 老 App 真实：/oa/mod/init/:modId (curl 200)，返 {formView: '<table>...</table>', fields: [...]}
+  /// formView 是 HTML 模板字符串，包含 {{fieldName}} 占位符 + form-label/ctrl
+  /// fields 是 [{name, type, ...}] 字段定义（如果后端返了）
   Future<Map<String, dynamic>> getFormSchema(int modId) async {
     try {
-      // 老 App 真实：/oa/mod/init/:modId (curl 200)，/oa/flow/config/:modId 返空
       final response = await _api.dioInstance.get('/oa/mod/init/$modId');
       final data = response.data;
-      if (data is Map) {
-        // 老 OA 流程 schema 在 data.module 里
-        final module = data['module'] is Map ? data['module'] : data;
-        final result = <String, dynamic>{
-          'moduleName': module['name']?.toString() ?? module['moduleName']?.toString() ?? '流程表单',
-          'appKey': module['appKey']?.toString() ?? module['app_key']?.toString() ?? '',
-          'tableName': module['tableName']?.toString() ?? module['name']?.toString() ?? '',
-          'fields': _parseSchema(module),
-        };
-        return {'success': true, 'data': result};
+      if (data is! Map) {
+        return {'success': false, 'message': '表单 schema 返回数据格式不正确'};
       }
-      return {'success': false, 'message': '表单 schema 返回数据格式不正确'};
+      final module = (data['module'] is Map) ? data['module'] : data;
+      // 优先用后端给的 fields
+      List<Map<String, dynamic>> fields = [];
+      final rawFields = data['fields'];
+      if (rawFields is List && rawFields.isNotEmpty) {
+        fields = rawFields.whereType<Map>().map((f) => Map<String, dynamic>.from(f)).toList();
+      }
+      // 兜底：从 formView HTML 提取字段
+      if (fields.isEmpty) {
+        final formView = data['formView']?.toString() ?? '';
+        fields = _parseFormViewHtml(formView);
+      }
+      final result = <String, dynamic>{
+        'moduleName': module['name']?.toString() ?? module['moduleName']?.toString() ?? '流程表单',
+        'appKey': module['appKey']?.toString() ?? module['app_key']?.toString() ?? '',
+        'tableName': module['tableName']?.toString() ?? module['name']?.toString() ?? '',
+        'fields': fields,
+        'formView': data['formView']?.toString() ?? '',
+        'module': module,
+      };
+      return {'success': true, 'data': result};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
@@ -173,7 +185,70 @@ class WorkflowRepository {
     }
   }
 
-  /// 解析老 OA schema 为 Flutter 端 FormFieldSchema 列表
+  /// 解析老 OA formView HTML 字符串，提取字段
+  /// HTML 格式：<tr><td class="form-label">受订单号</td><td class="form-ctrl" id="os_no">{{os_no}}</td></tr>
+  /// 字段 = id="xxx" 的 td 元素（class="form-ctrl"）
+  /// 标签 = 同行 form-label 的内容
+  List<Map<String, dynamic>> _parseFormViewHtml(String html) {
+    final out = <Map<String, dynamic>>[];
+    if (html.isEmpty) return out;
+    try {
+      // 找所有 <tr>...</tr>
+      final trRegex = RegExp(r'<tr[^>]*>(.*?)</tr>', dotAll: true);
+      final tdRegex = RegExp(r'<td[^>]*?(?:\s+id="([^"]+)")?[^>]*?class="([^"]*)"[^>]*?>(.*?)</td>',
+          dotAll: true);
+      final placeholderRegex = RegExp(r'\{\{([a-zA-Z_][a-zA-Z0-9_]*)\}\}');
+      final htmlTagStrip = RegExp(r'<[^>]+>');
+      final trMatches = trRegex.allMatches(html);
+      for (final tr in trMatches) {
+        // 收集本行所有 td（label + ctrl 配对）
+        final tds = tdRegex.allMatches(tr.group(1) ?? '').toList();
+        // 找 label-ctrl 对
+        for (int i = 0; i + 1 < tds.length; i += 2) {
+          final labelTd = tds[i];
+          final ctrlTd = tds[i + 1];
+          if (!labelTd.group(2)!.contains('form-label')) continue;
+          if (!ctrlTd.group(2)!.contains('form-ctrl')) continue;
+          // 提取标签文字（去 HTML 标签）
+          final labelHtml = labelTd.group(3) ?? '';
+          final label = labelHtml.replaceAll(htmlTagStrip, '').trim();
+          // 提取字段名
+          String? name = ctrlTd.group(1);
+          if (name == null || name.isEmpty) {
+            // 从 {{xxx}} 占位符提取
+            final ctrlHtml = ctrlTd.group(3) ?? '';
+            final m = placeholderRegex.firstMatch(ctrlHtml);
+            name = m?.group(1);
+          }
+          if (name == null || name.isEmpty) continue;
+          out.add({
+            'name': name,
+            'label': label.isEmpty ? name : label,
+            'type': _guessType(name, ctrlTd.group(3) ?? ''),
+            'required': false,
+          });
+        }
+      }
+    } catch (_) {}
+    return out;
+  }
+
+  /// 猜测字段类型（按字段名规则）
+  String _guessType(String name, String ctrlHtml) {
+    final n = name.toLowerCase();
+    if (n.contains('date') || n.contains('dd') || n.endsWith('_dd')) return 'date';
+    if (n.contains('time') || n.contains('datetime')) return 'datetime';
+    if (n.contains('num') || n.contains('qty') || n.contains('count') ||
+        n.contains('je') || n.contains('amount') || n.contains('hj') ||
+        n.contains('sl') || n.contains('price')) return 'number';
+    if (n.contains('memo') || n.contains('remark') || n.contains('note') ||
+        n.contains('des') || n.contains('content')) return 'textarea';
+    if (n.contains('no') || n.contains('id') || n.endsWith('_id')) return 'text';
+    if (ctrlHtml.contains('select') || ctrlHtml.contains('option')) return 'select';
+    return 'text';
+  }
+
+  /// 解析老 OA schema 为 Flutter 端 FormFieldSchema 列表（兼容旧版）
   List<Map<String, dynamic>> _parseSchema(dynamic data) {
     final out = <Map<String, dynamic>>[];
     try {
