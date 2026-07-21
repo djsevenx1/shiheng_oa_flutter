@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.4.6',
+              '版本 v2.4.8',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.4.6 (Build 246)'),
+          _buildInfoRow('版本', 'v2.4.8 (Build 248)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.4.8', '2026-07-21', [
+            '修复放弃按钮：改为真正放弃申购单（调用 /oa/pro/drop 接口删除流程）',
+            '放弃前增加二次确认弹窗，防止误操作',
+            '放弃/提交后返回列表自动刷新',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.4.6', '2026-07-21', [
             '优化日期选择器UI：主题色+尺寸约束',
