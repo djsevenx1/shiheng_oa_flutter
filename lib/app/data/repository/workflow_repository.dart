@@ -210,7 +210,7 @@ class WorkflowRepository {
     }
   }
 
-  /// 流程详情（GET /oa/pro/init/:proId）
+  /// 流程详情（GET /oa/pro/initWithMod/:proId）
   Future<Map<String, dynamic>> getWorkflowDetail(int proId) async {
     try {
       // 用 initWithMod 获取 tableSchema（表单字段定义）+ formData + logs
@@ -220,6 +220,31 @@ class WorkflowRepository {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
       return {'success': false, 'message': '获取流程详情失败: $e'};
+    }
+  }
+
+  /// 获取流程材料名摘要（轻量，GET /oa/pro/init/:proId，不带 tableSchema）
+  /// 返回 formData.mx 中所有 clmc 字段拼接的字符串
+  Future<String> getMaterialSummary(int proId) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/pro/init/$proId');
+      final data = response.data;
+      if (data is Map) {
+        final formData = data['formData'];
+        if (formData is Map) {
+          final mx = formData['mx'];
+          if (mx is List && mx.isNotEmpty) {
+            final names = mx.map((m) {
+              final item = m as Map;
+              return item['clmc']?.toString() ?? '';
+            }).where((s) => s.isNotEmpty).toList();
+            return names.join(', ');
+          }
+        }
+      }
+      return '';
+    } catch (e) {
+      return '';
     }
   }
 

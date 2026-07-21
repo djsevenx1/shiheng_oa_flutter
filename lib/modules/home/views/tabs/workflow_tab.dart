@@ -64,6 +64,32 @@ class _WorkflowTabState extends State<WorkflowTab> {
         }
       });
     }
+    // 异步获取每个流程的材料名，丰富列表显示
+    if (historyList.isNotEmpty) {
+      _enrichHistoryWithMaterialNames();
+    }
+  }
+
+  /// 异步批量获取历史流程的材料名，更新列表项
+  Future<void> _enrichHistoryWithMaterialNames() async {
+    final repo = WorkflowRepository();
+    // 并行获取（限制并发数避免请求过多）
+    const batchSize = 10;
+    for (int i = 0; i < historyList.length; i += batchSize) {
+      final end = (i + batchSize).clamp(0, historyList.length);
+      final batch = historyList.sublist(i, end);
+      final futures = batch.map((item) async {
+        final id = item['id'];
+        if (id == null) return;
+        final summary = await repo.getMaterialSummary(id is int ? id : int.tryParse(id.toString()) ?? 0);
+        if (summary.isNotEmpty && mounted) {
+          setState(() {
+            item['materialSummary'] = summary;
+          });
+        }
+      }).toList();
+      await Future.wait(futures);
+    }
   }
 
   String _formatDate(dynamic timestamp) {
@@ -221,6 +247,16 @@ class _WorkflowTabState extends State<WorkflowTab> {
                   item['name']?.toString() ?? item['title']?.toString() ?? '(无标题)',
                   style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                 ),
+                // 材料名摘要（历史流程异步加载后显示）
+                if (item['materialSummary'] != null) ...[
+                  SizedBox(height: 4.h),
+                  Text(
+                    item['materialSummary'].toString(),
+                    style: TextStyle(fontSize: 13.sp, color: AppTheme.primaryColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
                 SizedBox(height: 8.h),
                 if (item['creator'] != null)
                   Text(
