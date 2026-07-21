@@ -129,11 +129,16 @@ class VersionView extends StatelessWidget {
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
           SizedBox(height: 12.h),
-          _buildLogItem('v3.0.0', '2024-01-15', [
-            '全新 Flutter 重构，UI 全面升级',
-            '新增 CRM 商机管理',
-            '新增时恒专属报表',
-            '修复若干已知问题',
+          _buildLogItem('v2.2.6', '2026-07-21', [
+            '流程tab改为待处理+历史流程（去掉已发起/已审批）',
+            '修复流程详情页空白（错误显示+时间戳格式化+formData过滤）',
+            'App签名keystore放入仓库，CI直接签名编译',
+            '同步版本号到设置/版本页',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.2.5', '2026-07-21', [
+            '修复流程列表为空（token认证+HTML响应检测）',
+            '修复流程提交后不跳转',
           ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.0.0', '2023-08-10', [

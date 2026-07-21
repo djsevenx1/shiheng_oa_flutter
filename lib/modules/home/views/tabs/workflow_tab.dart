@@ -18,14 +18,11 @@ class _WorkflowTabState extends State<WorkflowTab> {
   final _workflowRepository = WorkflowRepository();
 
   List<dynamic> todoList = [];       // 待处理（preHandle）
-  List<dynamic> runningList = [];    // 已发起的（related+submitted）
-  List<dynamic> doneList = [];       // 已审批的（related+handled）
+  List<dynamic> historyList = [];    // 历史流程（全部）
   bool isLoadingTodo = true;
-  bool isLoadingRunning = true;
-  bool isLoadingDone = true;
+  bool isLoadingHistory = true;
   String? todoError;
-  String? runningError;
-  String? doneError;
+  String? historyError;
 
   @override
   void initState() {
@@ -34,7 +31,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
   }
 
   Future<void> _loadAll() async {
-    await Future.wait([_loadTodo(), _loadRunning(), _loadDone()]);
+    await Future.wait([_loadTodo(), _loadHistory()]);
   }
 
   Future<void> _loadTodo() async {
@@ -53,33 +50,17 @@ class _WorkflowTabState extends State<WorkflowTab> {
     }
   }
 
-  Future<void> _loadRunning() async {
-    setState(() { isLoadingRunning = true; runningError = null; });
-    final result = await _workflowRepository.getWorkflowList(status: 'running', limit: 50);
+  Future<void> _loadHistory() async {
+    setState(() { isLoadingHistory = true; historyError = null; });
+    final result = await _workflowRepository.getWorkflowList(status: 'history', limit: 50);
     if (mounted) {
       setState(() {
-        isLoadingRunning = false;
+        isLoadingHistory = false;
         if (result['success'] == true) {
-          runningList = List<dynamic>.from(result['data'] ?? []);
+          historyList = List<dynamic>.from(result['data'] ?? []);
         } else {
-          runningList = [];
-          runningError = result['message']?.toString() ?? '加载失败';
-        }
-      });
-    }
-  }
-
-  Future<void> _loadDone() async {
-    setState(() { isLoadingDone = true; doneError = null; });
-    final result = await _workflowRepository.getWorkflowList(status: 'done', limit: 50);
-    if (mounted) {
-      setState(() {
-        isLoadingDone = false;
-        if (result['success'] == true) {
-          doneList = List<dynamic>.from(result['data'] ?? []);
-        } else {
-          doneList = [];
-          doneError = result['message']?.toString() ?? '加载失败';
+          historyList = [];
+          historyError = result['message']?.toString() ?? '加载失败';
         }
       });
     }
@@ -97,15 +78,14 @@ class _WorkflowTabState extends State<WorkflowTab> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('流程'),
           bottom: TabBar(
             tabs: [
               Tab(text: '待处理 (${todoList.length})'),
-              Tab(text: '已发起的 (${runningList.length})'),
-              Tab(text: '已审批的 (${doneList.length})'),
+              Tab(text: '历史流程 (${historyList.length})'),
             ],
             labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
             unselectedLabelStyle: TextStyle(fontSize: 14.sp),
@@ -116,8 +96,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
         body: TabBarView(
           children: [
             _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo, error: todoError),
-            _buildFlowList(runningList, isLoadingRunning, '暂无已发起的流程', _loadRunning, error: runningError),
-            _buildFlowList(doneList, isLoadingDone, '暂无已审批的流程', _loadDone, error: doneError),
+            _buildFlowList(historyList, isLoadingHistory, '暂无历史流程', _loadHistory, error: historyError),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(

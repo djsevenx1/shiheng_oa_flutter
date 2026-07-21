@@ -29,6 +29,21 @@ class MyApplicationRepository {
     return _postInitList({'preHandle': null}, limit: limit, offset: offset);
   }
 
+  /// 历史流程（全部）：GET /oa/handle/initList 不带 filter body
+  Future<Map<String, dynamic>> getHistory({int limit = 20, int offset = 0}) async {
+    try {
+      final response = await _api.dioInstance.get(
+        '/oa/handle/initList',
+        queryParameters: {'limit': limit, 'offset': offset},
+      );
+      return _parseListResponse(response.data);
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
+    } catch (e) {
+      return {'success': false, 'message': '获取历史流程失败: $e', 'data': [], 'count': 0};
+    }
+  }
+
   /// 已发起的流程（我发起的）：POST /oa/handle/initList body={related: null, submitted: null}
   Future<Map<String, dynamic>> getMyRunning({int limit = 20, int offset = 0}) async {
     return _postInitList({'related': null, 'submitted': null}, limit: limit, offset: offset);

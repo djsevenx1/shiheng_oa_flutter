@@ -25,6 +25,37 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
             child: CircularProgressIndicator(color: AppTheme.primaryColor),
           );
         }
+        // 显示错误状态
+        if (controller.errorMessage.value != null) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.w),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 64.w, color: AppTheme.danger),
+                  SizedBox(height: 16.h),
+                  Text(
+                    controller.errorMessage.value!,
+                    style: TextStyle(fontSize: 14.sp, color: AppTheme.danger),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 16.h),
+                  OutlinedButton(
+                    onPressed: controller.loadDetail,
+                    child: const Text('重试'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        // 详情数据为空
+        if (controller.workflowDetail.isEmpty) {
+          return Center(
+            child: Text('暂无详情数据', style: TextStyle(fontSize: 14.sp, color: AppTheme.textTertiary)),
+          );
+        }
         return SingleChildScrollView(
           padding: EdgeInsets.all(16.w),
           child: Column(

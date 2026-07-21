@@ -177,36 +177,28 @@ class WorkflowRepository {
     return [];
   }
 
-  /// 流程实例列表（POST /oa/handle/initList + filter body）
-  /// 老 App sate 模式：name='handle'，POST body=filter 对象
-  /// filter 由 workflow.js 设置：
-  ///   todo(待处理):     {preHandle: null}
-  ///   running(已发起的): {related: null, submitted: null}
-  ///   done(已审批的):    {related: null, handled: null}
+  /// 流程实例列表
+  /// status: 'todo' = POST + {preHandle:null}（待处理）
+  ///         'history' = GET 不带 filter（历史流程/全部）
   Future<Map<String, dynamic>> getWorkflowList({
-    required String status, // 'todo' / 'running' / 'done'
+    required String status,
     int limit = 20,
     int offset = 0,
   }) async {
     try {
-      Map<String, dynamic> filter;
-      switch (status) {
-        case 'todo':
-          filter = {'preHandle': null};
-          break;
-        case 'running':
-          filter = {'related': null, 'submitted': null};
-          break;
-        case 'done':
-          filter = {'related': null, 'handled': null};
-          break;
-        default:
-          filter = {'preHandle': null};
+      if (status == 'history') {
+        // 历史流程：GET 不带 filter body，返回全部流程
+        final response = await _api.dioInstance.get(
+          '/oa/handle/initList',
+          queryParameters: {'limit': limit, 'offset': offset},
+        );
+        return _parseListResponse(response.data);
       }
+      // 待处理：POST + {preHandle:null}
       final response = await _api.dioInstance.post(
         '/oa/handle/initList',
         queryParameters: {'limit': limit, 'offset': offset},
-        data: filter,
+        data: {'preHandle': null},
       );
       return _parseListResponse(response.data);
     } on dio.DioException catch (e) {

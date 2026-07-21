@@ -27,8 +27,7 @@ class WorkflowView extends GetView<WorkflowController> {
           Obx(() => Row(
                 children: [
                   _tabBtn('待处理 (${controller.todoList.length})', 0),
-                  _tabBtn('已发起的 (${controller.runningList.length})', 1),
-                  _tabBtn('已审批的 (${controller.doneList.length})', 2),
+                  _tabBtn('历史流程 (${controller.historyList.length})', 1),
                 ],
               )),
           Divider(height: 1.h, color: AppTheme.dividerColor),
@@ -39,9 +38,7 @@ class WorkflowView extends GetView<WorkflowController> {
               }
               final list = controller.selectedTab.value == 0
                   ? controller.todoList
-                  : controller.selectedTab.value == 1
-                      ? controller.runningList
-                      : controller.doneList;
+                  : controller.historyList;
               if (list.isEmpty) {
                 return _emptyView();
               }

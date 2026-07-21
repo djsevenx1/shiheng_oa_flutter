@@ -34,14 +34,33 @@ class WorkflowDetailController extends GetxController {
 
   Future<void> loadDetail() async {
     isLoading.value = true;
+    errorMessage.value = null;
     try {
       // 老 OA 流程详情走 /oa/pro/init/:proId
       final result = await _repository.getWorkflowDetail(proId.value);
       if (result['success'] == true) {
         final data = (result['data'] as Map?)?.cast<String, dynamic>() ?? {};
+        // 格式化 createdDate（后端返回毫秒时间戳）
+        final cd = data['createdDate'];
+        if (cd is int) {
+          final dt = DateTime.fromMillisecondsSinceEpoch(cd);
+          data['createdDate'] = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+        } else if (cd is String && cd.length > 10) {
+          // 已经是字符串格式，截取到分钟
+          data['createdDate'] = cd.substring(0, cd.length > 16 ? 16 : cd.length);
+        }
         workflowDetail.value = data;
-        logs.value = (data['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        formData.value = (data['formData'] as Map?)?.cast<String, dynamic>() ?? {};
+        // logs 可能在顶层或 formData 内
+        logs.value = (data['logs'] as List?)?.cast<Map<String, dynamic>>() ??
+            (data['formData']?['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+        // formData 过滤掉 logs 和内部字段，只保留表单字段
+        final rawFormData = (data['formData'] as Map?)?.cast<String, dynamic>() ?? {};
+        formData.value = rawFormData.map((k, v) {
+          // 跳过 logs/mx(明细数组) 等非显示字段
+          if (k == 'logs' || k == 'mx' || k == 'id' || k == 'proId') return MapEntry(k, null);
+          return MapEntry(k, v);
+        });
+        formData.removeWhere((k, v) => v == null);
       } else {
         errorMessage.value = result['message']?.toString() ?? '加载详情失败';
       }
