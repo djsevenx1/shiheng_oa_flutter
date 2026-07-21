@@ -365,6 +365,24 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                               initialDate: DateTime.now(),
                               firstDate: DateTime(2020),
                               lastDate: DateTime(2030),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: ColorScheme.light(
+                                      primary: AppTheme.primaryColor,
+                                      onPrimary: Colors.white,
+                                      onSurface: AppTheme.textPrimary,
+                                    ),
+                                    textButtonTheme: TextButtonThemeData(
+                                      style: TextButton.styleFrom(foregroundColor: AppTheme.primaryColor),
+                                    ),
+                                  ),
+                                  child: ConstrainedBox(
+                                    constraints: BoxConstraints(maxWidth: 300.w, maxHeight: 400.h),
+                                    child: child!,
+                                  ),
+                                );
+                              },
                             );
                             if (date != null) {
                               controllers[id]!.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';

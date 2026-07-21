@@ -61,7 +61,7 @@ class SettingsView extends GetView<SettingsController> {
               leading: const Icon(Icons.info_outline, color: AppTheme.primaryColor),
               title: Text('版本信息', style: TextStyle(fontSize: 15.sp)),
               trailing: Text(
-                'v2.4.5',
+                'v2.4.6',
                 style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
               ),
             ),
