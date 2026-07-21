@@ -268,158 +268,235 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
     );
   }
 
-  /// 明细子表（如材料临时请购单的"材料明细"）
+  /// 明细子表（模仿老App：紫色标题栏+编辑按钮+新增明细按钮）
   Widget _buildDetailField(FormFieldSchema field) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            _buildFieldLabel(field),
-            const Spacer(),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.r)),
-                minimumSize: Size.zero,
-                elevation: 0,
-              ),
-              icon: Icon(Icons.add, size: 14.w),
-              label: Text('添加', style: TextStyle(fontSize: 12.sp)),
-              onPressed: () => controller.addDetailRow(field.name),
-            ),
-          ],
-        ),
-        SizedBox(height: 6.h),
+        SizedBox(height: 8.h),
         Obx(() {
           final rows = controller.detailRows[field.name] ?? [];
-          if (rows.isEmpty) {
-            return Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: AppTheme.gray50,
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: AppTheme.gray300, style: BorderStyle.solid),
-              ),
-              child: Center(
-                child: Text('点击"添加"按钮添加明细行',
-                    style: TextStyle(fontSize: 13.sp, color: AppTheme.textTertiary)),
-              ),
-            );
-          }
           return Column(
-            children: rows.asMap().entries.map((entry) {
-              final idx = entry.key;
-              final row = entry.value;
-              return Card(
-                margin: EdgeInsets.only(bottom: 8.h),
-                elevation: 0,
-                color: AppTheme.gray50,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                  side: BorderSide(color: AppTheme.gray300),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(12.w),
+            children: [
+              // 渲染每条明细
+              ...rows.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final row = entry.value;
+                return Container(
+                  margin: EdgeInsets.only(bottom: 8.h),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8.r),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 6, offset: const Offset(0, 2))],
+                  ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text('第 ${idx + 1} 行', style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary)),
-                          const Spacer(),
-                          IconButton(
-                            icon: Icon(Icons.delete_outline, color: Colors.red, size: 18),
-                            onPressed: () => controller.removeDetailRow(field.name, idx),
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                          ),
-                        ],
+                      // 紫色标题栏：明细N + 编辑按钮 + 删除按钮
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor,
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
+                        ),
+                        child: Row(
+                          children: [
+                            Text('明细${idx + 1}', style: TextStyle(fontSize: 14.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                            const Spacer(),
+                            GestureDetector(
+                              onTap: () => _showDetailEditDialog(field, idx, row),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                                child: Text('编辑', style: TextStyle(fontSize: 13.sp, color: Colors.white)),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            GestureDetector(
+                              onTap: () => controller.removeDetailRow(field.name, idx),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                                child: Icon(Icons.close, color: Colors.white.withAlpha(200), size: 16.w),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      ...((field.fields ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>()).map((sub) {
-                        return Padding(
-                          padding: EdgeInsets.only(top: 8.h),
-                          child: _buildDetailSubField(field.name, idx, sub, row),
-                        );
-                      }),
+                      // 明细内容预览
+                      Padding(
+                        padding: EdgeInsets.all(12.w),
+                        child: Column(
+                          children: ((field.fields ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>()).map((sub) {
+                            final subName = sub['name']?.toString() ?? '';
+                            final subLabel = sub['label']?.toString() ?? subName;
+                            final value = row[subName]?.toString() ?? '';
+                            return Padding(
+                              padding: EdgeInsets.symmetric(vertical: 4.h),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 100.w,
+                                    child: Text(subLabel, style: TextStyle(fontSize: 13.sp, color: AppTheme.textTertiary)),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      value.isEmpty ? '（未填）' : value,
+                                      style: TextStyle(
+                                        fontSize: 13.sp,
+                                        color: value.isEmpty ? AppTheme.textTertiary : AppTheme.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ],
                   ),
+                );
+              }).toList(),
+              // 新增明细按钮
+              SizedBox(
+                width: double.infinity,
+                height: 44.h,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    controller.addDetailRow(field.name);
+                    // 新增后自动弹出编辑框
+                    final rows = controller.detailRows[field.name] ?? [];
+                    if (rows.isNotEmpty) {
+                      _showDetailEditDialog(field, rows.length - 1, rows.last);
+                    }
+                  },
+                  icon: Icon(Icons.add, size: 18.w),
+                  label: Text('新增明细', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    elevation: 0,
+                  ),
                 ),
-              );
-            }).toList(),
+              ),
+            ],
           );
         }),
       ],
     );
   }
 
-  Widget _buildDetailSubField(String parentName, int rowIdx, Map<String, dynamic> sub, Map<String, dynamic> row) {
-    final name = sub['name']?.toString() ?? '';
-    final label = sub['label']?.toString() ?? name;
-    final type = sub['type']?.toString() ?? 'text';
-    final key = '${parentName}_${rowIdx}_$name';
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary)),
-        SizedBox(height: 4.h),
-        if (type == 'date' || type == 'datetime')
-          InkWell(
-            onTap: () async {
-              final date = await showDatePicker(
-                context: Get.context!,
-                initialDate: DateTime.now(),
-                firstDate: DateTime(2020),
-                lastDate: DateTime(2030),
-              );
-              if (date != null) {
-                controller.updateDetailCell(parentName, rowIdx, name,
-                    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}');
-              }
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(6.r),
-                border: Border.all(color: AppTheme.gray300),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.calendar_today, color: AppTheme.gray400, size: 14),
-                  SizedBox(width: 6.w),
-                  Text(row[name]?.toString() ?? '请选择',
-                      style: TextStyle(fontSize: 13.sp,
-                          color: row[name] == null ? AppTheme.textTertiary : AppTheme.textPrimary)),
-                ],
-              ),
+  /// 明细编辑弹窗（模仿老App的编辑模式）
+  void _showDetailEditDialog(FormFieldSchema field, int rowIdx, Map<String, dynamic> row) {
+    final subFields = (field.fields ?? <Map<String, dynamic>>[]).cast<Map<String, dynamic>>();
+    // 临时控制器
+    final controllers = <String, TextEditingController>{};
+    for (final sub in subFields) {
+      final name = sub['name']?.toString() ?? '';
+      controllers[name] = TextEditingController(text: row[name]?.toString() ?? '');
+    }
+
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Text('编辑明细${rowIdx + 1}', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Get.back(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
-          )
-        else
-          TextFormField(
-            initialValue: row[name]?.toString() ?? '',
-            style: TextStyle(fontSize: 13.sp),
-            decoration: InputDecoration(
-              isDense: true,
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.r),
-                borderSide: BorderSide(color: AppTheme.gray300),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(6.r),
-                borderSide: BorderSide(color: AppTheme.gray300),
-              ),
+          ],
+        ),
+        contentPadding: EdgeInsets.all(16.w),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: subFields.map((sub) {
+                final name = sub['name']?.toString() ?? '';
+                final label = sub['label']?.toString() ?? name;
+                final type = sub['type']?.toString() ?? 'text';
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label, style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                      SizedBox(height: 6.h),
+                      if (type == 'date' || type == 'datetime')
+                        InkWell(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: Get.context!,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (date != null) {
+                              final val = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                              controllers[name]!.text = val;
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppTheme.gray300),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 16.w, color: AppTheme.gray400),
+                                SizedBox(width: 8.w),
+                                Expanded(child: Text(controllers[name]!.text.isEmpty ? '请选择' : controllers[name]!.text, style: TextStyle(fontSize: 14.sp, color: controllers[name]!.text.isEmpty ? AppTheme.textTertiary : AppTheme.textPrimary))),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        TextFormField(
+                          controller: controllers[name],
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.r)),
+                          ),
+                          keyboardType: type == 'number' ? TextInputType.number : TextInputType.text,
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
             ),
-            keyboardType: type == 'number' ? TextInputType.number : TextInputType.text,
-            onChanged: (v) => controller.updateDetailCell(parentName, rowIdx, name, v),
           ),
-      ],
-    );
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('取消', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // 保存编辑结果到 controller
+              for (final sub in subFields) {
+                final name = sub['name']?.toString() ?? '';
+                controller.updateDetailCell(field.name, rowIdx, name, controllers[name]!.text);
+              }
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.white),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    ).then((_) {
+      // 清理控制器
+      for (final c in controllers.values) {
+        c.dispose();
+      }
+    });
   }
 
   Widget _buildTextField(FormFieldSchema field) {
