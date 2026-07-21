@@ -273,4 +273,34 @@ class WorkflowDetailController extends GetxController {
       default: return AppTheme.gray500;
     }
   }
+
+  /// 编辑明细行
+  void updateMxItem(int index, Map<String, dynamic> values) {
+    if (index < mxItems.length) {
+      final item = Map<String, dynamic>.from(mxItems[index]);
+      item.addAll(values);
+      mxItems[index] = item;
+      mxItems.refresh();
+      formData['mx'] = mxItems.toList();
+    }
+  }
+
+  /// 新增明细行
+  void addMxItem() {
+    final newItem = <String, dynamic>{};
+    for (final f in detailFields) {
+      final id = f['id']?.toString() ?? f['name']?.toString() ?? '';
+      if (id.isNotEmpty) newItem[id] = '';
+    }
+    mxItems.add(newItem);
+    formData['mx'] = mxItems.toList();
+  }
+
+  /// 删除明细行
+  void removeMxItem(int index) {
+    if (index < mxItems.length) {
+      mxItems.removeAt(index);
+      formData['mx'] = mxItems.toList();
+    }
+  }
 }

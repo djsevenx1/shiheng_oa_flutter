@@ -180,7 +180,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
 
   /// 明细区域
   Widget _buildDetailSection() {
-    return Container(
+    return Obx(() => Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
@@ -188,6 +188,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
       ),
       child: Column(
         children: [
+          // 标题栏
           Padding(
             padding: EdgeInsets.all(16.w),
             child: Row(
@@ -200,46 +201,224 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
               ],
             ),
           ),
-          // 表头
-          if (controller.detailFields.isNotEmpty)
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-              decoration: BoxDecoration(color: AppTheme.gray50),
-              child: Row(
-                children: controller.detailFields.map((f) {
-                  return Expanded(
-                    child: Text(
-                      f['name']?.toString() ?? '',
-                      style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600, color: AppTheme.textSecondary),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          // 数据行
+          // 每条明细：紫色标题栏 + 编辑按钮 + 内容预览
           ...controller.mxItems.asMap().entries.map((entry) {
+            final idx = entry.key;
             final item = entry.value;
-            final isLast = entry.key == controller.mxItems.length - 1;
             return Container(
-              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+              margin: EdgeInsets.fromLTRB(8.w, 0, 8.w, 8.h),
               decoration: BoxDecoration(
-                border: isLast ? null : Border(bottom: BorderSide(color: AppTheme.dividerColor, width: 0.5)),
+                color: AppTheme.gray50,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: AppTheme.gray200),
               ),
-              child: Row(
-                children: controller.detailFields.map((f) {
-                  return Expanded(
-                    child: Text(
-                      controller.getDetailValue(item, f),
-                      style: TextStyle(fontSize: 12.sp, color: AppTheme.textPrimary),
+              child: Column(
+                children: [
+                  // 紫色标题栏
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
                     ),
-                  );
-                }).toList(),
+                    child: Row(
+                      children: [
+                        Text('明细${idx + 1}', style: TextStyle(fontSize: 13.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                        const Spacer(),
+                        if (controller.isHandleMode.value)
+                          GestureDetector(
+                            onTap: () => _showMxEditDialog(idx, item),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                              child: Text('编辑', style: TextStyle(fontSize: 12.sp, color: Colors.white)),
+                            ),
+                          ),
+                        if (controller.isHandleMode.value) SizedBox(width: 12.w),
+                        if (controller.isHandleMode.value)
+                          GestureDetector(
+                            onTap: () => controller.removeMxItem(idx),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 2.h),
+                              child: Icon(Icons.close, color: Colors.white.withAlpha(200), size: 16.w),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  // 内容预览
+                  Padding(
+                    padding: EdgeInsets.all(10.w),
+                    child: Column(
+                      children: controller.detailFields.map((f) {
+                        final label = f['name']?.toString() ?? '';
+                        final value = controller.getDetailValue(item, f);
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 3.h),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: 90.w,
+                                child: Text(label, style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary)),
+                              ),
+                              Expanded(
+                                child: Text(
+                                  value.isEmpty ? '（未填）' : value,
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: value.isEmpty ? AppTheme.textTertiary : AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
               ),
             );
           }),
+          // 新增明细按钮（仅待处理模式）
+          if (controller.isHandleMode.value)
+            Padding(
+              padding: EdgeInsets.fromLTRB(8.w, 0, 8.w, 12.h),
+              child: SizedBox(
+                width: double.infinity,
+                height: 40.h,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    controller.addMxItem();
+                    final idx = controller.mxItems.length - 1;
+                    _showMxEditDialog(idx, controller.mxItems.last);
+                  },
+                  icon: Icon(Icons.add, size: 18.w),
+                  label: Text('新增明细', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    elevation: 0,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
-    );
+    ));
+  }
+
+  /// 明细编辑弹窗
+  void _showMxEditDialog(int idx, Map<String, dynamic> item) {
+    final fields = controller.detailFields.toList();
+    final controllers = <String, TextEditingController>{};
+    for (final f in fields) {
+      final id = f['id']?.toString() ?? f['name']?.toString() ?? '';
+      controllers[id] = TextEditingController(text: item[id]?.toString() ?? '');
+    }
+
+    Get.dialog(
+      AlertDialog(
+        title: Row(
+          children: [
+            Text('编辑明细${idx + 1}', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Get.back(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ],
+        ),
+        contentPadding: EdgeInsets.all(16.w),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: fields.map((f) {
+                final id = f['id']?.toString() ?? f['name']?.toString() ?? '';
+                final label = f['name']?.toString() ?? id;
+                final ctrl = f['ctrl']?.toString() ?? 'text';
+                final isDate = ctrl == 'date' || ctrl == 'datetime';
+                return Padding(
+                  padding: EdgeInsets.only(bottom: 12.h),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label, style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
+                      SizedBox(height: 6.h),
+                      if (isDate)
+                        InkWell(
+                          onTap: () async {
+                            final date = await showDatePicker(
+                              context: Get.context!,
+                              initialDate: DateTime.now(),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                            );
+                            if (date != null) {
+                              controllers[id]!.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: AppTheme.gray300),
+                              borderRadius: BorderRadius.circular(6.r),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.calendar_today, size: 16.w, color: AppTheme.gray400),
+                                SizedBox(width: 8.w),
+                                Expanded(child: Obx(() => Text(controllers[id]!.text.isEmpty ? '请选择' : controllers[id]!.text, style: TextStyle(fontSize: 14.sp, color: controllers[id]!.text.isEmpty ? AppTheme.textTertiary : AppTheme.textPrimary)))),
+                              ],
+                            ),
+                          ),
+                        )
+                      else
+                        TextFormField(
+                          controller: controllers[id],
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.r)),
+                          ),
+                          keyboardType: ctrl == 'number' || ctrl == 'num' || ctrl == 'money' ? TextInputType.number : TextInputType.text,
+                        ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('取消', style: TextStyle(color: AppTheme.textSecondary)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final values = <String, dynamic>{};
+              for (final f in fields) {
+                final id = f['id']?.toString() ?? f['name']?.toString() ?? '';
+                values[id] = controllers[id]!.text;
+              }
+              controller.updateMxItem(idx, values);
+              Get.back();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor, foregroundColor: Colors.white),
+            child: const Text('保存'),
+          ),
+        ],
+      ),
+    ).then((_) {
+      for (final c in controllers.values) {
+        c.dispose();
+      }
+    });
   }
 
   /// 审批记录时间线
