@@ -40,27 +40,29 @@ class WorkflowDetailController extends GetxController {
       final result = await _repository.getWorkflowDetail(proId.value);
       if (result['success'] == true) {
         final data = (result['data'] as Map?)?.cast<String, dynamic>() ?? {};
-        // 格式化 createdDate（后端返回毫秒时间戳）
-        final cd = data['createdDate'];
-        if (cd is int) {
-          final dt = DateTime.fromMillisecondsSinceEpoch(cd);
-          data['createdDate'] = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-        } else if (cd is String && cd.length > 10) {
-          // 已经是字符串格式，截取到分钟
-          data['createdDate'] = cd.substring(0, cd.length > 16 ? 16 : cd.length);
-        }
+        // 格式化顶层 createdDate（后端返回毫秒时间戳，字段名是驼峰 createdDate）
+        _formatTimestampField(data, 'createdDate');
+        _formatTimestampField(data, 'lastDate');
         workflowDetail.value = data;
-        // logs 可能在顶层或 formData 内
-        logs.value = (data['logs'] as List?)?.cast<Map<String, dynamic>>() ??
-            (data['formData']?['logs'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-        // formData 过滤掉 logs 和内部字段，只保留表单字段
+        // logs 在顶层
+        final rawLogs = (data['logs'] as List?) ?? [];
+        logs.value = rawLogs.map((log) {
+          final m = Map<String, dynamic>.from(log as Map);
+          // 格式化 log 的 createdDate 时间戳
+          _formatTimestampField(m, 'createdDate');
+          return m;
+        }).toList();
+        // formData 过滤掉 logs/mx 等非显示字段，格式化时间戳
         final rawFormData = (data['formData'] as Map?)?.cast<String, dynamic>() ?? {};
-        formData.value = rawFormData.map((k, v) {
-          // 跳过 logs/mx(明细数组) 等非显示字段
-          if (k == 'logs' || k == 'mx' || k == 'id' || k == 'proId') return MapEntry(k, null);
-          return MapEntry(k, v);
-        });
-        formData.removeWhere((k, v) => v == null);
+        formData.value = Map<String, dynamic>.from(rawFormData);
+        // 移除非显示字段
+        formData.removeWhere((k, v) => k == 'logs' || k == 'mx' || k == 'id' || k == 'status' || k == 'proId');
+        // 格式化 formData 里的时间戳字段（created_date, rq 等下划线字段名）
+        for (final key in ['created_date', 'rq', 'last_date']) {
+          if (formData.containsKey(key)) {
+            _formatTimestampField(formData, key);
+          }
+        }
       } else {
         errorMessage.value = result['message']?.toString() ?? '加载详情失败';
       }
@@ -69,6 +71,38 @@ class WorkflowDetailController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// 格式化时间戳字段（毫秒 → yyyy-MM-dd HH:mm）
+  void _formatTimestampField(Map<String, dynamic> map, String key) {
+    final v = map[key];
+    if (v is int && v > 100000000000) {
+      final dt = DateTime.fromMillisecondsSinceEpoch(v);
+      map[key] = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
+          '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    } else if (v is String && v.length > 10) {
+      map[key] = v.substring(0, v.length > 16 ? 16 : v.length);
+    }
+  }
+
+  /// actionId 转中文操作名
+  String getActionName(dynamic actionId) {
+    final id = actionId is int ? actionId : int.tryParse(actionId?.toString() ?? '') ?? 0;
+    switch (id) {
+      case 1: return '发起';
+      case 2: return '同意';
+      case 3: return '拒绝';
+      case 4: return '转交';
+      case 11: return '加签';
+      case -1: return '撤回';
+      default: return '审批';
+    }
+  }
+
+  /// actionId 判断是否通过
+  bool isActionPositive(dynamic actionId) {
+    final id = actionId is int ? actionId : int.tryParse(actionId?.toString() ?? '') ?? 0;
+    return id == 1 || id == 2 || id == 4 || id == 11;
   }
 
   Future<void> approve() async {

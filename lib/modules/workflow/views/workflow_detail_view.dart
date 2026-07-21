@@ -301,11 +301,13 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
               final index = entry.key;
               final log = entry.value;
               final isLast = index == logs.length - 1;
-              final isPositive = log['flagPositive'] == true;
+              final actionId = log['actionId'];
+              final isPositive = controller.isActionPositive(actionId);
               return _buildTimelineItem(
                 log: log,
                 isLast: isLast,
                 isPositive: isPositive,
+                actionName: controller.getActionName(actionId),
               );
             }),
         ],
@@ -317,6 +319,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
     required dynamic log,
     required bool isLast,
     required bool isPositive,
+    required String actionName,
   }) {
     return IntrinsicHeight(
       child: Row(
@@ -352,7 +355,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                   Row(
                     children: [
                       Text(
-                        log['userName'] ?? '未知',
+                        log['name'] ?? '未知',
                         style: TextStyle(
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w600,
@@ -367,7 +370,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                         child: Text(
-                          log['action'] ?? '',
+                          actionName,
                           style: TextStyle(
                             fontSize: 11.sp,
                             color: isPositive ? AppTheme.success : AppTheme.danger,
@@ -377,16 +380,17 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                     ],
                   ),
                   SizedBox(height: 4.h),
-                  Text(
-                    log['message'] ?? '',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      color: AppTheme.textSecondary,
+                  if (log['message'] != null && log['message'].toString().isNotEmpty)
+                    Text(
+                      log['message']?.toString() ?? '',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
-                  ),
                   SizedBox(height: 4.h),
                   Text(
-                    log['date'] ?? '',
+                    log['createdDate']?.toString() ?? '',
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AppTheme.textTertiary,
