@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/data/repository/dashboard_repository.dart';
+import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/routes/app_pages.dart';
 
 class HomeController extends GetxController {
   final _authRepository = AuthRepository();
   final _dashboardRepository = DashboardRepository();
+  final _workflowRepository = WorkflowRepository();
 
   final currentIndex = 0.obs;
   final isLoading = false.obs;
@@ -17,6 +19,7 @@ class HomeController extends GetxController {
   final memos = <dynamic>[].obs;
   final userList = <dynamic>[].obs;
   final events = <dynamic>[].obs;
+  final todoList = <dynamic>[].obs;  // 待处理流程（首页用）
   final userInfo = <String, dynamic>{}.obs;
 
   // 页面控制器
@@ -103,6 +106,11 @@ class HomeController extends GetxController {
       }
       if (results[3]['success'] == true) {
         events.value = results[3]['data'] ?? [];
+      }
+      // 加载待处理流程（首页"待处理"板块）
+      final todoRes = await _workflowRepository.getWorkflowList(status: 'todo', limit: 5);
+      if (todoRes['success'] == true) {
+        todoList.value = todoRes['data'] ?? [];
       }
     } catch (e) {
       print('加载仪表盘数据失败: $e');

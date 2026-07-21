@@ -87,7 +87,7 @@ class DashboardTab extends GetView<HomeController> {
                           _buildQuickAction(Icons.people_outline, '通讯录', Colors.blue, () => Get.toNamed(Routes.CONTACTS)),
                           _buildQuickAction(Icons.star_outline, '收藏', Colors.red, () => Get.toNamed(Routes.FAVORITE)),
                           _buildQuickAction(Icons.folder_open, '文档', Colors.green, () => Get.toNamed(Routes.ARCHIVE)),
-                          _buildQuickAction(Icons.insert_chart, '报表', Colors.indigo, () => Get.toNamed(Routes.REPORT)),
+                          _buildQuickAction(Icons.add_circle_outline, '发起流程', Colors.indigo, () => Get.toNamed(Routes.WORKFLOW_FORM)),
                         ],
                       ),
                     ],
@@ -128,33 +128,33 @@ class DashboardTab extends GetView<HomeController> {
             );
           }),
           SliverToBoxAdapter(child: SizedBox(height: 24.h)),
-          // 最新动态
+          // 待处理流程
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.w),
-              child: _buildSectionTitle('最新动态', Icons.update),
+              child: _buildSectionTitle('待处理', Icons.assignment_outlined),
             ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: 12.h)),
           Obx(() {
-            if (controller.isLoading.value && controller.events.isEmpty) {
+            if (controller.isLoading.value && controller.todoList.isEmpty) {
               return SliverToBoxAdapter(child: _buildEventShimmer());
             }
-            if (controller.events.isEmpty) {
+            if (controller.todoList.isEmpty) {
               return SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16.w),
-                  child: _buildEmptyState('暂无动态'),
+                  child: _buildEmptyState('暂无待处理流程'),
                 ),
               );
             }
             return SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final item = controller.events[index];
-                  return _buildEventCard(item);
+                  final item = controller.todoList[index];
+                  return _buildTodoCard(item);
                 },
-                childCount: controller.events.length > 5 ? 5 : controller.events.length,
+                childCount: controller.todoList.length,
               ),
             );
           }),
@@ -376,6 +376,65 @@ class DashboardTab extends GetView<HomeController> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodoCard(dynamic item) {
+    final proId = item['id'];
+    return GestureDetector(
+      onTap: () {
+        if (proId != null) {
+          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': true});
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44.w,
+              height: 44.w,
+              decoration: BoxDecoration(
+                color: AppTheme.warning.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(Icons.assignment_outlined, color: AppTheme.warning, size: 22.w),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['name'] ?? '无标题',
+                    style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    item['creator'] ?? '',
+                    style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: AppTheme.gray300, size: 20.w),
           ],
         ),
       ),
