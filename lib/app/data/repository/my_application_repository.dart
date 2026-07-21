@@ -29,12 +29,13 @@ class MyApplicationRepository {
     return _postInitList({'preHandle': null}, limit: limit, offset: offset);
   }
 
-  /// 历史流程（全部）：GET /oa/handle/initList 不带 filter body
+  /// 历史流程（当前用户相关）：POST /oa/pro/initList body={related: null}
   Future<Map<String, dynamic>> getHistory({int limit = 20, int offset = 0}) async {
     try {
-      final response = await _api.dioInstance.get(
-        '/oa/handle/initList',
+      final response = await _api.dioInstance.post(
+        '/oa/pro/initList',
         queryParameters: {'limit': limit, 'offset': offset},
+        data: {'related': null},
       );
       return _parseListResponse(response.data);
     } on dio.DioException catch (e) {

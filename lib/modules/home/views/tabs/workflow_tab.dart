@@ -95,8 +95,8 @@ class _WorkflowTabState extends State<WorkflowTab> {
         ),
         body: TabBarView(
           children: [
-            _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo, error: todoError),
-            _buildFlowList(historyList, isLoadingHistory, '暂无历史流程', _loadHistory, error: historyError),
+            _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo, error: todoError, isHandle: true),
+            _buildFlowList(historyList, isLoadingHistory, '暂无历史流程', _loadHistory, error: historyError, isHandle: false),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -119,7 +119,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
     );
   }
 
-  Widget _buildFlowList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh, {String? error}) {
+  Widget _buildFlowList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh, {String? error, bool isHandle = false}) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -176,7 +176,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
             onTap: () {
               final id = item['id'];
               if (id != null) {
-                Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id});
+                Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id, 'handle': isHandle});
               }
             },
             child: Container(

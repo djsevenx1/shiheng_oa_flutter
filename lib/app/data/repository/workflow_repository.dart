@@ -178,8 +178,8 @@ class WorkflowRepository {
   }
 
   /// 流程实例列表
-  /// status: 'todo' = POST + {preHandle:null}（待处理）
-  ///         'history' = GET 不带 filter（历史流程/全部）
+  /// status: 'todo' = POST /oa/handle/initList + {preHandle:null}（待处理）
+  ///         'history' = POST /oa/pro/initList + {related:null}（历史流程/当前用户相关）
   Future<Map<String, dynamic>> getWorkflowList({
     required String status,
     int limit = 20,
@@ -187,14 +187,16 @@ class WorkflowRepository {
   }) async {
     try {
       if (status == 'history') {
-        // 历史流程：GET 不带 filter body，返回全部流程
-        final response = await _api.dioInstance.get(
-          '/oa/handle/initList',
+        // 历史流程：POST /oa/pro/initList + {related:null}
+        // 后端生成 where 1 and (p.userId=:userId or pa.userId=:userId)
+        final response = await _api.dioInstance.post(
+          '/oa/pro/initList',
           queryParameters: {'limit': limit, 'offset': offset},
+          data: {'related': null},
         );
         return _parseListResponse(response.data);
       }
-      // 待处理：POST + {preHandle:null}
+      // 待处理：POST /oa/handle/initList + {preHandle:null}
       final response = await _api.dioInstance.post(
         '/oa/handle/initList',
         queryParameters: {'limit': limit, 'offset': offset},
@@ -211,7 +213,8 @@ class WorkflowRepository {
   /// 流程详情（GET /oa/pro/init/:proId）
   Future<Map<String, dynamic>> getWorkflowDetail(int proId) async {
     try {
-      final response = await _api.dioInstance.get('/oa/pro/init/$proId');
+      // 用 initWithMod 获取 tableSchema（表单字段定义）+ formData + logs
+      final response = await _api.dioInstance.get('/oa/pro/initWithMod/$proId');
       return {'success': true, 'data': response.data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
