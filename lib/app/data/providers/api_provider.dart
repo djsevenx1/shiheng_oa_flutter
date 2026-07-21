@@ -147,9 +147,19 @@ class ApiProvider {
 
     _dio.interceptors.add(dio.InterceptorsWrapper(
       onRequest: (options, handler) {
-        // 关键：只加 JSESSIONID cookie，其它什么都不加。
-        // 老 App 用 AngularJS $http 默认行为（不带 XHR/token/userId），curl 实测 200 + 数据。
-        // 之前加的 X-Requested-With / token / userId 全是干扰——但其中 userId=0 还导致 500。
+        // 关键：老 App AuthFilter.java 第45-61行逻辑：
+        // 如果请求带 token header，后端用它作为 login_name 查库获取密码并自动认证
+        // 所以每次请求都必须带 token=loginName，否则 session 失效后会被 302 到 login.jsp
+        final userInfo = _storage.read('userInfo');
+        String? loginName;
+        if (userInfo is Map) {
+          loginName = userInfo['loginName']?.toString() ??
+              userInfo['username']?.toString() ??
+              userInfo['name']?.toString();
+        }
+        if (loginName != null && loginName.isNotEmpty) {
+          options.headers['token'] = loginName;
+        }
 
         // 添加 JSESSIONID cookie
         final jsessionId = _storage.read('JSESSIONID');
