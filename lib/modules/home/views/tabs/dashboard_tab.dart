@@ -7,6 +7,7 @@ import '../../../../app/data/repository/auth_repository.dart';
 import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 import '../../controllers/home_controller.dart';
+import '../../../workflow/widgets/workflow_picker_sheet.dart';
 
 class DashboardTab extends GetView<HomeController> {
   const DashboardTab({super.key});
@@ -85,7 +86,7 @@ class DashboardTab extends GetView<HomeController> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildQuickAction(Icons.people_outline, '通讯录', Colors.blue, () => Get.toNamed(Routes.CONTACTS)),
-                          _buildQuickAction(Icons.add_circle_outline, '发起流程', Colors.indigo, () => Get.toNamed(Routes.WORKFLOW_FORM)),
+                          _buildQuickAction(Icons.add_circle_outline, '发起流程', Colors.indigo, () => WorkflowPickerSheet.show()),
                         ],
                       ),
                     ],

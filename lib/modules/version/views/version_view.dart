@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v3.0.0',
+              '版本 v2.3.4',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,9 +82,9 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v3.0.0 (Build 300)'),
-          _buildInfoRow('发布时间', '2024-01-15'),
-          _buildInfoRow('MD5', 'a1b2c3d4e5f6g7h8'),
+          _buildInfoRow('版本', 'v2.3.4 (Build 234)'),
+          _buildInfoRow('发布时间', '2026-07-21'),
+          _buildInfoRow('MD5', '—'),
         ],
       ),
     );
@@ -128,6 +128,35 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.3.4', '2026-07-21', [
+            '修复首页发起流程缺少modId参数（先选流程类型再填表单）',
+            '版本页版本号和日志同步更新',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.3.3', '2026-07-21', [
+            '历史流程列表显示材料名称（异步加载）',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.3.2', '2026-07-21', [
+            '流程表单自动填写字段不再锁定，可编辑修改',
+            '去掉没用的业务功能入口（项目/任务/话题/报表等）',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.3.1', '2026-07-21', [
+            '首页最新动态改为待处理流程',
+            '首页报表入口改为发起流程',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.3.0', '2026-07-21', [
+            '详情页重写：tableSchema渲染表单+明细表格',
+            '历史流程接口修复（/oa/pro/initList）',
+            '底部提交/放弃按钮',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.2.9', '2026-07-21', [
+            '修复审批记录字段映射（name/actionId/createdDate）',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.2.6', '2026-07-21', [
             '流程tab改为待处理+历史流程（去掉已发起/已审批）',
