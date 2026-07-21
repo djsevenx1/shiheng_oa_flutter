@@ -11,6 +11,16 @@ class WorkflowPickerSheet extends StatefulWidget {
   final WorkflowRepository? repository;
   const WorkflowPickerSheet({super.key, this.repository});
 
+  /// 弹出选择器（静态方法，方便调用）
+  static void show({WorkflowRepository? repository}) {
+    showModalBottomSheet(
+      context: Get.context!,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => WorkflowPickerSheet(repository: repository),
+    );
+  }
+
   @override
   State<WorkflowPickerSheet> createState() => _WorkflowPickerSheetState();
 }
@@ -40,16 +50,6 @@ class _WorkflowPickerSheetState extends State<WorkflowPickerSheet> {
         }
       });
     }
-  }
-
-  /// 弹出选择器（静态方法，方便调用）
-  static void show({WorkflowRepository? repository}) {
-    showModalBottomSheet(
-      context: Get.context!,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => WorkflowPickerSheet(repository: repository),
-    );
   }
 
   @override
