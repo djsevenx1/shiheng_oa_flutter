@@ -353,18 +353,11 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                         TextFormField(
                           controller: controllers[id],
                           readOnly: true,
-                          style: TextStyle(fontSize: 14.sp),
                           decoration: InputDecoration(
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 8.h),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.r)),
-                            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6.r), borderSide: BorderSide(color: AppTheme.gray300)),
-                            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(6.r), borderSide: BorderSide(color: AppTheme.primaryColor)),
-                            suffixIconConstraints: BoxConstraints(minWidth: 32.w, minHeight: 32.h),
-                            suffixIcon: Padding(
-                              padding: EdgeInsets.only(right: 8.w),
-                              child: Icon(Icons.calendar_today, size: 14.w, color: AppTheme.gray400),
-                            ),
+                            suffixIcon: Icon(Icons.calendar_today, size: 16.w, color: AppTheme.gray400),
                           ),
                           onTap: () async {
                             final date = await showDatePicker(
