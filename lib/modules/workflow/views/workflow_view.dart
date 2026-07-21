@@ -26,9 +26,9 @@ class WorkflowView extends GetView<WorkflowController> {
           // Tab 切换
           Obx(() => Row(
                 children: [
-                  _tabBtn('待办 (${controller.todoList.length})', 0),
-                  _tabBtn('进行中 (${controller.runningList.length})', 1),
-                  _tabBtn('已完成 (${controller.doneList.length})', 2),
+                  _tabBtn('待处理 (${controller.todoList.length})', 0),
+                  _tabBtn('已发起的 (${controller.runningList.length})', 1),
+                  _tabBtn('已审批的 (${controller.doneList.length})', 2),
                 ],
               )),
           Divider(height: 1.h, color: AppTheme.dividerColor),

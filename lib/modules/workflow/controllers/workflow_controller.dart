@@ -3,10 +3,10 @@ import '../../../app/data/repository/my_application_repository.dart';
 
 class WorkflowController extends GetxController {
   final isLoading = false.obs;
-  final todoList = <Map<String, dynamic>>[].obs;        // 待办
-  final runningList = <Map<String, dynamic>>[].obs;     // 进行中
-  final doneList = <Map<String, dynamic>>[].obs;        // 已完成
-  final selectedTab = 0.obs;                            // 0=待办 1=进行中 2=已完成
+  final todoList = <Map<String, dynamic>>[].obs;        // 待处理（preHandle）
+  final runningList = <Map<String, dynamic>>[].obs;     // 已发起的（submitted）
+  final doneList = <Map<String, dynamic>>[].obs;        // 已审批的（handled）
+  final selectedTab = 0.obs;                            // 0=待处理 1=已发起的 2=已审批的
 
   final _repo = MyApplicationRepository();
 

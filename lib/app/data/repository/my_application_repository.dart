@@ -3,70 +3,55 @@ import 'package:dio/dio.dart' as dio;
 import '../providers/api_provider.dart';
 
 /// 工作流/我的申请仓库
-/// 老 App 反编译真实接口（workflow.js / engine/core.js）：
-/// - /oa/handle/initList?limit=&offset=           待办/已办/进行中（state 过滤）
+/// 老 App 反编译真实接口（workflow.js + config/api.js $api 封装）：
+/// sate 模式 name='handle'，initList 实际请求：
+///   POST /oa/handle/initList?limit=&offset=  body=filter对象
+/// filter 由 workflow.js 设置：
+///   待处理(全部): {preHandle: null}
+///   待审批:       {preHandle: null, handle: null}
+///   待编辑:       {preHandle: null, edit: null}
+///   历史(全部):   {related: null}
+///   已发起的:     {related: null, submitted: null}
+///   已审批的:     {related: null, handled: null}
+/// 返回 {list: [...], count: N, filtersStr: "..."}
+/// - /oa/handle/getPage?limit=&offset=  POST body={filtersStr}  分页加载
 /// - /oa/pro/init/:proId                          流程实例初始化
-/// - /oa/pro/flag/withdraw/:proId                 是否可撤回
-/// - /oa/pro/save                                 暂存草稿
 /// - /oa/pro/handle                               提交流程/审批
 /// - /oa/pro/withdraw                             撤回
-/// - /oa/pro/getUsers                             候选审批人
-/// - /oa/pro/getLastAndCurrentHandlers            上一步/当前处理人
-/// - /oa/pro/drop/:proId                          流程删除
 /// - /oa/mod/init/:modId                          加载流程定义
-/// - /oa/flow/form/:formId/view/:objectId/process/:processId  自由流程表单
-/// - /oa/flow/approve/:processId/run              自由流程逐级审批
-/// - /oa/flow/approve/:processId                  自由流程审批
-/// - /oa/flow/withdraw/:processId                 自由流程撤回
 class MyApplicationRepository {
   MyApplicationRepository({ApiProvider? api}) : _api = api ?? ApiProvider();
 
   final ApiProvider _api;
 
-  /// 我发起的流程（进行中）：state=1 过滤 /oa/handle/initList
-  Future<Map<String, dynamic>> getMyRunning({int limit = 20, int offset = 0}) async {
-    try {
-      // 老 App 真实接口：/oa/handle/initList?limit=10 (curl 200，381190 条数据)
-      // 之前错用 /oa/flow/initList/running (404)
-      final response = await _api.dioInstance.get(
-        '/oa/handle/initList',
-        queryParameters: {'limit': limit, 'offset': offset, 'state': 1},
-      );
-      return _parseListResponse(response.data);
-    } on dio.DioException catch (e) {
-      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
-    } catch (e) {
-      return {'success': false, 'message': '获取进行中流程失败: $e', 'data': [], 'count': 0};
-    }
-  }
-
-  /// 待我审批：state=0 过滤
+  /// 待办流程（待我审批）：POST /oa/handle/initList body={preHandle: null}
   Future<Map<String, dynamic>> getTodo({int limit = 20, int offset = 0}) async {
-    try {
-      final response = await _api.dioInstance.get(
-        '/oa/handle/initList',
-        queryParameters: {'limit': limit, 'offset': offset, 'state': 0},
-      );
-      return _parseListResponse(response.data);
-    } on dio.DioException catch (e) {
-      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
-    } catch (e) {
-      return {'success': false, 'message': '获取待办失败: $e', 'data': [], 'count': 0};
-    }
+    return _postInitList({'preHandle': null}, limit: limit, offset: offset);
   }
 
-  /// 已完成：state=2
+  /// 已发起的流程（我发起的）：POST /oa/handle/initList body={related: null, submitted: null}
+  Future<Map<String, dynamic>> getMyRunning({int limit = 20, int offset = 0}) async {
+    return _postInitList({'related': null, 'submitted': null}, limit: limit, offset: offset);
+  }
+
+  /// 已审批的流程（我审批过的）：POST /oa/handle/initList body={related: null, handled: null}
   Future<Map<String, dynamic>> getDone({int limit = 20, int offset = 0}) async {
+    return _postInitList({'related': null, 'handled': null}, limit: limit, offset: offset);
+  }
+
+  /// 通用 POST /oa/handle/initList
+  Future<Map<String, dynamic>> _postInitList(Map<String, dynamic> filter, {int limit = 20, int offset = 0}) async {
     try {
-      final response = await _api.dioInstance.get(
+      final response = await _api.dioInstance.post(
         '/oa/handle/initList',
-        queryParameters: {'limit': limit, 'offset': offset, 'state': 2},
+        queryParameters: {'limit': limit, 'offset': offset},
+        data: filter,
       );
       return _parseListResponse(response.data);
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': [], 'count': 0};
     } catch (e) {
-      return {'success': false, 'message': '获取已完成失败: $e', 'data': [], 'count': 0};
+      return {'success': false, 'message': '获取流程列表失败: $e', 'data': [], 'count': 0};
     }
   }
 

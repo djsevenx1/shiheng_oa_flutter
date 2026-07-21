@@ -5,8 +5,8 @@ import '../../../../app/data/repository/workflow_repository.dart';
 import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
 
-/// 老 App 主流程 tab：待办(state=0) + 已完成(state=2)
-/// 老 App 实际是 3 个 tab：待办 / 进行中 / 已完成
+/// 老 App 主流程 tab：待处理(preHandle) + 已发起的(submitted) + 已审批的(handled)
+/// 老 App sate 模式 POST /oa/handle/initList + filter body
 class WorkflowTab extends StatefulWidget {
   const WorkflowTab({super.key});
 
@@ -17,9 +17,9 @@ class WorkflowTab extends StatefulWidget {
 class _WorkflowTabState extends State<WorkflowTab> {
   final _workflowRepository = WorkflowRepository();
 
-  List<dynamic> todoList = [];       // state=0 待我审批
-  List<dynamic> runningList = [];    // state=1 进行中（我发起的）
-  List<dynamic> doneList = [];       // state=2 已完成
+  List<dynamic> todoList = [];       // 待处理（preHandle）
+  List<dynamic> runningList = [];    // 已发起的（related+submitted）
+  List<dynamic> doneList = [];       // 已审批的（related+handled）
   bool isLoadingTodo = true;
   bool isLoadingRunning = true;
   bool isLoadingDone = true;
@@ -85,9 +85,9 @@ class _WorkflowTabState extends State<WorkflowTab> {
           title: const Text('流程'),
           bottom: TabBar(
             tabs: [
-              Tab(text: '待办 (${todoList.length})'),
-              Tab(text: '进行中 (${runningList.length})'),
-              Tab(text: '已完成 (${doneList.length})'),
+              Tab(text: '待处理 (${todoList.length})'),
+              Tab(text: '已发起的 (${runningList.length})'),
+              Tab(text: '已审批的 (${doneList.length})'),
             ],
             labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
             unselectedLabelStyle: TextStyle(fontSize: 14.sp),
@@ -97,9 +97,9 @@ class _WorkflowTabState extends State<WorkflowTab> {
         ),
         body: TabBarView(
           children: [
-            _buildFlowList(todoList, isLoadingTodo, '暂无待办', _loadTodo),
-            _buildFlowList(runningList, isLoadingRunning, '暂无进行中', _loadRunning),
-            _buildFlowList(doneList, isLoadingDone, '暂无已完成', _loadDone),
+            _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo),
+            _buildFlowList(runningList, isLoadingRunning, '暂无已发起的流程', _loadRunning),
+            _buildFlowList(doneList, isLoadingDone, '暂无已审批的流程', _loadDone),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -154,7 +154,14 @@ class _WorkflowTabState extends State<WorkflowTab> {
         itemCount: items.length,
         itemBuilder: (context, index) {
           final item = items[index] as Map<String, dynamic>;
-          return Container(
+          return GestureDetector(
+            onTap: () {
+              final id = item['id'];
+              if (id != null) {
+                Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id});
+              }
+            },
+            child: Container(
             margin: EdgeInsets.only(bottom: 12.h),
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
@@ -204,6 +211,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
                   ),
               ],
             ),
+          ),
           );
         },
       ),
