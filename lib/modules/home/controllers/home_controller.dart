@@ -119,6 +119,14 @@ class HomeController extends GetxController {
     }
   }
 
+  /// 仅刷新首页待处理流程列表（从流程详情返回后调用）
+  Future<void> refreshTodo() async {
+    final todoRes = await _workflowRepository.getWorkflowList(status: 'todo', limit: 5);
+    if (todoRes['success'] == true) {
+      todoList.value = todoRes['data'] ?? [];
+    }
+  }
+
   void changePage(int index) {
     currentIndex.value = index;
     pageController.jumpToPage(index);

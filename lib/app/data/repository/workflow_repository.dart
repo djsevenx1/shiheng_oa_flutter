@@ -342,6 +342,22 @@ class WorkflowRepository {
     }
   }
 
+  /// 放弃/删除流程（GET /oa/pro/drop/:proId）
+  /// 老 App proView.js: $http.get(host + '/oa/pro/drop/' + proId) → "删除成功"
+  /// 彻底删除该申购单（流程实例 + 表单数据），将其从待处理列表移除
+  Future<Map<String, dynamic>> dropProcess(int proId) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/pro/drop/$proId');
+      final data = response.data;
+      // 老 App 以 HTTP 200 判定成功，无 errCode 字段
+      return {'success': true, 'data': data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '放弃失败: $e'};
+    }
+  }
+
   /// 解析老 OA formView HTML 字符串，提取字段
   /// HTML 格式：<tr><td class="form-label">受订单号</td><td class="form-ctrl" id="os_no">{{os_no}}</td></tr>
   /// 字段 = id="xxx" 的 td 元素（class="form-ctrl"）

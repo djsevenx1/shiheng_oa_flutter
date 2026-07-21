@@ -384,9 +384,13 @@ class DashboardTab extends GetView<HomeController> {
   Widget _buildTodoCard(dynamic item) {
     final proId = item['id'];
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (proId != null) {
-          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': true});
+          final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': true});
+          // 从详情返回后，若有操作（放弃/提交）则刷新待处理列表
+          if (result is Map && result['refresh'] == true) {
+            controller.refreshTodo();
+          }
         }
       },
       child: Container(

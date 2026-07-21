@@ -601,7 +601,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
             // 放弃按钮
             Expanded(
               child: OutlinedButton(
-                onPressed: () => Get.back(),
+                onPressed: controller.isLoading.value ? null : controller.abandon,
                 style: OutlinedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                   side: BorderSide(color: AppTheme.danger),

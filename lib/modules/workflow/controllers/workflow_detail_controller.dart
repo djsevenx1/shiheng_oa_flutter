@@ -253,6 +253,47 @@ class WorkflowDetailController extends GetxController {
     }
   }
 
+  /// 放弃此申购单（GET /oa/pro/drop/:proId 彻底删除流程实例及表单数据）
+  /// 与老 App proView.js 的 $scope.remove 一致：删除成功后返回流程列表
+  Future<void> abandon() async {
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: const Text('确认放弃'),
+        content: const Text('放弃后将删除此申购单，且无法恢复。是否确认放弃？'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Get.back(result: true),
+            child: Text('确认放弃', style: TextStyle(color: AppTheme.danger)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    isLoading.value = true;
+    try {
+      final result = await _repository.dropProcess(proId.value);
+      if (result['success'] == true) {
+        Get.snackbar('成功', '已放弃此申购单', snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.success, colorText: Colors.white);
+        Get.back(result: {'refresh': true});
+      } else {
+        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.danger, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppTheme.danger, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
   String getStateName(int state) {
     switch (state) {
       case 0: return '未提交';
