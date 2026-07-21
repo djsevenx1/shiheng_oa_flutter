@@ -116,6 +116,12 @@ class WorkflowFormController extends GetxController {
         if (formFields.isEmpty) {
         errorMessage.value = '该流程未配置表单字段（后端 schema 为空）';
       }
+        // 先为所有 text/number 字段创建 TextEditingController
+        for (final f in formFields) {
+          if (f.type == 'text' || f.type == 'number' || f.type == 'textarea') {
+            getTextController(f.name);
+          }
+        }
         // 自动填 sequence / current / info / logs 字段
         await _autoFillFields();
       } else {
@@ -159,9 +165,16 @@ class WorkflowFormController extends GetxController {
     try {
       final auth = AuthRepository();
       final res = await auth.getCurrentUser();
+      debugPrint('[autoFill] getCurrentUser result: $res');
+      Map? u;
       if (res['success'] == true && res['data'] is Map) {
-        final u = res['data'] as Map;
-        // 实际后端字段：id/name/loginName/groupName/groupId
+        u = res['data'] as Map;
+      } else if (res is Map && res['data'] is Map) {
+        u = res['data'] as Map;
+      } else if (res is Map && res['id'] != null) {
+        u = res;
+      }
+      if (u != null) {
         currentUserId = u['id']?.toString();
         currentUserName = u['name']?.toString()
             ?? u['loginName']?.toString()
@@ -171,14 +184,18 @@ class WorkflowFormController extends GetxController {
             ?? u['department']?.toString()
             ?? u['deptName']?.toString()
             ?? u['dept']?.toString();
+        debugPrint('[autoFill] user: id=$currentUserId name=$currentUserName dept=$currentUserDept');
+      } else {
+        debugPrint('[autoFill] getCurrentUser returned no user data');
       }
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('[autoFill] getCurrentUser error: $e');
+    }
 
     for (final f in formFields) {
       if (!f.isAutoFill) continue;
       switch (f.ctrl) {
         case 'sequence':
-          // 订单号 — 临时用时间戳当 fake，老 App 后端会自动生成
           formData[f.name] = 'AUTO_${now.millisecondsSinceEpoch.toString().substring(7)}';
           break;
         case 'current':
@@ -188,12 +205,9 @@ class WorkflowFormController extends GetxController {
           break;
         case 'info':
         case 'name':
-          // 拟制人 → 当前用户ID（后端要 id 不要 name）；
-          // 申请部门 → 用户部门（字符串）
           if (f.label.contains('部门') || f.label.contains('department')) {
             formData[f.name] = currentUserDept ?? '';
           } else {
-            // 拟制人/申请人等 user 字段 — 后端要 id
             formData[f.name] = currentUserId ?? currentUserName ?? '';
           }
           break;
@@ -208,10 +222,15 @@ class WorkflowFormController extends GetxController {
       formFields.refresh();
     }
     // 更新文本控制器，让 TextFormField 显示自动填的值
+    debugPrint('[autoFill] formData after fill: ${formData.toString()}');
+    debugPrint('[autoFill] textControllers keys: ${textControllers.keys.toList()}');
     for (final entry in formData.entries) {
       final ctrl = textControllers[entry.key];
       if (ctrl != null) {
         ctrl.text = entry.value?.toString() ?? '';
+        debugPrint('[autoFill] set controller ${entry.key} = ${ctrl.text}');
+      } else {
+        debugPrint('[autoFill] no controller for ${entry.key}');
       }
     }
   }
