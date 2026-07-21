@@ -234,22 +234,43 @@ class ApiProvider {
             '→ ${response.statusCode} ct=$ct loc=$loc sc=$sc body=$body');
 
         // 关键修复：老 OA Spring Security 在 session 失效时返回 302 + location:/login.jsp
-        // 之前 dio validateStatus 只接受 2xx，会直接抛异常；
-        // 现在我们改成 < 400 接受，业务层继续处理 — 但这里额外做一次自动处理
-        // （如果后续响应是 /login.jsp，直接转成 401 让业务层知道要重新登录）
+        // 但 followRedirects=true 时 dio 会自动跟随到 /login.jsp 返回 200 + HTML
+        // _parseListResponse 收到 HTML 会当作空数据返回，导致用户看到空列表无错误
+        // 解决：检测 302 重定向到 login + 检测 HTML 响应，都转为认证失败
         if (response.statusCode != null &&
             response.statusCode! >= 300 &&
             response.statusCode! < 400) {
           final loc = response.headers.value('location') ?? '';
           if (loc.contains('login') || loc.contains('error')) {
-            // 模拟一个 401 让业务层知道
+            // 302 重定向到登录页 = session 失效
             return handler.reject(dio.DioException(
               requestOptions: response.requestOptions,
               response: response,
               type: dio.DioExceptionType.badResponse,
+              error: '登录已过期，请重新登录',
             ));
           }
         }
+
+        // 检测被重定向后返回的 HTML（login.jsp 的内容）
+        final ct = response.headers.value('content-type') ?? '';
+        if (ct.contains('text/html')) {
+          String bodyStr = '';
+          try {
+            final d = response.data;
+            if (d is String) bodyStr = d;
+            else if (d != null) bodyStr = d.toString();
+          } catch (_) {}
+          if (bodyStr.contains('login') || bodyStr.contains('<html') || bodyStr.contains('password')) {
+            return handler.reject(dio.DioException(
+              requestOptions: response.requestOptions,
+              response: response,
+              type: dio.DioExceptionType.badResponse,
+              error: '登录已过期，请重新登录',
+            ));
+          }
+        }
+
         return handler.next(response);
       },
       onError: (error, handler) {
@@ -311,6 +332,10 @@ class ApiProvider {
             kind: ApiErrorKind.timeout,
           );
         case dio.DioExceptionType.badResponse:
+          // 优先使用拦截器中设置的自定义 error 消息（如"登录已过期"）
+          if (error.error is String && (error.error as String).isNotEmpty) {
+            return ApiError(message: error.error as String, statusCode: code, kind: ApiErrorKind.unauthorized);
+          }
           if (code == 401) {
             return ApiError(message: '登录已过期，请重新登录', statusCode: code, kind: ApiErrorKind.unauthorized);
           } else if (code == 403) {

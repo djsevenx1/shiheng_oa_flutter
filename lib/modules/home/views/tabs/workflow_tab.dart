@@ -23,6 +23,9 @@ class _WorkflowTabState extends State<WorkflowTab> {
   bool isLoadingTodo = true;
   bool isLoadingRunning = true;
   bool isLoadingDone = true;
+  String? todoError;
+  String? runningError;
+  String? doneError;
 
   @override
   void initState() {
@@ -35,34 +38,49 @@ class _WorkflowTabState extends State<WorkflowTab> {
   }
 
   Future<void> _loadTodo() async {
-    setState(() => isLoadingTodo = true);
+    setState(() { isLoadingTodo = true; todoError = null; });
     final result = await _workflowRepository.getWorkflowList(status: 'todo', limit: 50);
     if (mounted) {
       setState(() {
         isLoadingTodo = false;
-        todoList = (result['success'] == true) ? List<dynamic>.from(result['data'] ?? []) : [];
+        if (result['success'] == true) {
+          todoList = List<dynamic>.from(result['data'] ?? []);
+        } else {
+          todoList = [];
+          todoError = result['message']?.toString() ?? '加载失败';
+        }
       });
     }
   }
 
   Future<void> _loadRunning() async {
-    setState(() => isLoadingRunning = true);
+    setState(() { isLoadingRunning = true; runningError = null; });
     final result = await _workflowRepository.getWorkflowList(status: 'running', limit: 50);
     if (mounted) {
       setState(() {
         isLoadingRunning = false;
-        runningList = (result['success'] == true) ? List<dynamic>.from(result['data'] ?? []) : [];
+        if (result['success'] == true) {
+          runningList = List<dynamic>.from(result['data'] ?? []);
+        } else {
+          runningList = [];
+          runningError = result['message']?.toString() ?? '加载失败';
+        }
       });
     }
   }
 
   Future<void> _loadDone() async {
-    setState(() => isLoadingDone = true);
+    setState(() { isLoadingDone = true; doneError = null; });
     final result = await _workflowRepository.getWorkflowList(status: 'done', limit: 50);
     if (mounted) {
       setState(() {
         isLoadingDone = false;
-        doneList = (result['success'] == true) ? List<dynamic>.from(result['data'] ?? []) : [];
+        if (result['success'] == true) {
+          doneList = List<dynamic>.from(result['data'] ?? []);
+        } else {
+          doneList = [];
+          doneError = result['message']?.toString() ?? '加载失败';
+        }
       });
     }
   }
@@ -97,9 +115,9 @@ class _WorkflowTabState extends State<WorkflowTab> {
         ),
         body: TabBarView(
           children: [
-            _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo),
-            _buildFlowList(runningList, isLoadingRunning, '暂无已发起的流程', _loadRunning),
-            _buildFlowList(doneList, isLoadingDone, '暂无已审批的流程', _loadDone),
+            _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo, error: todoError),
+            _buildFlowList(runningList, isLoadingRunning, '暂无已发起的流程', _loadRunning, error: runningError),
+            _buildFlowList(doneList, isLoadingDone, '暂无已审批的流程', _loadDone, error: doneError),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
@@ -122,9 +140,30 @@ class _WorkflowTabState extends State<WorkflowTab> {
     );
   }
 
-  Widget _buildFlowList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh) {
+  Widget _buildFlowList(List<dynamic> items, bool isLoading, String emptyText, Future<void> Function() onRefresh, {String? error}) {
     if (isLoading) {
       return const Center(child: CircularProgressIndicator());
+    }
+    if (error != null) {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView(
+          children: [
+            SizedBox(height: 100.h),
+            Center(
+              child: Column(
+                children: [
+                  Icon(Icons.error_outline, size: 64.w, color: AppTheme.danger),
+                  SizedBox(height: 16.h),
+                  Text(error, style: TextStyle(fontSize: 14.sp, color: AppTheme.danger), textAlign: TextAlign.center),
+                  SizedBox(height: 8.h),
+                  TextButton(onPressed: onRefresh, child: const Text('重试')),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
     }
     if (items.isEmpty) {
       return RefreshIndicator(
