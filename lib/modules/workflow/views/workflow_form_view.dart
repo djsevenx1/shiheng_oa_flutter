@@ -434,7 +434,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
         _buildFieldLabel(field),
         SizedBox(height: 6.h),
         TextFormField(
-          initialValue: field.defaultValue?.toString() ?? '',
+          controller: controller.getTextController(field.name),
           decoration: _inputDecoration(field.placeholder),
           validator: field.required
               ? (v) => v == null || v.isEmpty ? '请输入${field.label}' : null

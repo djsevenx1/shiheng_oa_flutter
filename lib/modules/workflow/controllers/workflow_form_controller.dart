@@ -50,6 +50,9 @@ class WorkflowFormController extends GetxController {
   final detailRows = <String, List<Map<String, dynamic>>>{}.obs;
   final errorMessage = RxnString();
 
+  // 文本输入控制器（每个字段一个，用于自动填值后更新 UI）
+  final textControllers = <String, TextEditingController>{}.obs;
+
   // 保存 schema 加载结果中的 module 对象和 groupId（提交时需要）
   Map<String, dynamic>? _moduleObj;
   int? _groupId;
@@ -67,6 +70,14 @@ class WorkflowFormController extends GetxController {
     } else {
       errorMessage.value = '缺少 modId 参数';
     }
+  }
+
+  @override
+  void onClose() {
+    for (final ctrl in textControllers.values) {
+      ctrl.dispose();
+    }
+    super.onClose();
   }
 
   Future<void> loadFormSchema() async {
@@ -196,6 +207,18 @@ class WorkflowFormController extends GetxController {
     if (formFields.isNotEmpty) {
       formFields.refresh();
     }
+    // 更新文本控制器，让 TextFormField 显示自动填的值
+    for (final entry in formData.entries) {
+      final ctrl = textControllers[entry.key];
+      if (ctrl != null) {
+        ctrl.text = entry.value?.toString() ?? '';
+      }
+    }
+  }
+
+  /// 获取或创建字段的 TextEditingController
+  TextEditingController getTextController(String fieldName) {
+    return textControllers.putIfAbsent(fieldName, () => TextEditingController());
   }
 
   void toggleApprover(String name) {
