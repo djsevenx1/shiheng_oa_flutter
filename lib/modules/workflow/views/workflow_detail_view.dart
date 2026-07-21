@@ -56,6 +56,9 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                     ],
                     SizedBox(height: 12.h),
                     _buildTimeline(),
+                    SizedBox(height: 12.h),
+                    // 审批意见输入框（仅待处理模式显示）
+                    if (controller.isHandleMode.value) _buildCommentField(),
                     SizedBox(height: 80.h),
                   ],
                 ),
@@ -342,6 +345,58 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
     );
   }
 
+  /// 审批意见输入框
+  Widget _buildCommentField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(width: 3.w, height: 14.h, decoration: BoxDecoration(color: AppTheme.primaryColor, borderRadius: BorderRadius.circular(2.r))),
+                SizedBox(width: 8.w),
+                Text('审批意见', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                SizedBox(width: 4.w),
+                Text('*', style: TextStyle(fontSize: 15.sp, color: AppTheme.danger)),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: controller.commentController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: '请输入审批意见',
+                hintStyle: TextStyle(fontSize: 14.sp, color: AppTheme.textTertiary),
+                filled: true,
+                fillColor: AppTheme.gray50,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: AppTheme.gray200),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: AppTheme.gray200),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                  borderSide: BorderSide(color: AppTheme.primaryColor),
+                ),
+                contentPadding: EdgeInsets.all(12.w),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 底部操作栏
   Widget _buildBottomBar() {
     return Obx(() {
@@ -357,10 +412,13 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
           top: false,
           child: Row(
             children: [
-              // 放弃按钮（随时可用，不禁用）
+              // 放弃按钮
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => Get.back(),
+                  onPressed: () {
+                    controller.commentController.clear();
+                    Get.back();
+                  },
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                     side: BorderSide(color: AppTheme.danger),
@@ -370,7 +428,20 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                 ),
               ),
               SizedBox(width: 12.w),
-              // 提交按钮
+              // 拒绝按钮
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: controller.isLoading.value ? null : controller.reject,
+                  style: OutlinedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    side: BorderSide(color: AppTheme.warning),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                  child: Text('拒绝', style: TextStyle(fontSize: 15.sp, color: AppTheme.warning, fontWeight: FontWeight.w500)),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              // 同意按钮
               Expanded(
                 child: ElevatedButton(
                   onPressed: controller.isLoading.value ? null : controller.approve,
@@ -381,7 +452,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                   ),
                   child: controller.isLoading.value
                       ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('提交', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                      : Text('同意', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
                 ),
               ),
             ],
