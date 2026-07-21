@@ -9,22 +9,27 @@ class TaskController extends GetxController {
   final isLoading = false.obs;
   final taskList = <dynamic>[].obs;
   final totalCount = 0.obs;
-  final selectedTab = 0.obs; // 0: all, 1: todo, 2: doing, 3: done
+  final selectedTab = 0.obs;
 
-  final List<Map<String, String>> tabs = [
-    {'key': 'Recent', 'label': '全部', 'icon': 'list_alt'},
-    {'key': 'Todo', 'label': '待办', 'icon': 'pending_actions'},
-    {'key': 'Done', 'label': '已完成', 'icon': 'check_circle_outline'},
+  // 统计数据（从接口获取，不再硬编码）
+  final stats = <String, int>{'total': 0, 'todo': 0, 'doing': 0, 'done': 0}.obs;
+
+  // 老 App 真实 tab 结构
+  final List<Map<String, dynamic>> tabs = [
+    {'key': 'JoinedOrCreated', 'label': '全部', 'statusKey': ''},
+    {'key': 'JoinedOrCreated', 'label': '未开始', 'statusKey': '/Initialized'},
+    {'key': 'JoinedOrCreated', 'label': '进行中', 'statusKey': '/InProgress'},
+    {'key': 'JoinedOrCreated', 'label': '已完成', 'statusKey': '/Finished'},
   ];
 
-  String get _status {
-    return tabs[selectedTab.value]['key']!;
-  }
+  String get _tabKey => tabs[selectedTab.value]['key'] as String;
+  String get _statusKey => tabs[selectedTab.value]['statusKey'] as String;
 
   @override
   void onInit() {
     super.onInit();
     loadTasks();
+    loadStats();
   }
 
   @override
@@ -37,8 +42,9 @@ class TaskController extends GetxController {
     isLoading.value = true;
     try {
       final result = await _repository.getTaskList(
-        keyword: searchController.text,
-        status: _status,
+        tabKey: _tabKey,
+        statusKey: _statusKey,
+        keyword: searchController.text.isEmpty ? null : searchController.text,
       );
 
       if (result['success'] == true) {
@@ -56,6 +62,11 @@ class TaskController extends GetxController {
     }
   }
 
+  Future<void> loadStats() async {
+    final s = await _repository.getTaskStats();
+    stats.value = s;
+  }
+
   void changeTab(int index) {
     selectedTab.value = index;
     loadTasks();
@@ -66,87 +77,23 @@ class TaskController extends GetxController {
   }
 
   Future<void> toggleTaskStatus(dynamic task) async {
-    final currentStatus = task['status'];
-    final newStatus = currentStatus == 'done' ? 'todo' : 'done';
+    final id = task['id'];
+    if (id == null) return;
+    // 老 App 用 approve 字段：0=审核中 1=已通过 2=未通过
+    // 切换已完成/未完成
+    final currentApprove = task['approve'];
+    final newApprove = currentApprove == 1 ? 0 : 1;
     try {
-      await _repository.updateTaskStatus(task['id'], newStatus);
-      task['status'] = newStatus;
+      await _repository.updateTaskStatus(
+        id is int ? id : int.tryParse(id.toString()) ?? 0,
+        newApprove == 1 ? 'Finished' : 'InProgress',
+      );
+      task['approve'] = newApprove;
       taskList.refresh();
+      loadStats();
     } catch (e) {
-      task['status'] = newStatus;
+      task['approve'] = newApprove;
       taskList.refresh();
     }
-  }
-
-  void _loadMockData() {
-    final mockData = [
-      {
-        'id': 1,
-        'title': '完成控制器硬件测试',
-        'description': '对新一批控制器进行硬件测试并记录结果',
-        'status': 'doing',
-        'priority': 'high',
-        'assignee': '张工',
-        'creator': '张经理',
-        'dueDate': '2024-01-20',
-        'createdDate': '2024-01-15',
-        'progress': 60,
-      },
-      {
-        'id': 2,
-        'title': '编写技术文档',
-        'description': '整理项目技术方案并编写为正式文档',
-        'status': 'todo',
-        'priority': 'medium',
-        'assignee': '我',
-        'creator': '李总监',
-        'dueDate': '2024-01-25',
-        'createdDate': '2024-01-14',
-        'progress': 0,
-      },
-      {
-        'id': 3,
-        'title': '采购申请审批',
-        'description': '提交5万元电子元件采购申请',
-        'status': 'todo',
-        'priority': 'low',
-        'assignee': '我',
-        'creator': '我',
-        'dueDate': '2024-01-18',
-        'createdDate': '2024-01-16',
-        'progress': 0,
-      },
-      {
-        'id': 4,
-        'title': '客户回访',
-        'description': '回访华联科技对产品的反馈',
-        'status': 'done',
-        'priority': 'medium',
-        'assignee': '王主管',
-        'creator': '王主管',
-        'dueDate': '2024-01-10',
-        'createdDate': '2024-01-05',
-        'progress': 100,
-      },
-      {
-        'id': 5,
-        'title': '生产数据周报',
-        'description': '汇总本周生产数据并提交周报',
-        'status': 'doing',
-        'priority': 'high',
-        'assignee': '我',
-        'creator': '陈总',
-        'dueDate': '2024-01-22',
-        'createdDate': '2024-01-15',
-        'progress': 40,
-      },
-    ];
-
-    final filtered = _status == 'all'
-        ? mockData
-        : mockData.where((t) => t['status'] == _status).toList();
-
-    taskList.value = filtered;
-    totalCount.value = filtered.length;
   }
 }

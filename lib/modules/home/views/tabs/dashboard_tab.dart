@@ -77,10 +77,6 @@ class DashboardTab extends GetView<HomeController> {
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                            onPressed: () {},
-                          ),
                         ],
                       ),
                       SizedBox(height: 24.h),
@@ -286,89 +282,102 @@ class DashboardTab extends GetView<HomeController> {
   Widget _buildEventCard(dynamic item) {
     final type = item['eveType'] ?? 0;
     final state = item['state'] ?? 0;
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44.w,
-            height: 44.w,
-            decoration: BoxDecoration(
-              color: controller.getEventTypeColor(type).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12.r),
+    return GestureDetector(
+      onTap: () {
+        final proId = item['proId'];
+        final topId = item['topId'];
+        if (type == 0 && topId != null) {
+          // 内部邮件 → 话题详情
+          Get.toNamed(Routes.TOPIC, arguments: {'id': topId});
+        } else if ((type == 1 || type == 2) && proId != null) {
+          // 待办流程 / 历史流程 → 流程详情
+          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId});
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 6.h),
+        padding: EdgeInsets.all(16.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12.r),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(
-              type == 0 ? Icons.email_outlined : Icons.assignment_outlined,
-              color: controller.getEventTypeColor(type),
-              size: 22.w,
-            ),
-          ),
-          SizedBox(width: 12.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item['name'] ?? '无标题',
-                  style: TextStyle(
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textPrimary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4.h),
-                Row(
-                  children: [
-                    Text(
-                      item['creatorName'] ?? '',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppTheme.textSecondary,
-                      ),
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      item['createdDate'] ?? '',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppTheme.textTertiary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: controller.getStateColor(state).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(6.r),
-            ),
-            child: Text(
-              controller.getStateName(state),
-              style: TextStyle(
-                fontSize: 11.sp,
-                color: controller.getStateColor(state),
-                fontWeight: FontWeight.w500,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44.w,
+              height: 44.w,
+              decoration: BoxDecoration(
+                color: controller.getEventTypeColor(type as int).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Icon(
+                type == 0 ? Icons.email_outlined : Icons.assignment_outlined,
+                color: controller.getEventTypeColor(type),
+                size: 22.w,
               ),
             ),
-          ),
-        ],
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item['name'] ?? '无标题',
+                    style: TextStyle(
+                      fontSize: 15.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppTheme.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  SizedBox(height: 4.h),
+                  Row(
+                    children: [
+                      Text(
+                        item['creatorName'] ?? '',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        item['createdDate'] ?? '',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: AppTheme.textTertiary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+              decoration: BoxDecoration(
+                color: controller.getStateColor(state).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Text(
+                controller.getStateName(state),
+                style: TextStyle(
+                  fontSize: 11.sp,
+                  color: controller.getStateColor(state),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,35 +1,79 @@
 import '../providers/api_provider.dart';
 
+/// 任务仓库
+/// 老 App 反编译真实接口（task.js）：
+/// - /oa/task/initList/{key}?limit=N   任务列表（key=tab+status 组合）
+/// - /oa/task/getDetail/id/:id         任务详情
+/// - /oa/task/addTask                  创建任务（POST）
+/// - /oa/task/addFeedback              更新状态/反馈（POST）
+///
+/// tab keys: JoinedOrCreated / Joined / Joined/AsLeader / Joined/AsMember / Created / Created/Approving / Created/Rejected
+/// status keys: (空) / /Initialized / /InProgress / /Finished
 class TaskRepository {
   final _api = ApiProvider();
 
   /// 获取任务列表
-  /// status: Done | Recent | Todo
+  /// tabKey: JoinedOrCreated / Joined / Created 等
+  /// statusKey: '' / '/Initialized' / '/InProgress' / '/Finished'
   Future<Map<String, dynamic>> getTaskList({
-    int page = 1,
-    int pageSize = 20,
+    int limit = 20,
+    String tabKey = 'JoinedOrCreated',
+    String statusKey = '',
     String? keyword,
-    String? status, // Done | Recent | Todo
   }) async {
     try {
-      // 后端用 /oa/task/initList/{status}?limit=N
-      final s = status ?? 'Todo';
-      final response = await _api.dioInstance.get('/oa/task/initList/$s', queryParameters: {
-        'limit': pageSize,
+      final fullKey = tabKey + statusKey;
+      final response = await _api.dioInstance.get('/oa/task/initList/$fullKey', queryParameters: {
+        'limit': limit,
       });
-      return {
-        'success': true,
-        'data': response.data?['list'] ?? [],
-        'count': response.data?['count'] ?? 0,
-      };
+      final data = response.data;
+      if (data is Map) {
+        return {
+          'success': true,
+          'data': data['list'] ?? [],
+          'count': data['count'] ?? 0,
+        };
+      }
+      if (data is List) {
+        return {'success': true, 'data': data, 'count': data.length};
+      }
+      return {'success': true, 'data': [], 'count': 0};
     } catch (e) {
       return {'success': false, 'message': '获取任务列表失败: $e'};
     }
   }
 
+  /// 获取任务统计（分别请求各状态数量）
+  Future<Map<String, int>> getTaskStats() async {
+    final stats = <String, int>{'total': 0, 'todo': 0, 'doing': 0, 'done': 0};
+    try {
+      final results = await Future.wait([
+        _api.dioInstance.get('/oa/task/initList/JoinedOrCreated', queryParameters: {'limit': 1}),
+        _api.dioInstance.get('/oa/task/initList/JoinedOrCreated/Initialized', queryParameters: {'limit': 1}),
+        _api.dioInstance.get('/oa/task/initList/JoinedOrCreated/InProgress', queryParameters: {'limit': 1}),
+        _api.dioInstance.get('/oa/task/initList/JoinedOrCreated/Finished', queryParameters: {'limit': 1}),
+      ]);
+      for (int i = 0; i < results.length; i++) {
+        final data = results[i].data;
+        int count = 0;
+        if (data is Map) {
+          count = (data['count'] as num?)?.toInt() ?? 0;
+        } else if (data is List) {
+          count = data.length;
+        }
+        switch (i) {
+          case 0: stats['total'] = count; break;
+          case 1: stats['todo'] = count; break;
+          case 2: stats['doing'] = count; break;
+          case 3: stats['done'] = count; break;
+        }
+      }
+    } catch (_) {}
+    return stats;
+  }
+
   Future<Map<String, dynamic>> getTaskDetail(int taskId) async {
     try {
-      // 老 App 真实接口：/oa/task/getDetail/id/:id (curl 200，/oa/task/get/:id 404)
       final response = await _api.dioInstance.get('/oa/task/getDetail/id/$taskId');
       return {'success': true, 'data': response.data};
     } catch (e) {
@@ -39,7 +83,6 @@ class TaskRepository {
 
   Future<Map<String, dynamic>> createTask(dynamic formData) async {
     try {
-      // 老 App 真实接口：/oa/task/addTask (curl 实测 200，/oa/task/add 404)
       final response = await _api.dioInstance.post('/oa/task/addTask', data: formData);
       return {'success': true, 'data': response.data};
     } catch (e) {
@@ -49,8 +92,6 @@ class TaskRepository {
 
   Future<Map<String, dynamic>> updateTaskStatus(int taskId, String status) async {
     try {
-      // 老 App 用 /oa/task/addFeedback（加反馈完成），curl /oa/task/updateStatus 404
-      // 这里传 status 字段让后端识别是"完成"还是其他
       final response = await _api.dioInstance.post('/oa/task/addFeedback', data: {
         'id': taskId,
         'status': status,
@@ -59,20 +100,6 @@ class TaskRepository {
       return {'success': true, 'data': response.data};
     } catch (e) {
       return {'success': false, 'message': '更新状态失败: $e'};
-    }
-  }
-
-  /// 获取待办事项（老 App 真实接口：/oa/eve/getList/8）
-  /// 之前错用 /oa/todo/initList（结构乱）
-  Future<Map<String, dynamic>> getTodo() async {
-    try {
-      final response = await _api.dioInstance.get('/oa/eve/getList/8', queryParameters: {'limit': 20});
-      return {
-        'success': true,
-        'data': response.data,
-      };
-    } catch (e) {
-      return {'success': false, 'message': '获取待办失败: $e'};
     }
   }
 }

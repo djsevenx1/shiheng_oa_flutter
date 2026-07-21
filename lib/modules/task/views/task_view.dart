@@ -44,7 +44,7 @@ class TaskView extends GetView<TaskController> {
   }
 
   Widget _buildStats() {
-    return Container(
+    return Obx(() => Container(
       padding: EdgeInsets.all(16.w),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -55,16 +55,16 @@ class TaskView extends GetView<TaskController> {
       ),
       child: Row(
         children: [
-          Expanded(child: _buildStatItem('待办', '8', Icons.pending_actions, Colors.white.withOpacity(0.2))),
+          Expanded(child: _buildStatItem('全部', '${controller.stats['total'] ?? 0}', Icons.list_alt, Colors.white.withOpacity(0.2))),
           SizedBox(width: 12.w),
-          Expanded(child: _buildStatItem('进行中', '5', Icons.autorenew, Colors.white.withOpacity(0.2))),
+          Expanded(child: _buildStatItem('未开始', '${controller.stats['todo'] ?? 0}', Icons.pending_actions, Colors.white.withOpacity(0.2))),
           SizedBox(width: 12.w),
-          Expanded(child: _buildStatItem('已完成', '23', Icons.check_circle, Colors.white.withOpacity(0.2))),
+          Expanded(child: _buildStatItem('进行中', '${controller.stats['doing'] ?? 0}', Icons.autorenew, Colors.white.withOpacity(0.2))),
           SizedBox(width: 12.w),
-          Expanded(child: _buildStatItem('逾期', '1', Icons.warning, Colors.white.withOpacity(0.2))),
+          Expanded(child: _buildStatItem('已完成', '${controller.stats['done'] ?? 0}', Icons.check_circle, Colors.white.withOpacity(0.2))),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildStatItem(String label, String value, IconData icon, Color bgColor) {
@@ -178,8 +178,21 @@ class TaskView extends GetView<TaskController> {
   }
 
   Widget _buildTaskCard(dynamic task) {
-    final status = task['status'] ?? 'todo';
-    final priority = task['priority'] ?? 'medium';
+    // 老 App 字段：approve(0=审核中 1=已通过 2=未通过) name deadline schedule
+    final approve = task['approve'];
+    final isApproved = approve == 1;
+    final isRejected = approve == 2;
+    final schedule = (task['schedule'] as num?)?.toInt() ?? 0;
+    final deadline = task['deadline'];
+    String deadlineStr = '';
+    if (deadline != null) {
+      final dt = deadline is int
+          ? DateTime.fromMillisecondsSinceEpoch(deadline)
+          : DateTime.tryParse(deadline.toString());
+      if (dt != null) {
+        deadlineStr = '${dt.year}年${dt.month.toString().padLeft(2, '0')}月${dt.day.toString().padLeft(2, '0')}日';
+      }
+    }
     return GestureDetector(
       onTap: () => Get.toNamed(Routes.TASK_DETAIL, arguments: {'taskId': task['id']}),
       child: Container(
@@ -201,123 +214,76 @@ class TaskView extends GetView<TaskController> {
           children: [
             Row(
               children: [
-                GestureDetector(
-                  onTap: () => controller.toggleTaskStatus(task),
-                  child: Container(
-                    width: 22.w,
-                    height: 22.w,
+                if (isRejected)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: status == 'done' ? AppTheme.success : Colors.transparent,
-                      border: Border.all(
-                        color: status == 'done' ? AppTheme.success : AppTheme.gray300,
-                        width: 2,
-                      ),
+                      color: AppTheme.danger.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4.r),
                     ),
-                    child: status == 'done'
-                        ? const Icon(Icons.check, size: 14, color: Colors.white)
-                        : null,
+                    child: Text('未通过', style: TextStyle(fontSize: 10.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
                   ),
-                ),
-                SizedBox(width: 12.w),
                 Expanded(
                   child: Text(
-                    task['title'] ?? '',
+                    task['name'] ?? '(无标题)',
                     style: TextStyle(
                       fontSize: 15.sp,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textPrimary,
-                      decoration: status == 'done' ? TextDecoration.lineThrough : null,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
-                  decoration: BoxDecoration(
-                    color: _getPriorityColor(priority).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                  child: Text(
-                    _getPriorityLabel(priority),
-                    style: TextStyle(
-                      fontSize: 10.sp,
-                      color: _getPriorityColor(priority),
-                      fontWeight: FontWeight.w500,
+                if (approve == 0)
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
+                    decoration: BoxDecoration(
+                      color: AppTheme.warning.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4.r),
+                    ),
+                    child: Text('审核中', style: TextStyle(fontSize: 10.sp, color: AppTheme.warning, fontWeight: FontWeight.w500)),
+                  )
+                else if (isApproved && schedule > 0)
+                  Container(
+                    width: 44.w,
+                    height: 44.w,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox(
+                          width: 44.w,
+                          height: 44.w,
+                          child: CircularProgressIndicator(
+                            value: schedule / 100,
+                            strokeWidth: 3,
+                            backgroundColor: Colors.grey.shade200,
+                            valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                          ),
+                        ),
+                        Text('$schedule%', style: TextStyle(fontSize: 10.sp, fontWeight: FontWeight.w600, color: AppTheme.primaryColor)),
+                      ],
                     ),
                   ),
-                ),
               ],
             ),
-            if ((task['description'] ?? '').isNotEmpty) ...[
+            if (deadlineStr.isNotEmpty) ...[
               SizedBox(height: 8.h),
-              Text(
-                task['description'] ?? '',
-                style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            SizedBox(height: 12.h),
-            Row(
-              children: [
-                Icon(Icons.person_outline, size: 14.w, color: AppTheme.textTertiary),
-                SizedBox(width: 4.w),
-                Text(
-                  task['assignee'] ?? '-',
-                  style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
-                ),
-                const Spacer(),
-                Icon(Icons.schedule, size: 14.w, color: AppTheme.textTertiary),
-                SizedBox(width: 4.w),
-                Text(
-                  task['dueDate'] ?? '-',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: _isOverdue(task['dueDate'], status) ? AppTheme.danger : AppTheme.textTertiary,
+              Row(
+                children: [
+                  Icon(Icons.schedule, size: 14.w, color: AppTheme.textTertiary),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '截至日期：$deadlineStr',
+                    style: TextStyle(fontSize: 12.sp, color: AppTheme.textSecondary),
                   ),
-                ),
-              ],
-            ),
-            if (status == 'doing' && (task['progress'] ?? 0) > 0) ...[
-              SizedBox(height: 8.h),
-              LinearProgressIndicator(
-                value: (task['progress'] as int) / 100,
-                backgroundColor: AppTheme.gray200,
-                valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
-                minHeight: 4.h,
+                ],
               ),
             ],
           ],
         ),
       ),
     );
-  }
-
-  Color _getPriorityColor(String priority) {
-    switch (priority) {
-      case 'high': return AppTheme.danger;
-      case 'medium': return AppTheme.warning;
-      case 'low': return AppTheme.info;
-      default: return AppTheme.gray500;
-    }
-  }
-
-  String _getPriorityLabel(String priority) {
-    switch (priority) {
-      case 'high': return '高';
-      case 'medium': return '中';
-      case 'low': return '低';
-      default: return '中';
-    }
-  }
-
-  bool _isOverdue(String? date, String status) {
-    if (status == 'done' || date == null) return false;
-    final due = DateTime.tryParse(date);
-    if (due == null) return false;
-    return due.isBefore(DateTime.now());
   }
 
   Widget _buildEmptyState() {

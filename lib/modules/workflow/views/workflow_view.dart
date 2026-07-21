@@ -106,7 +106,7 @@ class WorkflowView extends GetView<WorkflowController> {
   Widget _flowItem(Map<String, dynamic> item) {
     final id = item['id']?.toString() ?? '';
     final name = item['name']?.toString() ?? '(无标题)';
-    final creator = item['creator']?.toString() ?? '';
+    final creator = (item['creatorName'] ?? item['creator'])?.toString() ?? '';
     final date = item['createdDate']?.toString() ?? '';
     final state = item['state']?.toString() ?? '';
     return ListTile(
@@ -131,7 +131,7 @@ class WorkflowView extends GetView<WorkflowController> {
           : null,
       onTap: () {
         if (id.isNotEmpty) {
-          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'id': id});
+          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id});
         }
       },
     );

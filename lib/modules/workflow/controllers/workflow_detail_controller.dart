@@ -20,7 +20,8 @@ class WorkflowDetailController extends GetxController {
     super.onInit();
     final args = Get.arguments;
     if (args != null && args['proId'] != null) {
-      proId.value = args['proId'];
+      final raw = args['proId'];
+      proId.value = raw is int ? raw : int.tryParse(raw.toString()) ?? 0;
       loadDetail();
     }
   }
