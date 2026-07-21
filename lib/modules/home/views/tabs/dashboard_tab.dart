@@ -90,8 +90,8 @@ class DashboardTab extends GetView<HomeController> {
                         children: [
                           _buildQuickAction(Icons.edit_location_alt, '签到', Colors.orange, () => Get.toNamed(Routes.ATTENDANCE)),
                           _buildQuickAction(Icons.people_outline, '通讯录', Colors.blue, () => Get.toNamed(Routes.CONTACTS)),
-                          _buildQuickAction(Icons.star_outline, '收藏', Colors.red, () => Get.snackbar('提示', '请通过更多页访问')),
-                          _buildQuickAction(Icons.folder_open, '文档', Colors.green, () => Get.snackbar('提示', '文档功能后端未配置')),
+                          _buildQuickAction(Icons.star_outline, '收藏', Colors.red, () => Get.toNamed(Routes.FAVORITE)),
+                          _buildQuickAction(Icons.folder_open, '文档', Colors.green, () => Get.toNamed(Routes.ARCHIVE)),
                         ],
                       ),
                     ],

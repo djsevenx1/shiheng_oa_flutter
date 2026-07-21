@@ -9,11 +9,6 @@ import '../../modules/notice/bindings/notice_binding.dart';
 import '../../modules/notice/views/notice_view.dart';
 import '../../modules/contacts/bindings/contacts_binding.dart';
 import '../../modules/contacts/views/contacts_view.dart';
-import '../../modules/my_application/bindings/my_application_binding.dart';
-import '../../modules/my_application/views/my_application_view.dart';
-import '../../modules/qr_scan/bindings/qr_scan_binding.dart';
-import '../../modules/qr_scan/views/qr_scan_view.dart';
-import '../../modules/chat/views/chat_list_view.dart';
 import '../../modules/workflow/bindings/workflow_binding.dart';
 import '../../modules/workflow/views/workflow_view.dart';
 import '../../modules/workflow/bindings/workflow_detail_binding.dart';
@@ -22,8 +17,6 @@ import '../../modules/workflow/bindings/workflow_form_binding.dart';
 import '../../modules/workflow/views/workflow_form_view.dart';
 import '../../modules/report/bindings/report_binding.dart';
 import '../../modules/report/views/report_view.dart';
-import '../../modules/report/views/stock_report_view.dart';
-import '../../modules/report/bindings/stock_report_binding.dart';
 import '../../modules/attendance/bindings/attendance_binding.dart';
 import '../../modules/attendance/views/attendance_view.dart';
 import '../../modules/project/bindings/project_binding.dart';
@@ -40,13 +33,15 @@ import '../../modules/topic/bindings/topic_binding.dart';
 import '../../modules/topic/views/topic_view.dart';
 import '../../modules/sh_report/bindings/sh_report_binding.dart';
 import '../../modules/sh_report/views/sh_report_view.dart';
+import '../../modules/archive/bindings/archive_binding.dart';
+import '../../modules/archive/views/archive_view.dart';
+import '../../modules/favorite/bindings/favorite_binding.dart';
+import '../../modules/favorite/views/favorite_view.dart';
 import '../../modules/help/views/help_view.dart';
 import '../../modules/company/views/company_view.dart';
 import '../../modules/version/views/version_view.dart';
 import '../../modules/settings/bindings/settings_binding.dart';
 import '../../modules/settings/views/settings_view.dart';
-import '../../modules/map/bindings/map_binding.dart';
-import '../../modules/map/views/map_view.dart';
 
 part 'app_routes.dart';
 
@@ -98,12 +93,6 @@ class AppPages {
       transition: Transition.cupertino,
     ),
     GetPage(
-      name: _Paths.STOCK_REPORT,
-      page: () => const StockReportView(),
-      binding: StockReportBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
       name: _Paths.ATTENDANCE,
       page: () => const AttendanceView(),
       binding: AttendanceBinding(),
@@ -152,6 +141,18 @@ class AppPages {
       transition: Transition.cupertino,
     ),
     GetPage(
+      name: _Paths.ARCHIVE,
+      page: () => const ArchiveView(),
+      binding: ArchiveBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
+      name: _Paths.FAVORITE,
+      page: () => const FavoriteView(),
+      binding: FavoriteBinding(),
+      transition: Transition.cupertino,
+    ),
+    GetPage(
       name: _Paths.HELP,
       page: () => const HelpView(),
       transition: Transition.cupertino,
@@ -173,12 +174,6 @@ class AppPages {
       transition: Transition.cupertino,
     ),
     GetPage(
-      name: _Paths.MAP,
-      page: () => const MapView(),
-      binding: MapBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
       name: _Paths.NOTICE,
       page: () => const NoticeView(),
       binding: NoticeBinding(),
@@ -193,23 +188,6 @@ class AppPages {
       name: _Paths.CONTACTS,
       page: () => const ContactsView(),
       binding: ContactsBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.MY_APPLICATION,
-      page: () => const MyApplicationView(),
-      binding: MyApplicationBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.QR_SCAN,
-      page: () => const QrScanView(),
-      binding: QrScanBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.CHAT_LIST,
-      page: () => const ChatListView(),
       transition: Transition.cupertino,
     ),
   ];
