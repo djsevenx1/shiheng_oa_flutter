@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.4.4',
+              '版本 v2.4.5',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.4.4 (Build 244)'),
+          _buildInfoRow('版本', 'v2.4.5 (Build 245)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.4.5', '2026-07-21', [
+            '修复明细编辑弹窗需求日期显示异常',
+            '日期字段改用readOnly TextFormField+onTap弹日期选择器',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.4.4', '2026-07-21', [
             '详情页明细区域添加编辑和新增功能',

@@ -350,7 +350,15 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                       Text(label, style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary, fontWeight: FontWeight.w500)),
                       SizedBox(height: 6.h),
                       if (isDate)
-                        InkWell(
+                        TextFormField(
+                          controller: controllers[id],
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(6.r)),
+                            suffixIcon: Icon(Icons.calendar_today, size: 16.w, color: AppTheme.gray400),
+                          ),
                           onTap: () async {
                             final date = await showDatePicker(
                               context: Get.context!,
@@ -362,20 +370,6 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                               controllers[id]!.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
                             }
                           },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppTheme.gray300),
-                              borderRadius: BorderRadius.circular(6.r),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.calendar_today, size: 16.w, color: AppTheme.gray400),
-                                SizedBox(width: 8.w),
-                                Expanded(child: Obx(() => Text(controllers[id]!.text.isEmpty ? '请选择' : controllers[id]!.text, style: TextStyle(fontSize: 14.sp, color: controllers[id]!.text.isEmpty ? AppTheme.textTertiary : AppTheme.textPrimary)))),
-                              ],
-                            ),
-                          ),
                         )
                       else
                         TextFormField(
