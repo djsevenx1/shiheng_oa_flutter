@@ -102,7 +102,10 @@ class WorkflowView extends GetView<WorkflowController> {
 
   Widget _flowItem(Map<String, dynamic> item) {
     final id = item['id']?.toString() ?? '';
-    final name = item['name']?.toString() ?? '(无标题)';
+    // 列表 API 不返回 name 字段，用模块名（modsMap[modId]）作为标题
+    final modName = controller.getModuleName(item['modId']);
+    final rawName = item['name']?.toString() ?? '';
+    final name = rawName.isNotEmpty ? rawName : (modName.isNotEmpty ? modName : '(无标题)');
     final creator = (item['creatorName'] ?? item['creator'])?.toString() ?? '';
     final date = item['createdDate']?.toString() ?? '';
     final state = item['state']?.toString() ?? '';
@@ -126,9 +129,12 @@ class WorkflowView extends GetView<WorkflowController> {
                 style: TextStyle(fontSize: 11.sp, color: _stateColor(state))),
             )
           : null,
-      onTap: () {
+      onTap: () async {
         if (id.isNotEmpty) {
-          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id});
+          final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id});
+          if (result is Map && result['refresh'] == true) {
+            controller.refresh();
+          }
         }
       },
     );

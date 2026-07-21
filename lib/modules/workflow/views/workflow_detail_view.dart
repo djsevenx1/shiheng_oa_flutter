@@ -587,7 +587,10 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
   }
 
   /// 底部操作栏
+  /// 老 App: state > 0 且 approveNode 不含 'start' → 审批人模式（拒绝/通过）
+  ///         state <= 0 或 approveNode 含 'start' → 发起人模式（放弃/提交）
   Widget _buildBottomBar() {
+    final isApprover = controller.isApproverMode;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
@@ -598,20 +601,23 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
         top: false,
         child: Row(
           children: [
-            // 放弃按钮
+            // 左按钮：审批人=拒绝 / 发起人=放弃
             Expanded(
               child: OutlinedButton(
-                onPressed: controller.isLoading.value ? null : controller.abandon,
+                onPressed: controller.isLoading.value
+                    ? null
+                    : (isApprover ? controller.reject : controller.abandon),
                 style: OutlinedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                   side: BorderSide(color: AppTheme.danger),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                 ),
-                child: Text('放弃', style: TextStyle(fontSize: 15.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
+                child: Text(isApprover ? '拒绝' : '放弃',
+                    style: TextStyle(fontSize: 15.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
               ),
             ),
             SizedBox(width: 12.w),
-            // 提交按钮
+            // 右按钮：审批人=通过 / 发起人=提交
             Expanded(
               child: ElevatedButton(
                 onPressed: controller.isLoading.value ? null : controller.approve,
@@ -622,7 +628,8 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                 ),
                 child: controller.isLoading.value
                     ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text('提交', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                    : Text(isApprover ? '通过' : '提交',
+                        style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
               ),
             ),
           ],

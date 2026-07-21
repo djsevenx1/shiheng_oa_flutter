@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../../app/data/repository/my_application_repository.dart';
 import '../../../../app/data/repository/workflow_repository.dart';
 import '../../../../app/routes/app_pages.dart';
 import '../../../../app/themes/app_theme.dart';
@@ -16,6 +17,8 @@ class WorkflowTab extends StatefulWidget {
 
 class _WorkflowTabState extends State<WorkflowTab> {
   final _workflowRepository = WorkflowRepository();
+  final _myAppRepo = MyApplicationRepository();
+  Map<int, String> modsMap = {};  // modId → moduleName（列表标题用）
 
   List<dynamic> todoList = [];       // 待处理（preHandle）
   List<dynamic> historyList = [];    // 历史流程（全部）
@@ -31,7 +34,21 @@ class _WorkflowTabState extends State<WorkflowTab> {
   }
 
   Future<void> _loadAll() async {
-    await Future.wait([_loadTodo(), _loadHistory()]);
+    await Future.wait([_loadTodo(), _loadHistory(), _loadModules()]);
+  }
+
+  /// 获取模块列表（老 App 调 /oa/handle/initMods，用于列表标题）
+  Future<void> _loadModules() async {
+    final res = await _myAppRepo.getModules();
+    if (res['success'] == true && res['data'] is Map) {
+      modsMap = (res['data'] as Map).cast<int, String>();
+    }
+  }
+
+  /// 根据 modId 获取模块名（列表标题）
+  String _getModuleName(dynamic modId) {
+    final id = modId is int ? modId : int.tryParse(modId?.toString() ?? '') ?? 0;
+    return modsMap[id] ?? '';
   }
 
   Future<void> _loadTodo() async {
@@ -251,7 +268,7 @@ class _WorkflowTabState extends State<WorkflowTab> {
                 ),
                 SizedBox(height: 12.h),
                 Text(
-                  item['name']?.toString() ?? item['title']?.toString() ?? '(无标题)',
+                  item['name']?.toString() ?? _getModuleName(item['modId']) ?? '(无标题)',
                   style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                 ),
                 // 材料名摘要（历史流程异步加载后显示）

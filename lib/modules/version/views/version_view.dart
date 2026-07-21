@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.4.8',
+              '版本 v2.4.9',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.4.8 (Build 248)'),
+          _buildInfoRow('版本', 'v2.4.9 (Build 249)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.4.9', '2026-07-21', [
+            '修复流程列表标题显示"(无标题)"：改用模块名（如"材料临时请购单"）作为标题',
+            '详情页按钮根据角色动态显示：审批人显示拒绝/通过，发起人显示放弃/提交',
+            '审批记录补全"指定审批"和"退回"两种操作类型的显示',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.4.8', '2026-07-21', [
             '修复放弃按钮：改为真正放弃申购单（调用 /oa/pro/drop 接口删除流程）',

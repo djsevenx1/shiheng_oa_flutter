@@ -424,7 +424,7 @@ class DashboardTab extends GetView<HomeController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['name'] ?? '无标题',
+                    item['name'] ?? controller.getModuleName(item['modId']) ?? '无标题',
                     style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w500, color: AppTheme.textPrimary),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

@@ -133,6 +133,8 @@ class WorkflowDetailController extends GetxController {
       case 2: return '同意';
       case 3: return '拒绝';
       case 4: return '转交';
+      case 5: return '指定审批';
+      case 6: return '退回';
       case 11: return '加签';
       case -1: return '撤回';
       default: return '审批';
@@ -141,7 +143,26 @@ class WorkflowDetailController extends GetxController {
 
   bool isActionPositive(dynamic actionId) {
     final id = actionId is int ? actionId : int.tryParse(actionId?.toString() ?? '') ?? 0;
-    return id == 1 || id == 2 || id == 4 || id == 11;
+    return id == 1 || id == 2 || id == 4 || id == 5 || id == 11;
+  }
+
+  /// 是否为审批人模式（显示拒绝/通过按钮）
+  /// 老 App goHandle: state > 0 → handle 视图（拒绝/通过）
+  /// 但若 approveNode 含 'start'，说明流程被退回给发起人，需重新提交 → form 视图（放弃/提交）
+  bool get isApproverMode {
+    if (!isHandleMode.value) return false;
+    final state = workflowDetail['state'];
+    final approveNode = workflowDetail['approveNode'];
+    if (approveNode is List) {
+      final nodes = approveNode.map((e) => e.toString()).toList();
+      // approveNode 含 'start' → 流程退回给发起人，需重新提交
+      if (nodes.contains('start')) return false;
+      // approveNode 含非 start 节点 → 审批人
+      if (nodes.isNotEmpty) return true;
+    }
+    // approveNode 无信息时，state > 0 默认审批人
+    if (state is int && state > 0) return true;
+    return false;
   }
 
   /// 获取字段显示值

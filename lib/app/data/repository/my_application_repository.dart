@@ -151,6 +151,37 @@ class MyApplicationRepository {
     }
   }
 
+  /// 获取模块列表（POST /oa/handle/initMods）
+  /// 老 App ProToDoCtrl: 调用 initMods 获取模块列表，构建 modsMap(modId→name) 用于列表标题
+  /// 返回 {success, data: {modId: moduleName, ...}}
+  Future<Map<String, dynamic>> getModules() async {
+    try {
+      final response = await _api.dioInstance.post(
+        '/oa/handle/initMods',
+        queryParameters: {'filtersStr': ''},
+      );
+      final list = response.data;
+      final modsMap = <int, String>{};
+      if (list is List) {
+        for (final m in list) {
+          if (m is Map) {
+            final id = m['id'];
+            final name = m['name']?.toString() ?? '';
+            final modId = id is int ? id : int.tryParse(id?.toString() ?? '') ?? 0;
+            if (modId > 0 && name.isNotEmpty) {
+              modsMap[modId] = name;
+            }
+          }
+        }
+      }
+      return {'success': true, 'data': modsMap};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message, 'data': <int, String>{}};
+    } catch (e) {
+      return {'success': false, 'message': '获取模块列表失败: $e', 'data': <int, String>{}};
+    }
+  }
+
   /// 通用：根据 tab key 拉对应列表
   Future<Map<String, dynamic>> getListByTab(String tabKey, {int limit = 20, int offset = 0}) async {
     switch (tabKey) {

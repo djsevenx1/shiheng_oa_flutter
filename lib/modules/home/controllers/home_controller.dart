@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/data/repository/dashboard_repository.dart';
+import '../../../app/data/repository/my_application_repository.dart';
 import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/routes/app_pages.dart';
 
@@ -9,6 +10,7 @@ class HomeController extends GetxController {
   final _authRepository = AuthRepository();
   final _dashboardRepository = DashboardRepository();
   final _workflowRepository = WorkflowRepository();
+  final _myAppRepo = MyApplicationRepository();
 
   final currentIndex = 0.obs;
   final isLoading = false.obs;
@@ -21,6 +23,7 @@ class HomeController extends GetxController {
   final events = <dynamic>[].obs;
   final todoList = <dynamic>[].obs;  // 待处理流程（首页用）
   final userInfo = <String, dynamic>{}.obs;
+  final modsMap = <int, String>{}.obs;  // modId → moduleName（列表标题用）
 
   // 页面控制器
   final pageController = PageController();
@@ -112,6 +115,8 @@ class HomeController extends GetxController {
       if (todoRes['success'] == true) {
         todoList.value = todoRes['data'] ?? [];
       }
+      // 加载模块名称映射（列表标题用）
+      await _loadModules();
     } catch (e) {
       print('加载仪表盘数据失败: $e');
     } finally {
@@ -119,8 +124,24 @@ class HomeController extends GetxController {
     }
   }
 
+  /// 获取模块列表（老 App 调 /oa/handle/initMods，用于列表标题）
+  Future<void> _loadModules() async {
+    if (modsMap.isNotEmpty) return;
+    final res = await _myAppRepo.getModules();
+    if (res['success'] == true && res['data'] is Map) {
+      modsMap.assignAll((res['data'] as Map).cast<int, String>());
+    }
+  }
+
+  /// 根据 modId 获取模块名（列表标题）
+  String getModuleName(dynamic modId) {
+    final id = modId is int ? modId : int.tryParse(modId?.toString() ?? '') ?? 0;
+    return modsMap[id] ?? '';
+  }
+
   /// 仅刷新首页待处理流程列表（从流程详情返回后调用）
   Future<void> refreshTodo() async {
+    await _loadModules();
     final todoRes = await _workflowRepository.getWorkflowList(status: 'todo', limit: 5);
     if (todoRes['success'] == true) {
       todoList.value = todoRes['data'] ?? [];
