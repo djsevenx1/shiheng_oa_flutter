@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.4.0',
+              '版本 v2.4.1',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.4.0 (Build 240)'),
+          _buildInfoRow('版本', 'v2.4.1 (Build 241)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.4.1', '2026-07-21', [
+            '改回放弃+提交两按钮（去掉同意/拒绝）',
+            '修复放弃按钮没反应：底部栏移到Scaffold.bottomNavigationBar',
+            '底部栏脱离body的Obx，避免重建导致点击事件丢失',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.4.0', '2026-07-21', [
             '详情页添加审批意见输入框（之前没有导致提交无反应）',

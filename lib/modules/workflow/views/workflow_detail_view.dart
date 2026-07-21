@@ -39,34 +39,32 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
         if (controller.workflowDetail.isEmpty) {
           return Center(child: Text('暂无详情数据', style: TextStyle(fontSize: 14.sp, color: AppTheme.textTertiary)));
         }
-        return Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(16.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildStatusCard(),
-                    SizedBox(height: 12.h),
-                    _buildFormFields(),
-                    if (controller.mxItems.isNotEmpty) ...[
-                      SizedBox(height: 12.h),
-                      _buildDetailSection(),
-                    ],
-                    SizedBox(height: 12.h),
-                    _buildTimeline(),
-                    SizedBox(height: 12.h),
-                    // 审批意见输入框（仅待处理模式显示）
-                    if (controller.isHandleMode.value) _buildCommentField(),
-                    SizedBox(height: 80.h),
-                  ],
-                ),
-              ),
-            ),
-            _buildBottomBar(),
-          ],
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStatusCard(),
+              SizedBox(height: 12.h),
+              _buildFormFields(),
+              if (controller.mxItems.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                _buildDetailSection(),
+              ],
+              SizedBox(height: 12.h),
+              _buildTimeline(),
+              SizedBox(height: 12.h),
+              // 审批意见输入框（仅待处理模式显示）
+              if (controller.isHandleMode.value) _buildCommentField(),
+              SizedBox(height: 80.h),
+            ],
+          ),
         );
+      }),
+      bottomNavigationBar: Obx(() {
+        if (!controller.isHandleMode.value) return const SizedBox.shrink();
+        if (controller.isLoading.value) return const SizedBox.shrink();
+        return _buildBottomBar();
       }),
     );
   }
@@ -399,67 +397,47 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
 
   /// 底部操作栏
   Widget _buildBottomBar() {
-    return Obx(() {
-      // 历史模式（只读）不显示底部按钮
-      if (!controller.isHandleMode.value) return const SizedBox.shrink();
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, -2))],
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: const Offset(0, -2))],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            // 放弃按钮
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Get.back(),
+                style: OutlinedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  side: BorderSide(color: AppTheme.danger),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                ),
+                child: Text('放弃', style: TextStyle(fontSize: 15.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
+              ),
+            ),
+            SizedBox(width: 12.w),
+            // 提交按钮
+            Expanded(
+              child: ElevatedButton(
+                onPressed: controller.isLoading.value ? null : controller.approve,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  backgroundColor: AppTheme.primaryColor,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                ),
+                child: controller.isLoading.value
+                    ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                    : Text('提交', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+              ),
+            ),
+          ],
         ),
-        child: SafeArea(
-          top: false,
-          child: Row(
-            children: [
-              // 放弃按钮
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    controller.commentController.clear();
-                    Get.back();
-                  },
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    side: BorderSide(color: AppTheme.danger),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                  child: Text('放弃', style: TextStyle(fontSize: 15.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              // 拒绝按钮
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: controller.isLoading.value ? null : controller.reject,
-                  style: OutlinedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    side: BorderSide(color: AppTheme.warning),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                  child: Text('拒绝', style: TextStyle(fontSize: 15.sp, color: AppTheme.warning, fontWeight: FontWeight.w500)),
-                ),
-              ),
-              SizedBox(width: 12.w),
-              // 同意按钮
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: controller.isLoading.value ? null : controller.approve,
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    backgroundColor: AppTheme.primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                  child: controller.isLoading.value
-                      ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                      : Text('同意', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    });
+      ),
+    );
   }
 
   /// formData 回退显示（tableSchema 为空时）
