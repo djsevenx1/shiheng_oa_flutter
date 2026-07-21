@@ -137,7 +137,6 @@ class VersionView extends StatelessWidget {
           ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.0.0', '2023-08-10', [
-            '新增考勤签到功能',
             '新增任务管理',
             '优化流程审批',
           ]),

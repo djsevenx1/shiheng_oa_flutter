@@ -10,7 +10,6 @@ abstract class Routes {
   static const WORKFLOW_DETAIL = _Paths.WORKFLOW_DETAIL;
   static const WORKFLOW_FORM = _Paths.WORKFLOW_FORM;
   static const REPORT = _Paths.REPORT;
-  static const ATTENDANCE = _Paths.ATTENDANCE;
   static const PROJECT = _Paths.PROJECT;
   static const PROJECT_DETAIL = _Paths.PROJECT_DETAIL;
   static const TASK = _Paths.TASK;
@@ -39,7 +38,6 @@ abstract class _Paths {
   static const WORKFLOW_DETAIL = '/workflow/detail';
   static const WORKFLOW_FORM = '/workflow/form';
   static const REPORT = '/report';
-  static const ATTENDANCE = '/attendance';
   static const PROJECT = '/project';
   static const PROJECT_DETAIL = '/project/detail';
   static const TASK = '/task';

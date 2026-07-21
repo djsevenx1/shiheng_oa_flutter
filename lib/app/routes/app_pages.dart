@@ -17,8 +17,6 @@ import '../../modules/workflow/bindings/workflow_form_binding.dart';
 import '../../modules/workflow/views/workflow_form_view.dart';
 import '../../modules/report/bindings/report_binding.dart';
 import '../../modules/report/views/report_view.dart';
-import '../../modules/attendance/bindings/attendance_binding.dart';
-import '../../modules/attendance/views/attendance_view.dart';
 import '../../modules/project/bindings/project_binding.dart';
 import '../../modules/project/bindings/project_detail_binding.dart';
 import '../../modules/project/views/project_view.dart';
@@ -90,12 +88,6 @@ class AppPages {
       name: _Paths.REPORT,
       page: () => const ReportView(),
       binding: ReportBinding(),
-      transition: Transition.cupertino,
-    ),
-    GetPage(
-      name: _Paths.ATTENDANCE,
-      page: () => const AttendanceView(),
-      binding: AttendanceBinding(),
       transition: Transition.cupertino,
     ),
     GetPage(

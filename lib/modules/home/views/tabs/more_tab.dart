@@ -19,7 +19,6 @@ class MoreTab extends GetView<HomeController> {
         padding: EdgeInsets.all(16.w),
         children: [
           _buildMenuSection('业务模块', [
-            _MenuItem(Icons.location_on_outlined, '考勤签到', Colors.orange, Routes.ATTENDANCE),
             _MenuItem(Icons.contacts_outlined, '通讯录', Colors.blue, Routes.CONTACTS),
             _MenuItem(Icons.folder_copy_outlined, '项目管理', Colors.purple, Routes.PROJECT),
             _MenuItem(Icons.task_alt, '任务管理', Colors.teal, Routes.TASK),
