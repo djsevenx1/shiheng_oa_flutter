@@ -229,24 +229,46 @@ class WorkflowRepository {
   }
 
   /// 提交流程（POST /oa/pro/handle）
-  /// 老 App 真实：POST /oa/pro/handle body=formData
-  /// 之前错用 /oa/flow/submit/:modId (400)
-  /// 老 OA 实际需要 formData + appKey (tableKey) + modId
+  /// 老 App project_flow_detail.js 真实 body 格式：
+  /// {name, module, formData, flagPositive, proId, groupId, message}
+  /// 新建流程: proId=null, flagPositive=null
+  /// 审批通过: flagPositive=true
+  /// 审批拒绝: flagPositive=false
+  /// 返回 {errCode, errMsg}，errCode>0 表示成功
   Future<Map<String, dynamic>> submitWorkflow({
     required int modId,
     required Map<String, dynamic> formData,
     String appKey = '',
+    String name = '',
+    Map<String, dynamic>? module,
+    int? proId,
+    int? groupId,
+    String message = '',
+    bool? flagPositive, // null=新建 true=同意 false=拒绝
   }) async {
     try {
-      // 老 App 真实：POST /oa/pro/handle  body=formData
-      // 之前错用 /oa/flow/submit/:modId (400)
-      final response = await _api.dioInstance.post('/oa/pro/handle', data: {
+      final payload = <String, dynamic>{
+        'name': name,
+        'module': module ?? {'id': modId, 'tableKey': appKey},
         'formData': formData,
-        'appKey': appKey,
-        'isDraft': false,
-        'modId': modId,
-      });
-      return {'success': true, 'data': response.data};
+        'flagPositive': flagPositive,
+        'proId': proId,
+        'groupId': groupId,
+        'message': message,
+      };
+      final response = await _api.dioInstance.post('/oa/pro/handle', data: payload);
+      final data = response.data;
+      // 老 App 判断：errCode > 0 表示成功
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        final errMsg = data['errMsg']?.toString() ?? '';
+        if (errCode > 0) {
+          return {'success': true, 'data': data, 'message': errMsg};
+        } else {
+          return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '提交失败(errCode=$errCode)', 'data': data};
+        }
+      }
+      return {'success': true, 'data': data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
@@ -255,19 +277,32 @@ class WorkflowRepository {
   }
 
   /// 审批（POST /oa/pro/handle）
+  /// flagPositive=true 同意, flagPositive=false 拒绝
+  /// 返回 {errCode, errMsg}，errCode>0 表示成功
   Future<Map<String, dynamic>> approveWorkflow({
     required int proId,
     required String result, // 'pass' / 'reject'
     String comment = '',
   }) async {
     try {
+      final flagPositive = result == 'pass';
       final response = await _api.dioInstance.post('/oa/pro/handle', data: {
-        'id': proId,
-        'result': result,
-        'comment': comment,
-        'isApprove': true,
+        'proId': proId,
+        'flagPositive': flagPositive,
+        'message': comment,
+        'formData': {},
       });
-      return {'success': true, 'data': response.data};
+      final data = response.data;
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        final errMsg = data['errMsg']?.toString() ?? '';
+        if (errCode > 0) {
+          return {'success': true, 'data': data, 'message': errMsg};
+        } else {
+          return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '操作失败(errCode=$errCode)', 'data': data};
+        }
+      }
+      return {'success': true, 'data': data};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {

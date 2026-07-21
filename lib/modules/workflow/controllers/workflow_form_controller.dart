@@ -50,6 +50,10 @@ class WorkflowFormController extends GetxController {
   final detailRows = <String, List<Map<String, dynamic>>>{}.obs;
   final errorMessage = RxnString();
 
+  // 保存 schema 加载结果中的 module 对象和 groupId（提交时需要）
+  Map<String, dynamic>? _moduleObj;
+  int? _groupId;
+
   @override
   void onInit() {
     super.onInit();
@@ -76,6 +80,10 @@ class WorkflowFormController extends GetxController {
           moduleName.value = data['moduleName']?.toString() ?? '流程表单';
         }
         appKey.value = data['appKey']?.toString() ?? '';
+        // 保存 module 对象（提交时需要传给 /oa/pro/handle）
+        _moduleObj = (data['module'] is Map) ? Map<String, dynamic>.from(data['module'] as Map) : null;
+        // 获取当前用户 groupId
+        _groupId = await _getCurrentGroupId();
         final fieldsJson = (data['fields'] as List?)?.cast<Map<String, dynamic>>() ?? [];
         formFields.value = fieldsJson.map((json) {
           // 老 OA: flagDetail=true 是明细表，需用 'detail' 类型渲染
@@ -111,6 +119,21 @@ class WorkflowFormController extends GetxController {
 
   void updateField(String name, dynamic value) {
     formData[name] = value;
+  }
+
+  /// 获取当前用户 groupId
+  Future<int?> _getCurrentGroupId() async {
+    try {
+      final auth = AuthRepository();
+      final res = await auth.getCurrentUser();
+      if (res['success'] == true && res['data'] is Map) {
+        final u = res['data'] as Map;
+        final gid = u['groupId'];
+        if (gid is int) return gid;
+        if (gid != null) return int.tryParse(gid.toString());
+      }
+    } catch (_) {}
+    return null;
   }
 
   /// 自动填 sequence / current / info / logs 字段
@@ -233,14 +256,26 @@ class WorkflowFormController extends GetxController {
         modId: modId.value,
         formData: data,
         appKey: appKey.value,
+        name: moduleName.value,
+        module: _moduleObj,
+        proId: null, // 新建流程
+        groupId: _groupId,
+        flagPositive: null, // 新建流程
       );
       if (result['success'] == true) {
-        Get.snackbar('提交成功', '流程已发起，等待审批', snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: AppTheme.success, colorText: Colors.white);
-        Get.back(result: {'refresh': true, 'submitted': true});
+        // 老 App 提交成功后显示审批人信息然后跳转
+        final msg = result['message']?.toString() ?? '流程已发起，等待审批';
+        Get.snackbar('提交成功', msg, snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.success, colorText: Colors.white,
+            duration: const Duration(seconds: 2));
+        // 等待 1.5 秒让用户看到提示，然后返回首页（跳过中间页）
+        await Future.delayed(const Duration(milliseconds: 1500));
+        Get.until((route) => Get.currentRoute == '/home');
       } else {
-        Get.snackbar('提交失败', result['message']?.toString() ?? '请稍后再试', snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: AppTheme.danger, colorText: Colors.white);
+        Get.snackbar('提交失败', result['message']?.toString() ?? '请稍后再试',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.danger, colorText: Colors.white,
+            duration: const Duration(seconds: 4));
       }
     } catch (e) {
       Get.snackbar('提交失败', '异常: $e', snackPosition: SnackPosition.BOTTOM,
