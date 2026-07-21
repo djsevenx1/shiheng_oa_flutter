@@ -240,7 +240,7 @@ class ApiProvider {
         if (response.statusCode != null &&
             response.statusCode! >= 300 &&
             response.statusCode! < 400) {
-          final loc = response.headers.value('location') ?? '';
+          // 复用上面已声明的 loc
           if (loc.contains('login') || loc.contains('error')) {
             // 302 重定向到登录页 = session 失效
             return handler.reject(dio.DioException(
@@ -253,7 +253,7 @@ class ApiProvider {
         }
 
         // 检测被重定向后返回的 HTML（login.jsp 的内容）
-        final ct = response.headers.value('content-type') ?? '';
+        // 复用上面已声明的 ct (content-type)
         if (ct.contains('text/html')) {
           String bodyStr = '';
           try {
