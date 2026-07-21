@@ -357,7 +357,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
           top: false,
           child: Row(
             children: [
-              // 放弃按钮
+              // 放弃按钮（随时可用，不禁用）
               Expanded(
                 child: OutlinedButton(
                   onPressed: () => Get.back(),
@@ -379,7 +379,9 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
                     backgroundColor: AppTheme.primaryColor,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                   ),
-                  child: Text('提交', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                  child: controller.isLoading.value
+                      ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text('提交', style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
                 ),
               ),
             ],
