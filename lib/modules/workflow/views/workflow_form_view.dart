@@ -423,7 +423,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
   }
 
   Widget _buildTextField(FormFieldSchema field) {
-    if (field.isAutoFill) return _buildReadonlyField(field);
+    // 自动填写的字段也允许编辑，只是预填默认值
     return _buildEditableTextField(field);
   }
 
@@ -503,7 +503,7 @@ class WorkflowFormView extends GetView<WorkflowFormController> {
   }
 
   Widget _buildDateField(FormFieldSchema field) {
-    if (field.isAutoFill) return _buildReadonlyField(field);
+    // 自动填写的日期字段也允许编辑
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

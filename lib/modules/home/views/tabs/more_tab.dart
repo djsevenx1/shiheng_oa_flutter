@@ -20,13 +20,6 @@ class MoreTab extends GetView<HomeController> {
         children: [
           _buildMenuSection('业务模块', [
             _MenuItem(Icons.contacts_outlined, '通讯录', Colors.blue, Routes.CONTACTS),
-            _MenuItem(Icons.folder_copy_outlined, '项目管理', Colors.purple, Routes.PROJECT),
-            _MenuItem(Icons.task_alt, '任务管理', Colors.teal, Routes.TASK),
-            _MenuItem(Icons.forum_outlined, '话题讨论', Colors.cyan, Routes.TOPIC),
-            _MenuItem(Icons.analytics, '时恒报表', Colors.pink, Routes.SH_REPORT),
-            _MenuItem(Icons.insert_chart, '报表中心', Colors.indigo, Routes.REPORT),
-            _MenuItem(Icons.folder_open, '知识文档', Colors.green, Routes.ARCHIVE),
-            _MenuItem(Icons.favorite_outline, '收藏夹', Colors.red, Routes.FAVORITE),
           ]),
           SizedBox(height: 16.h),
           _buildMenuSection('其他', [

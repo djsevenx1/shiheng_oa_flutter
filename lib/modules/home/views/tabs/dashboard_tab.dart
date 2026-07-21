@@ -85,8 +85,6 @@ class DashboardTab extends GetView<HomeController> {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
                           _buildQuickAction(Icons.people_outline, '通讯录', Colors.blue, () => Get.toNamed(Routes.CONTACTS)),
-                          _buildQuickAction(Icons.star_outline, '收藏', Colors.red, () => Get.toNamed(Routes.FAVORITE)),
-                          _buildQuickAction(Icons.folder_open, '文档', Colors.green, () => Get.toNamed(Routes.ARCHIVE)),
                           _buildQuickAction(Icons.add_circle_outline, '发起流程', Colors.indigo, () => Get.toNamed(Routes.WORKFLOW_FORM)),
                         ],
                       ),
