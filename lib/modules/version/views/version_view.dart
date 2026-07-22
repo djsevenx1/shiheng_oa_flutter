@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.2',
+              'OA 移动办公平台 v2.7.3',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.2 (Build 272)'),
+          _buildInfoRow('版本', 'v2.7.3 (Build 273)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.7.3', '2026-07-22', [
+            '最新页面支持下拉刷新:公告/动态/待处理流程均可下拉重新加载',
+            '下拉 spinner 颜色与主紫色统一',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.7.2', '2026-07-22', [
             '修复流程详情"提交"按钮卡在当前页:发起人模式改走 submitWorkflow 接口(带 formData + flagPositive=null)',
