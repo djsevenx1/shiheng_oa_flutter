@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/data/repository/dashboard_repository.dart';
 import '../../../app/data/repository/my_application_repository.dart';
+import '../../../app/data/services/update_service.dart';
 import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/routes/app_pages.dart';
 
@@ -33,6 +34,8 @@ class HomeController extends GetxController {
     super.onInit();
     loadUserInfo();
     loadDashboardData();
+    // 启动时静默检查更新
+    UpdateService.checkUpdateOnStartup();
   }
 
   @override

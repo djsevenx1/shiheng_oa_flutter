@@ -146,7 +146,7 @@ class WorkflowDetailController extends GetxController {
       case 3: return '拒绝';
       case 4: return '转交';
       case 5: return '指定审批';
-      case 6: return '退回';
+      case 6: return '转交';
       case 11: return '加签';
       case -1: return '撤回';
       default: return '审批';
@@ -155,7 +155,7 @@ class WorkflowDetailController extends GetxController {
 
   bool isActionPositive(dynamic actionId) {
     final id = actionId is int ? actionId : int.tryParse(actionId?.toString() ?? '') ?? 0;
-    return id == 1 || id == 2 || id == 4 || id == 5 || id == 11;
+    return id == 1 || id == 2 || id == 4 || id == 5 || id == 6 || id == 11;
   }
 
   /// 是否为审批人模式（显示拒绝/通过 + 转交/前加签/通知）
