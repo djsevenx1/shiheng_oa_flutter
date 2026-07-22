@@ -25,6 +25,9 @@ class WorkflowDetailController extends GetxController {
   final detailFields = <Map<String, dynamic>>[].obs; // 明细子字段定义
   final mxItems = <Map<String, dynamic>>[].obs;      // 明细数据行
   final isHandleMode = false.obs; // true=待处理(可审批) false=历史(只读)
+  // 转交：选人后暂存，等用户填审批意见点"通过"时一起提交
+  final forwardUserIds = <int>[].obs;
+  final forwardUserNames = <String>[].obs;
 
   @override
   void onInit() {
@@ -209,16 +212,28 @@ class WorkflowDetailController extends GetxController {
       final groupId = userInfo?['groupId'] is int
           ? userInfo!['groupId'] as int
           : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
-      final result = await _repository.approveWorkflow(
-        proId: proId.value,
-        result: 'pass',
-        comment: commentController.text.trim(),
-        name: moduleName,
-        groupId: groupId > 0 ? groupId : null,
-      );
+
+      // 如果选了转交人，走转交审批接口；否则走普通通过
+      final result = forwardUserIds.isNotEmpty
+          ? await _repository.forwardWorkflow(
+              proId: proId.value,
+              extraUserIds: forwardUserIds.toList(),
+              comment: commentController.text.trim(),
+              name: moduleName,
+              groupId: groupId > 0 ? groupId : null,
+            )
+          : await _repository.approveWorkflow(
+              proId: proId.value,
+              result: 'pass',
+              comment: commentController.text.trim(),
+              name: moduleName,
+              groupId: groupId > 0 ? groupId : null,
+            );
       // 老 App: 后端返回 errMsg 作为提示信息（如"已提交库房审批"）
       final serverMsg = result['message']?.toString() ?? '';
-      final displayMsg = serverMsg.isNotEmpty ? serverMsg : '审批已通过';
+      final displayMsg = serverMsg.isNotEmpty
+          ? serverMsg
+          : (forwardUserIds.isNotEmpty ? '已转交给${forwardUserNames.length}人审批' : '审批已通过');
       if (result['success'] == true) {
         Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
@@ -332,7 +347,7 @@ class WorkflowDetailController extends GetxController {
     }
   }
 
-  /// 转交：选择人员后，通过审批接口带 extraUserIds 转交
+  /// 转交：仅选择人员并暂存，等用户填审批意见后点"通过"时一起提交
   Future<void> forward() async {
     final users = await _pickUsers(title: '选择转交人', multiSelect: true);
     if (users == null || users.isEmpty) return;
@@ -344,49 +359,12 @@ class WorkflowDetailController extends GetxController {
       Get.snackbar('提示', '请选择有效的转交人', snackPosition: SnackPosition.BOTTOM);
       return;
     }
-
-    isLoading.value = true;
-    try {
-      final oldLogCount = logs.length;
-      final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
-      final userInfo = _authRepo.getUserInfo();
-      final groupId = userInfo?['groupId'] is int
-          ? userInfo!['groupId'] as int
-          : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
-
-      final result = await _repository.forwardWorkflow(
-        proId: proId.value,
-        extraUserIds: userIds,
-        comment: commentController.text.trim(),
-        name: moduleName,
-        groupId: groupId > 0 ? groupId : null,
-      );
-      final serverMsg = result['message']?.toString() ?? '';
-      final displayMsg = serverMsg.isNotEmpty ? serverMsg : '已转交给${users.length}人审批';
-      if (result['success'] == true) {
-        Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: AppTheme.success, colorText: Colors.white);
-        Get.back(result: {'refresh': true});
-      } else {
-        // 后端可能返回错误但操作已生效，重新加载详情验证
-        await loadDetail();
-        if (logs.length > oldLogCount) {
-          // logs 增加 → 操作实际已生效
-          Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: AppTheme.success, colorText: Colors.white);
-          Get.back(result: {'refresh': true});
-        } else {
-          Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: AppTheme.danger, colorText: Colors.white);
-        }
-      }
-    } catch (e) {
-      Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: AppTheme.danger, colorText: Colors.white);
-    } finally {
-      isLoading.value = false;
-    }
+    // 暂存转交人，不提交；等用户填审批意见点"通过"时一起提交
+    forwardUserIds.value = userIds;
+    forwardUserNames.value = users.map((u) => u['name']?.toString() ?? '').toList();
+    final names = forwardUserNames.join('、');
+    Get.snackbar('已选转交人', '$names\n请填写审批意见后点击"通过"提交',
+        snackPosition: SnackPosition.BOTTOM, duration: const Duration(seconds: 3));
   }
 
   /// 前加签：选择人员后，调用 /oa/pro/assist 加签

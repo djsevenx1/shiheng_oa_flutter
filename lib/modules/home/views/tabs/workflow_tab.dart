@@ -222,9 +222,9 @@ class _WorkflowTabState extends State<WorkflowTab> {
             onTap: () async {
               final id = item['id'];
               if (id != null) {
-                final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id, 'handle': isHandle});
-                // 从详情返回后，若有操作（放弃/提交）则刷新列表
-                if (mounted && result is Map && result['refresh'] == true) {
+                await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id, 'handle': isHandle});
+                // 从详情返回后无条件刷新列表
+                if (mounted) {
                   _loadAll();
                 }
               }

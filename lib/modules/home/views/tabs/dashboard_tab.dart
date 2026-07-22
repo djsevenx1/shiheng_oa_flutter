@@ -290,11 +290,9 @@ class DashboardTab extends GetView<HomeController> {
           Get.toNamed(Routes.TOPIC, arguments: {'id': topId});
         } else if ((type == 1 || type == 2) && proId != null) {
           // 待办流程 / 历史流程 → 流程详情
-          final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': type == 1});
-          // 从详情返回后，若有操作则刷新通知列表和待办列表
-          if (result is Map && result['refresh'] == true) {
-            controller.refreshTodo();
-          }
+          await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': type == 1});
+          // 从详情返回后无条件刷新通知列表和待办列表
+          controller.refreshTodo();
         }
       },
       child: Container(
@@ -390,11 +388,9 @@ class DashboardTab extends GetView<HomeController> {
     return GestureDetector(
       onTap: () async {
         if (proId != null) {
-          final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': true});
-          // 从详情返回后，若有操作（放弃/提交）则刷新待处理列表
-          if (result is Map && result['refresh'] == true) {
-            controller.refreshTodo();
-          }
+          await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': true});
+          // 从详情返回后无条件刷新待处理列表
+          controller.refreshTodo();
         }
       },
       child: Container(
