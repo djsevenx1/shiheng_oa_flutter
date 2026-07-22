@@ -5,7 +5,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.22.2-02569B?logo=flutter)
 ![Dart](https://img.shields.io/badge/Dart-3.4%2B-0175C2?logo=dart)
 ![Android](https://img.shields.io/badge/Android-5.0%2B-3DDC84?logo=android)
-![Version](https://img.shields.io/badge/version-v2.7.10-61428F)
+![Version](https://img.shields.io/badge/version-v2.8.0-61428F)
 ![License](https://img.shields.io/badge/license-Proprietary-red)
 
 ---
@@ -114,7 +114,7 @@ lib/
 │       └── app_theme.dart          # 浅色 + 深色双主题
 └── modules/                        # 17 个业务模块
     ├── splash/                     # 启动页
-    ├── login/                      # 登录页(服务器+代理配置)
+    ├── login/                      # 登录页(服务器+凭据)
     ├── home/                       # 主页(4 Tab)
     │   └── views/tabs/             #   dashboard/workflow/more
     ├── workflow/                   # 流程(列表/详情/表单/选择器)
@@ -187,6 +187,7 @@ flutter analyze
 完整版本日志见 [Releases](https://github.com/djsevenx1/shiheng_oa_flutter/releases),或 App 内"设置 → 关于 → 更新日志"。
 
 最近几个版本:
+- **v2.8.0** (2026-07-22) - 加速 GitHub 代理配置从登录页迁到"设置 > 网络"
 - **v2.7.10** (2026-07-22) - 登录页新增加速 GitHub 地址输入框
 - **v2.7.9** (2026-07-22) - 链接服务器速度优化(keep-alive/gzip/预热/并行)
 - **v2.7.8** (2026-07-22) - 修复系统文本选择菜单英文

@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.11 (Build 281)'),
+          _buildInfoRow('版本', 'v2.8.0 (Build 280)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -129,6 +129,15 @@ class VersionView extends StatelessWidget {
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           SizedBox(height: 12.h),
+          _buildLogItem('v2.8.0', '2026-07-22', [
+            '加速 GitHub 代理配置入口从登录页迁到"设置 > 网络",登录页不再显示该输入框',
+            '设置页新增"加速 GitHub 代理"列表项,副标题实时显示当前代理地址',
+            '点击进入编辑弹窗:支持自定义地址 / 留空恢复默认 / "恢复默认"快捷按钮',
+            '地址校验:必须以 http:// 或 https:// 开头,否则弹错误提示',
+            'SettingsController 新增 githubProxy (RxString) + saveGithubProxy / resetGithubProxy 方法',
+            '清除缓存保留 github_proxy_url 键,避免误清代理配置',
+            'UpdateService 注释更新:代理来源改为设置页',
+          ]),
           _buildLogItem('v2.7.10', '2026-07-22', [
             '登录页新增"加速GitHub地址"输入框,默认 https://tmdb-8d1.pages.dev,值持久化到 GetStorage',
             'UpdateService 改为读取 GetStorage 里的 github_proxy_url,登录后可随时换代理',

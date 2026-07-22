@@ -6,6 +6,8 @@ import 'package:path_provider/path_provider.dart';
 
 class SettingsController extends GetxController {
   static const _kDarkMode = 'dark_mode';
+  static const _kGithubProxy = 'github_proxy_url';
+  static const _defaultGithubProxy = 'https://tmdb-8d1.pages.dev';
 
   final GetStorage _storage = GetStorage();
 
@@ -18,6 +20,9 @@ class SettingsController extends GetxController {
   final notificationsEnabled = true.obs;
   final cacheSize = '0 B'.obs;
   final isClearingCache = false.obs;
+
+  /// 加速 GitHub 代理地址（UpdateService 检查更新/下载 APK 走此代理）
+  final githubProxy = _defaultGithubProxy.obs;
 
   @override
   void onInit() {
@@ -34,6 +39,14 @@ class SettingsController extends GetxController {
     } else {
       themeMode.value = ThemeMode.light;
     }
+
+    // 从本地恢复 GitHub 代理地址(v2.8.0 起从登录页迁到此处)
+    final savedProxy = _storage.read(_kGithubProxy);
+    if (savedProxy is String && savedProxy.trim().isNotEmpty) {
+      githubProxy.value = savedProxy.trim();
+    } else {
+      githubProxy.value = _defaultGithubProxy;
+    }
   }
 
   /// 切换深色模式
@@ -45,6 +58,32 @@ class SettingsController extends GetxController {
 
   void toggleNotifications(bool value) {
     notificationsEnabled.value = value;
+  }
+
+  /// 保存加速 GitHub 代理地址。
+  /// 空字符串视为恢复默认值,前后空格自动去除,末尾的 / 自动去掉。
+  /// 返回 true=保存成功,false=输入非法。
+  bool saveGithubProxy(String input) {
+    final trimmed = input.trim();
+    if (trimmed.isEmpty) {
+      // 空值: 恢复默认
+      githubProxy.value = _defaultGithubProxy;
+      _storage.remove(_kGithubProxy);
+      return true;
+    }
+    // 简单校验: 必须以 http:// 或 https:// 开头
+    if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+      return false;
+    }
+    githubProxy.value = trimmed;
+    _storage.write(_kGithubProxy, trimmed);
+    return true;
+  }
+
+  /// 重置为默认代理
+  void resetGithubProxy() {
+    githubProxy.value = _defaultGithubProxy;
+    _storage.remove(_kGithubProxy);
   }
 
   /// 重新计算缓存大小
@@ -115,8 +154,12 @@ class SettingsController extends GetxController {
       final keys = _storage.getKeys().toList();
       for (final k in keys) {
         if (k == _kDarkMode) continue; // 保留深色模式选择
+        if (k == _kGithubProxy) continue; // 保留加速 GitHub 代理
         if (k.startsWith('login_') || k == 'server_url' || k == 'auto_login') {
           continue; // 保留登录相关
+        }
+        if (k == 'remembered_username' || k == 'remembered_password') {
+          continue; // 保留记住密码
         }
         await _storage.remove(k);
       }

@@ -41,7 +41,7 @@ class CompanyView extends StatelessWidget {
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '移动办公平台 v2.7.11',
+                      '移动办公平台 v2.8.0',
                       style: TextStyle(fontSize: 12.sp, color: Colors.white70),
                     ),
                     SizedBox(height: 20.h),

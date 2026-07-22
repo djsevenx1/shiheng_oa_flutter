@@ -23,14 +23,12 @@ class LoginController extends GetxController {
   static const _kSavedPassword = 'remembered_password';
   static const _kAutoLogin = 'auto_login';
 
-  // GitHub 加速代理地址（用于检查更新/下载 APK 走 Cloudflare Pages 代理）
-  static const _kGithubProxy = 'github_proxy_url';
-  static const _defaultGithubProxy = 'https://tmdb-8d1.pages.dev';
-
   final serverController = TextEditingController();
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
-  final githubProxyController = TextEditingController();
+
+  // 注：加速 GitHub 代理配置已迁到"设置"页(v2.8.0)，
+  // 存储 key 'github_proxy_url' 由 SettingsController 维护，UpdateService 直接读取。
 
   final isLoading = false.obs;
   final isPasswordVisible = false.obs;
@@ -47,11 +45,6 @@ class LoginController extends GetxController {
     super.onInit();
     // 默认服务器地址
     serverController.text = _api.baseUrl;
-
-    // 恢复加速 GitHub 代理地址(用户可改),默认 tmdb-8d1.pages.dev
-    final savedProxy = _storage.read(_kGithubProxy);
-    githubProxyController.text =
-        (savedProxy is String && savedProxy.isNotEmpty) ? savedProxy : _defaultGithubProxy;
 
     // 关键改动：恢复"记住密码"保存的凭据。
     // 注意：优先使用 user 真正保存过的账号，其次才回退到默认 'admin'。
@@ -84,7 +77,6 @@ class LoginController extends GetxController {
     serverController.dispose();
     usernameController.dispose();
     passwordController.dispose();
-    githubProxyController.dispose();
     super.onClose();
   }
 
@@ -184,15 +176,6 @@ class LoginController extends GetxController {
     try {
       // 切换服务器地址
       _api.setBaseUrl(serverController.text);
-
-      // 持久化 GitHub 加速代理地址(用户可改,默认 tmdb-8d1.pages.dev)
-      // 登录成功/失败都保存,这样下次启动自动填回用户上次输入的值
-      final proxy = githubProxyController.text.trim();
-      if (proxy.isNotEmpty) {
-        _storage.write(_kGithubProxy, proxy);
-      } else {
-        _storage.write(_kGithubProxy, _defaultGithubProxy);
-      }
 
       // 关键修复：登录前清掉旧 session，避免 dio 自动加上旧 Cookie 头
       // 导致后端返回 302 时被 dio 误判为异常（"只能登录一次"的根因）

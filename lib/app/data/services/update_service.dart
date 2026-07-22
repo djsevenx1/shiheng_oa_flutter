@@ -15,13 +15,14 @@ class UpdateService {
   static const _repoOwner = 'djsevenx1';
   static const _repoName = 'shiheng_oa_flutter';
   static const _apkName = 'shiheng-oa-universal.apk';
-  static const _currentVersion = '2.7.11';
+  static const _currentVersion = '2.8.0';
 
   /// 暴露给 UI 使用的当前版本号（如设置页、关于页）
   static String get currentVersion => _currentVersion;
 
-  /// GitHub 加速代理地址(用户在登录页可改,默认 tmdb-8d1.pages.dev)
+  /// GitHub 加速代理地址(用户在"设置"页可改,默认 tmdb-8d1.pages.dev)
   /// 读取顺序: GetStorage 持久化值 > 硬编码默认值
+  /// 持久化 key 由 SettingsController._kGithubProxy 维护。
   static String get _cfProxy {
     final saved = GetStorage().read('github_proxy_url');
     if (saved is String && saved.trim().isNotEmpty) {
