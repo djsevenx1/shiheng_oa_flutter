@@ -205,6 +205,7 @@ class WorkflowDetailController extends GetxController {
     try {
       final oldLogCount = logs.length;
       final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
+      final userInfo = _authRepo.getUserInfo();
       final groupId = userInfo?['groupId'] is int
           ? userInfo!['groupId'] as int
           : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
@@ -252,6 +253,7 @@ class WorkflowDetailController extends GetxController {
     try {
       final oldLogCount = logs.length;
       final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
+      final userInfo = _authRepo.getUserInfo();
       final groupId = userInfo?['groupId'] is int
           ? userInfo!['groupId'] as int
           : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
