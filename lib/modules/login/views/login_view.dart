@@ -129,6 +129,8 @@ class LoginView extends GetView<LoginController> {
                               TextField(
                                 controller: controller.serverController,
                                 style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                                enableSuggestions: false,
+                                autocorrect: false,
                                 decoration: InputDecoration(
                                   hintText: '服务器地址',
                                   hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
@@ -137,11 +139,11 @@ class LoginView extends GetView<LoginController> {
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -155,6 +157,9 @@ class LoginView extends GetView<LoginController> {
                               TextField(
                                 controller: controller.usernameController,
                                 style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                                enableSuggestions: false,
+                                autocorrect: false,
+                                textInputAction: TextInputAction.next,
                                 decoration: InputDecoration(
                                   hintText: '用户名',
                                   hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
@@ -163,11 +168,11 @@ class LoginView extends GetView<LoginController> {
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
@@ -182,6 +187,10 @@ class LoginView extends GetView<LoginController> {
                                 controller: controller.passwordController,
                                 style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
                                 obscureText: !controller.isPasswordVisible.value,
+                                enableSuggestions: false,
+                                autocorrect: false,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => controller.login(),
                                 decoration: InputDecoration(
                                   hintText: '密码',
                                   hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
@@ -200,11 +209,11 @@ class LoginView extends GetView<LoginController> {
                                   fillColor: Colors.white,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),

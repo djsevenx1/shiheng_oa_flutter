@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.6.2',
+              '版本 v2.6.3',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.6.2 (Build 262)'),
+          _buildInfoRow('版本', 'v2.6.3 (Build 263)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.6.3', '2026-07-22', [
+            '修复三星手机输入框不显示文字：边框改为可见浅灰色',
+            '关闭自动纠错和建议（三星键盘兼容）',
+            '密码框支持回车直接登录',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.6.2', '2026-07-22', [
             '设置页优化：去除"业务模块"和"其他"标题，合并为一个列表',
