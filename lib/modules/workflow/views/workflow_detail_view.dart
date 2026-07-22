@@ -587,7 +587,7 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
   }
 
   /// 底部操作栏
-  /// 老 App: state > 0 且 approveNode 不含 'start' → 审批人模式（拒绝/通过）
+  /// 老 App: state > 0 且 approveNode 不含 'start' → 审批人模式（拒绝/通过 + 转交/前加签/通知）
   ///         state <= 0 或 approveNode 含 'start' → 发起人模式（放弃/提交）
   Widget _buildBottomBar() {
     final isApprover = controller.isApproverMode;
@@ -599,41 +599,76 @@ class WorkflowDetailView extends GetView<WorkflowDetailController> {
       ),
       child: SafeArea(
         top: false,
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // 左按钮：审批人=拒绝 / 发起人=放弃
-            Expanded(
-              child: OutlinedButton(
-                onPressed: controller.isLoading.value
-                    ? null
-                    : (isApprover ? controller.reject : controller.abandon),
-                style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  side: BorderSide(color: AppTheme.danger),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                ),
-                child: Text(isApprover ? '拒绝' : '放弃',
-                    style: TextStyle(fontSize: 15.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
+            // 审批人模式：额外操作按钮行（转交/前加签/通知）
+            if (isApprover) ...[
+              Row(
+                children: [
+                  _buildActionChip(Icons.forward_to_inbox, '转交', AppTheme.info, controller.forward),
+                  SizedBox(width: 8.w),
+                  _buildActionChip(Icons.person_add_alt, '前加签', AppTheme.warning, controller.assist),
+                  SizedBox(width: 8.w),
+                  _buildActionChip(Icons.notifications_active, '通知', AppTheme.success, controller.broadcast),
+                ],
               ),
-            ),
-            SizedBox(width: 12.w),
-            // 右按钮：审批人=通过 / 发起人=提交
-            Expanded(
-              child: ElevatedButton(
-                onPressed: controller.isLoading.value ? null : controller.approve,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  backgroundColor: AppTheme.primaryColor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              SizedBox(height: 10.h),
+            ],
+            // 主操作按钮行
+            Row(
+              children: [
+                // 左按钮：审批人=拒绝 / 发起人=放弃
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: controller.isLoading.value
+                        ? null
+                        : (isApprover ? controller.reject : controller.abandon),
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      side: BorderSide(color: AppTheme.danger),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                    child: Text(isApprover ? '拒绝' : '放弃',
+                        style: TextStyle(fontSize: 15.sp, color: AppTheme.danger, fontWeight: FontWeight.w500)),
+                  ),
                 ),
-                child: controller.isLoading.value
-                    ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                    : Text(isApprover ? '通过' : '提交',
-                        style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
-              ),
+                SizedBox(width: 12.w),
+                // 右按钮：审批人=通过 / 发起人=提交
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: controller.isLoading.value ? null : controller.approve,
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      backgroundColor: AppTheme.primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                    child: controller.isLoading.value
+                        ? SizedBox(width: 18.w, height: 18.w, child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : Text(isApprover ? '通过' : '提交',
+                            style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 额外操作按钮（转交/前加签/通知）
+  Widget _buildActionChip(IconData icon, String label, Color color, VoidCallback onTap) {
+    return Expanded(
+      child: OutlinedButton.icon(
+        onPressed: controller.isLoading.value ? null : onTap,
+        style: OutlinedButton.styleFrom(
+          padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 4.w),
+          side: BorderSide(color: color.withOpacity(0.4)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        ),
+        icon: Icon(icon, size: 16.w, color: color),
+        label: Text(label, style: TextStyle(fontSize: 13.sp, color: color, fontWeight: FontWeight.w500)),
       ),
     );
   }

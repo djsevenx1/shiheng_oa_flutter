@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../app/data/repository/contacts_repository.dart';
 import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/themes/app_theme.dart';
 
@@ -315,6 +318,130 @@ class WorkflowDetailController extends GetxController {
     }
   }
 
+  /// 转交：选择人员后，通过审批接口带 extraUserIds 转交
+  Future<void> forward() async {
+    final users = await _pickUsers(title: '选择转交人', multiSelect: true);
+    if (users == null || users.isEmpty) return;
+    final userIds = users.map((u) {
+      final id = u['id'];
+      return id is int ? id : int.tryParse(id?.toString() ?? '') ?? 0;
+    }).where((id) => id > 0).toList();
+    if (userIds.isEmpty) {
+      Get.snackbar('提示', '请选择有效的转交人', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      final result = await _repository.forwardWorkflow(
+        proId: proId.value,
+        extraUserIds: userIds,
+        comment: commentController.text.trim(),
+      );
+      if (result['success'] == true) {
+        Get.snackbar('成功', '已转交给${users.length}人审批', snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.success, colorText: Colors.white);
+        Get.back(result: {'refresh': true});
+      } else {
+        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.danger, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppTheme.danger, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// 前加签：选择人员后，调用 /oa/pro/assist 加签
+  Future<void> assist() async {
+    final users = await _pickUsers(title: '选择前加签人员', multiSelect: false);
+    if (users == null || users.isEmpty) return;
+    final user = users.first;
+    final assistId = user['id'] is int ? user['id'] : int.tryParse(user['id']?.toString() ?? '') ?? 0;
+    if (assistId <= 0) {
+      Get.snackbar('提示', '请选择有效的加签人', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      final result = await _repository.assistWorkflow(
+        proId: proId.value,
+        assistId: assistId,
+        comment: commentController.text.trim(),
+      );
+      if (result['success'] == true) {
+        Get.snackbar('成功', '已加签${user['name']}，等待其审批后由您继续处理',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.success, colorText: Colors.white);
+        await loadDetail();
+      } else {
+        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.danger, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppTheme.danger, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// 通知：选择人员后，发送站内消息通知其查看此流程
+  Future<void> broadcast() async {
+    final users = await _pickUsers(title: '选择通知人', multiSelect: true);
+    if (users == null || users.isEmpty) return;
+    final receivers = users.map((u) {
+      final id = u['id'];
+      return id is int ? id : int.tryParse(id?.toString() ?? '') ?? 0;
+    }).where((id) => id > 0).toList();
+    if (receivers.isEmpty) {
+      Get.snackbar('提示', '请选择有效的通知人', snackPosition: SnackPosition.BOTTOM);
+      return;
+    }
+
+    isLoading.value = true;
+    try {
+      final moduleName = workflowDetail['module']?['name']?.toString() ?? '流程';
+      final result = await _repository.broadcastWorkflow(
+        name: '$moduleName 通知',
+        content: '请查看流程：$moduleName（编号：${proId.value}）',
+        receivers: receivers,
+      );
+      if (result['success'] == true) {
+        Get.snackbar('成功', '已通知${users.length}人', snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.success, colorText: Colors.white);
+      } else {
+        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+            snackPosition: SnackPosition.BOTTOM,
+            backgroundColor: AppTheme.danger, colorText: Colors.white);
+      }
+    } catch (e) {
+      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: AppTheme.danger, colorText: Colors.white);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// 选人弹窗（复用通讯录接口 /oa/u/initList）
+  /// multiSelect=true 返回 List<Map>，false 返回 List<Map>（1个元素）
+  Future<List<Map<String, dynamic>>?> _pickUsers({
+    required String title,
+    required bool multiSelect,
+  }) async {
+    return Get.bottomSheet<List<Map<String, dynamic>>>(
+      _UserPickerBottomSheet(title: title, multiSelect: multiSelect),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16.r))),
+    );
+  }
+
   String getStateName(int state) {
     switch (state) {
       case 0: return '未提交';
@@ -364,5 +491,191 @@ class WorkflowDetailController extends GetxController {
       mxItems.removeAt(index);
       formData['mx'] = mxItems.toList();
     }
+  }
+}
+
+/// 选人底部弹窗（支持单选/多选，复用 /oa/u/initList）
+class _UserPickerBottomSheet extends StatefulWidget {
+  final String title;
+  final bool multiSelect;
+  const _UserPickerBottomSheet({required this.title, required this.multiSelect});
+
+  @override
+  State<_UserPickerBottomSheet> createState() => _UserPickerBottomSheetState();
+}
+
+class _UserPickerBottomSheetState extends State<_UserPickerBottomSheet> {
+  final _repo = ContactsRepository();
+  final _keyword = TextEditingController();
+  List<Map<String, dynamic>> _allUsers = [];
+  List<Map<String, dynamic>> _filtered = [];
+  final Set<int> _selectedIds = {};
+  bool _isLoading = true;
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _isLoading = true);
+    final res = await _repo.getAllMembers(limit: 200);
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (res['success'] == true) {
+          _allUsers = (res['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+          _filtered = _allUsers;
+        }
+      });
+    }
+  }
+
+  void _onSearch(String k) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 200), () {
+      if (k.trim().isEmpty) {
+        setState(() => _filtered = _allUsers);
+      } else {
+        setState(() {
+          _filtered = _allUsers.where((u) {
+            final n = u['name']?.toString() ?? '';
+            return n.toLowerCase().contains(k.toLowerCase());
+          }).toList();
+        });
+      }
+    });
+  }
+
+  int _getId(Map u) {
+    final id = u['id'];
+    return id is int ? id : int.tryParse(id?.toString() ?? '') ?? 0;
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    _keyword.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.7,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, controller) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16.r)),
+          ),
+          child: Column(
+            children: [
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 8.h),
+                width: 36.w, height: 4.h,
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2.r)),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Row(
+                  children: [
+                    Text(widget.title, style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w600)),
+                    const Spacer(),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Get.back()),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.w),
+                child: TextField(
+                  controller: _keyword,
+                  onChanged: _onSearch,
+                  decoration: InputDecoration(
+                    hintText: '搜索姓名',
+                    prefixIcon: const Icon(Icons.search, size: 20),
+                    filled: true, fillColor: AppTheme.gray50,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r), borderSide: BorderSide.none),
+                    contentPadding: EdgeInsets.symmetric(vertical: 8.h),
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Expanded(
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _filtered.isEmpty
+                        ? const Center(child: Text('暂无成员'))
+                        : ListView.separated(
+                            controller: controller,
+                            itemCount: _filtered.length,
+                            separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                            itemBuilder: (_, i) {
+                              final u = _filtered[i];
+                              final name = u['name']?.toString() ?? '(无姓名)';
+                              final dept = u['deptName']?.toString() ?? u['groupName']?.toString() ?? '';
+                              final id = _getId(u);
+                              final isSelected = _selectedIds.contains(id);
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: AppTheme.primaryColor.withOpacity(0.1),
+                                  child: Text(name.isNotEmpty ? name[0] : '?',
+                                      style: TextStyle(color: AppTheme.primaryColor)),
+                                ),
+                                title: Text(name),
+                                subtitle: dept.isNotEmpty ? Text(dept, style: TextStyle(fontSize: 12.sp)) : null,
+                                trailing: widget.multiSelect
+                                    ? Icon(isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                        color: isSelected ? AppTheme.primaryColor : Colors.grey[400])
+                                    : null,
+                                onTap: () {
+                                  if (widget.multiSelect) {
+                                    setState(() {
+                                      if (isSelected) {
+                                        _selectedIds.remove(id);
+                                      } else {
+                                        _selectedIds.add(id);
+                                      }
+                                    });
+                                  } else {
+                                    Get.back(result: <Map<String, dynamic>>[u]);
+                                  }
+                                },
+                              );
+                            },
+                          ),
+              ),
+              if (widget.multiSelect && _selectedIds.isNotEmpty)
+                SafeArea(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          final selected = _allUsers.where((u) => _selectedIds.contains(_getId(u))).toList();
+                          Get.back(result: selected);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(vertical: 12.h),
+                          backgroundColor: AppTheme.primaryColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                        ),
+                        child: Text('确认选择（${_selectedIds.length}人）',
+                            style: TextStyle(fontSize: 15.sp, color: Colors.white, fontWeight: FontWeight.w500)),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

@@ -358,6 +358,101 @@ class WorkflowRepository {
     }
   }
 
+  /// 转交（在审批通过时附带 extraUserIds）
+  /// 老 App core.js handle(): payload.extraUserIds = scope.extraUserIds
+  /// 然后调 POST /oa/pro/handle，后端将流程转交给这些人审批
+  Future<Map<String, dynamic>> forwardWorkflow({
+    required int proId,
+    required List<int> extraUserIds,
+    String comment = '',
+  }) async {
+    try {
+      final response = await _api.dioInstance.post('/oa/pro/handle', data: {
+        'proId': proId,
+        'flagPositive': true,
+        'message': comment.isNotEmpty ? comment : '转交审批',
+        'formData': {},
+        'extraUserIds': extraUserIds,
+      });
+      final data = response.data;
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        final errMsg = data['errMsg']?.toString() ?? '';
+        if (errCode > 0) {
+          return {'success': true, 'data': data, 'message': errMsg};
+        }
+        return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '转交失败(errCode=$errCode)', 'data': data};
+      }
+      return {'success': true, 'data': data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '转交失败: $e'};
+    }
+  }
+
+  /// 前加签（GET /oa/pro/assist?proId=X&assistId=Y&message=Z）
+  /// 老 App core.js this.assist(): $http.get(host + '/oa/pro/assist', {params})
+  /// assistId = 被加签人的用户 ID
+  Future<Map<String, dynamic>> assistWorkflow({
+    required int proId,
+    required int assistId,
+    String comment = '',
+  }) async {
+    try {
+      final response = await _api.dioInstance.get('/oa/pro/assist', queryParameters: {
+        'proId': proId,
+        'assistId': assistId,
+        'message': comment.isNotEmpty ? comment : '请协助审批',
+      });
+      final data = response.data;
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        final errMsg = data['errMsg']?.toString() ?? '';
+        if (errCode > 0) {
+          return {'success': true, 'data': data, 'message': errMsg};
+        }
+        return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '加签失败(errCode=$errCode)', 'data': data};
+      }
+      return {'success': true, 'data': data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '加签失败: $e'};
+    }
+  }
+
+  /// 通知（POST /oa/message/add）
+  /// 老 App flow.js doAlert(): 发送站内消息通知其他用户查看流程
+  /// receivers = 用户 ID 列表
+  Future<Map<String, dynamic>> broadcastWorkflow({
+    required String name,
+    required String content,
+    required List<int> receivers,
+  }) async {
+    try {
+      final response = await _api.dioInstance.post('/oa/message/add', data: {
+        'name': name,
+        'content': content,
+        'receivers': receivers,
+        'for_all': 0,
+      });
+      final data = response.data;
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        if (errCode >= 0) {
+          return {'success': true, 'data': data};
+        }
+        return {'success': false, 'message': data['errMsg']?.toString() ?? '通知发送失败'};
+      }
+      return {'success': true, 'data': data};
+    } on dio.DioException catch (e) {
+      return {'success': false, 'message': ApiProvider.normalize(e).message};
+    } catch (e) {
+      return {'success': false, 'message': '通知发送失败: $e'};
+    }
+  }
+
   /// 解析老 OA formView HTML 字符串，提取字段
   /// HTML 格式：<tr><td class="form-label">受订单号</td><td class="form-ctrl" id="os_no">{{os_no}}</td></tr>
   /// 字段 = id="xxx" 的 td 元素（class="form-ctrl"）
