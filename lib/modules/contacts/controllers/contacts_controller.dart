@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 
 import '../../../app/data/repository/contacts_repository.dart';
@@ -125,12 +126,24 @@ class ContactsController extends GetxController {
     isSearching.value = false;
   }
 
-  void callMember(Map<String, dynamic> m) {
+  void callMember(Map<String, dynamic> m) async {
     final phone = m['mobile']?.toString() ?? m['phone']?.toString() ?? m['tel']?.toString() ?? '';
     if (phone.isEmpty) {
       Get.snackbar('提示', '该成员没有电话', snackPosition: SnackPosition.BOTTOM);
       return;
     }
-    Get.snackbar('拨号', phone, snackPosition: SnackPosition.BOTTOM);
+    // 过滤掉非数字字符,保留 + 和数字
+    final cleaned = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    final uri = Uri(scheme: 'tel', path: cleaned);
+    try {
+      final canLaunch = await canLaunchUrl(uri);
+      if (!canLaunch) {
+        Get.snackbar('提示', '当前设备无法拨号', snackPosition: SnackPosition.BOTTOM);
+        return;
+      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (e) {
+      Get.snackbar('拨号失败', '$e', snackPosition: SnackPosition.BOTTOM);
+    }
   }
 }

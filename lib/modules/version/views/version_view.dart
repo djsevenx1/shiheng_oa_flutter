@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.5',
+              'OA 移动办公平台 v2.7.6',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.4 (Build 274)'),
+          _buildInfoRow('版本', 'v2.7.6 (Build 276)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -129,6 +129,11 @@ class VersionView extends StatelessWidget {
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           SizedBox(height: 12.h),
+          _buildLogItem('v2.7.6', '2026-07-22', [
+            '通讯录点击电话调用系统拨号功能:使用 url_launcher 拉起 tel: scheme',
+            '强制竖屏禁止横屏:启动时锁定 portraitUp 方向',
+            '加入 url_launcher 依赖',
+          ]),
           _buildLogItem('v2.7.5', '2026-07-22', [
             'getFieldValue 改为按 ctrl+config 精确匹配:info+department 查部门,info+name/loginName/id 查人员',
             '所有纯数字字段统一兜底查 userMap / deptMap',

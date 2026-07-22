@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -9,6 +10,11 @@ import 'app/themes/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 强制竖屏,禁止横屏
+  await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+  ]);
 
   // 全局错误处理
   FlutterError.onError = (FlutterErrorDetails details) {

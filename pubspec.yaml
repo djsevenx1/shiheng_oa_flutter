@@ -2,7 +2,7 @@ name: shiheng_oa
 description: "移动办公平台"
 publish_to: 'none'
 
-version: 2.7.5+1
+version: 2.7.6+1
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
@@ -24,6 +24,9 @@ dependencies:
   flutter_staggered_grid_view: any
   pull_to_refresh: any
   flutter_smart_dialog: any
+
+  # 通讯录拨号
+  url_launcher: any
 
   # 推送（个推）
   getuiflut: ^0.2.31
