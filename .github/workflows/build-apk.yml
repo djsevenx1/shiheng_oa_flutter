@@ -37,9 +37,9 @@ jobs:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: ${{ runner.os }}-flutter-${{ hashFiles('**/pubspec.lock') }}
+          key: ${{ runner.os }}-flutter-v2-${{ hashFiles('**/pubspec.lock') }}
           restore-keys: |
-            ${{ runner.os }}-flutter-
+            ${{ runner.os }}-flutter-v2-
 
       - name: Get dependencies
         run: flutter pub get
