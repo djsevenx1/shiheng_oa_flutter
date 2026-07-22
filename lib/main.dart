@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'app/data/repository/name_dict_repository.dart';
 import 'app/routes/app_pages.dart';
 import 'app/themes/app_theme.dart';
+import 'modules/settings/controllers/settings_controller.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +39,9 @@ void main() async {
     debugPrint('NameDict loadFromCache failed: $e');
   }
 
+  // 提前注册 SettingsController,让 main 可以响应式读取深色模式
+  Get.put<SettingsController>(SettingsController(), permanent: true);
+
   runApp(const MyApp());
 }
 
@@ -55,7 +59,10 @@ class MyApp extends StatelessWidget {
           title: '时恒OA',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          themeMode: ThemeMode.light,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: Get.isRegistered<SettingsController>()
+              ? Get.find<SettingsController>().themeMode.value
+              : ThemeMode.light,
           initialRoute: AppPages.INITIAL,
           getPages: AppPages.routes,
           defaultTransition: Transition.cupertino,

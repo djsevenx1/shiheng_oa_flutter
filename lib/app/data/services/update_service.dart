@@ -14,7 +14,10 @@ class UpdateService {
   static const _repoOwner = 'djsevenx1';
   static const _repoName = 'shiheng_oa_flutter';
   static const _apkName = 'shiheng-oa-universal.apk';
-  static const _currentVersion = '2.7.6';
+  static const _currentVersion = '2.7.7';
+
+  /// 暴露给 UI 使用的当前版本号（如设置页、关于页）
+  static String get currentVersion => _currentVersion;
 
   /// CF Pages 代理域名（path-based 路由，跟 LunaTV-Mobile 一致）
   static const _cfProxy = 'https://tmdb-8d1.pages.dev';
