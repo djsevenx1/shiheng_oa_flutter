@@ -162,7 +162,7 @@ class LoginView extends GetView<LoginController> {
                                 keyboardType: TextInputType.url,
                                 decoration: InputDecoration(
                                   hintText: '加速GitHub地址',
-                                  hintTextStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
+                                  hintStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
                                   helperText: '检查更新/下载 APK 走此代理',
                                   helperStyle: const TextStyle(color: AppTheme.gray400, fontSize: 11),
                                   prefixIcon: const Icon(Icons.rocket_launch_outlined, color: AppTheme.gray400, size: 22),
