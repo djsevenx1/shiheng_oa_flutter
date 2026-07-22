@@ -223,7 +223,7 @@ class LoginView extends GetView<LoginController> {
                                 ),
                               )),
                               SizedBox(height: 16.h),
-                              // Remember me
+                              // Remember me + Auto Login
                               Row(
                                 children: [
                                   Obx(() => Checkbox(
@@ -236,6 +236,22 @@ class LoginView extends GetView<LoginController> {
                                   )),
                                   Text(
                                     '记住密码',
+                                    style: TextStyle(
+                                      fontSize: 13.sp,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.w),
+                                  Obx(() => Checkbox(
+                                    value: controller.autoLogin.value,
+                                    onChanged: controller.toggleAutoLogin,
+                                    activeColor: AppTheme.primaryColor,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4.r),
+                                    ),
+                                  )),
+                                  Text(
+                                    '自动登录',
                                     style: TextStyle(
                                       fontSize: 13.sp,
                                       color: AppTheme.textSecondary,

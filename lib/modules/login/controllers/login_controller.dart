@@ -19,6 +19,7 @@ class LoginController extends GetxController {
   // 凭据保存的存储 key（base64 后存，避免明文落盘）
   static const _kSavedUsername = 'remembered_username';
   static const _kSavedPassword = 'remembered_password';
+  static const _kAutoLogin = 'auto_login';
 
   final serverController = TextEditingController();
   final usernameController = TextEditingController();
@@ -27,6 +28,7 @@ class LoginController extends GetxController {
   final isLoading = false.obs;
   final isPasswordVisible = false.obs;
   final rememberMe = true.obs;
+  final autoLogin = false.obs;
 
   /// 顶部红色 banner 的短文案。null 表示不展示。
   final RxnString errorBanner = RxnString();
@@ -50,6 +52,7 @@ class LoginController extends GetxController {
         // 应该 utf8.decode 转回原密码字符串
         passwordController.text = utf8.decode(base64Decode(savedPasswordRaw.toString()));
         rememberMe.value = true;
+        autoLogin.value = _storage.read(_kAutoLogin) == true;
       } catch (_) {
         // 旧版本写的是错误编码的密码（[1,2,3,...]），解码失败就清掉让用户重输
         _storage.remove(_kSavedPassword);
@@ -81,6 +84,16 @@ class LoginController extends GetxController {
     if (!rememberMe.value) {
       // 用户主动取消记住，立即清除已保存的凭据
       clearSavedCredentials();
+      autoLogin.value = false;
+      _storage.remove(_kAutoLogin);
+    }
+  }
+
+  void toggleAutoLogin(bool? value) {
+    autoLogin.value = value ?? false;
+    // 勾选自动登录时自动勾选记住密码
+    if (autoLogin.value) {
+      rememberMe.value = true;
     }
   }
 
@@ -175,8 +188,10 @@ class LoginController extends GetxController {
         // 关键改动：根据 rememberMe 选择保存或清除凭据。
         if (rememberMe.value) {
           _saveCredentials(username, password);
+          _storage.write(_kAutoLogin, autoLogin.value);
         } else {
           clearSavedCredentials();
+          _storage.remove(_kAutoLogin);
         }
         // 登录成功后主动拉取一次用户信息并缓存（供首页展示用）
         _storage.write('cachedUsername', username);
@@ -208,6 +223,55 @@ class LoginController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  /// 静默自动登录（App 启动时调用）
+  /// 返回 true 表示登录成功，false 表示跳过
+  static Future<bool> tryAutoLogin() async {
+    final storage = GetStorage();
+    final autoLoginFlag = storage.read(_kAutoLogin);
+    if (autoLoginFlag != true) return false;
+
+    final savedUsername = storage.read(_kSavedUsername);
+    final savedPasswordRaw = storage.read(_kSavedPassword);
+    if (savedUsername == null || savedPasswordRaw == null) return false;
+
+    String username;
+    String password;
+    try {
+      username = savedUsername.toString();
+      password = utf8.decode(base64Decode(savedPasswordRaw.toString()));
+    } catch (_) {
+      return false;
+    }
+
+    final api = ApiProvider();
+    final authRepo = AuthRepository();
+
+    try {
+      storage.remove('JSESSIONID');
+      storage.remove('token');
+      storage.remove('userInfo');
+
+      final result = await authRepo.login(username, password);
+      if (result['success'] == true) {
+        storage.write('cachedUsername', username);
+        // 拉取用户信息
+        try {
+          final response = await api.dioInstance.get('/oa/user/current');
+          final data = response.data;
+          if (data is Map) {
+            final m = data.cast<String, dynamic>();
+            if (m['name'] != null) storage.write('cachedUserName', m['name'].toString());
+            if (m['groupName'] != null) storage.write('cachedUserGroup', m['groupName'].toString());
+            if (m['icon'] != null) storage.write('cachedUserIcon', m['icon'].toString());
+            if (m['id'] != null) storage.write('cachedUserId', m['id'].toString());
+          }
+        } catch (_) {}
+        return true;
+      }
+    } catch (_) {}
+    return false;
   }
 
   /// 登录后从 /oa/user/current 拉取真实用户信息（name/groupName/icon）缓存到 storage。

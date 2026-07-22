@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../app/routes/app_pages.dart';
+import '../../login/controllers/login_controller.dart';
 
 class SplashView extends StatelessWidget {
   const SplashView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    Future.delayed(const Duration(seconds: 2), () {
+    Future.delayed(const Duration(seconds: 2), () async {
       try {
-        Get.offAllNamed(Routes.LOGIN);
+        // 尝试自动登录
+        final autoLoggedIn = await LoginController.tryAutoLogin();
+        if (autoLoggedIn) {
+          Get.offAllNamed(Routes.HOME);
+        } else {
+          Get.offAllNamed(Routes.LOGIN);
+        }
       } catch (e) {
         debugPrint('Navigate error: $e');
+        Get.offAllNamed(Routes.LOGIN);
       }
     });
 
