@@ -328,15 +328,9 @@ class WorkflowDetailController extends GetxController {
 
     isLoading.value = true;
     try {
-      // 老 App core.js handle payload: name, formData, groupId, fileIds, extraUserIds
+      // 老 App core.js handle(): name, formData(不含logs), groupId, fileIds, extraUserIds
+      // 注意：不发送完整 formData（含 logs 会导致 payload 过大/序列化失败）
       final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
-      final formData = workflowDetail['formData'] is Map
-          ? workflowDetail['formData'] as Map<String, dynamic>
-          : <String, dynamic>{};
-      final fileIds = workflowDetail['fileIds'] is List
-          ? workflowDetail['fileIds'] as List
-          : <dynamic>[];
-      // groupId 从用户信息获取（老 App userInfo.groupId）
       final userInfo = _authRepo.getUserInfo();
       final groupId = userInfo?['groupId'] is int
           ? userInfo!['groupId'] as int
@@ -348,20 +342,18 @@ class WorkflowDetailController extends GetxController {
         comment: commentController.text.trim(),
         name: moduleName,
         groupId: groupId > 0 ? groupId : null,
-        formData: formData,
-        fileIds: fileIds,
       );
       if (result['success'] == true) {
         Get.snackbar('成功', '已转交给${users.length}人审批', snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
         Get.back(result: {'refresh': true});
       } else {
-        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+        Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.danger, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+      Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.danger, colorText: Colors.white);
     } finally {
       isLoading.value = false;
@@ -392,12 +384,12 @@ class WorkflowDetailController extends GetxController {
             backgroundColor: AppTheme.success, colorText: Colors.white);
         await loadDetail();
       } else {
-        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+        Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.danger, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+      Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.danger, colorText: Colors.white);
     } finally {
       isLoading.value = false;
@@ -429,12 +421,12 @@ class WorkflowDetailController extends GetxController {
         Get.snackbar('成功', '已通知${users.length}人', snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
       } else {
-        Get.snackbar('失败', result['message']?.toString() ?? '网络错误，请重试',
+        Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
             snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.danger, colorText: Colors.white);
       }
     } catch (e) {
-      Get.snackbar('失败', '网络错误，请重试', snackPosition: SnackPosition.BOTTOM,
+      Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.danger, colorText: Colors.white);
     } finally {
       isLoading.value = false;

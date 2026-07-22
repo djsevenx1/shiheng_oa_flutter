@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.5.2',
+              '版本 v2.5.3',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.5.2 (Build 252)'),
+          _buildInfoRow('版本', 'v2.5.3 (Build 253)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.5.3', '2026-07-22', [
+            '修复转交功能：不发完整 formData（含 logs 导致 payload 过大/序列化失败）',
+            '改进错误提示：显示后端实际错误信息而非通用"网络错误"',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.5.2', '2026-07-22', [
             '修复转交功能报数据库死锁：补全 payload 字段(name/groupId/formData/fileIds)',
