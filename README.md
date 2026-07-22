@@ -141,7 +141,7 @@ lib/
 
 ### 网络配置(v2.7.10)
 - **服务器地址**:登录页可改,持久化到 `GetStorage`,换服务器自动清旧登录态
-- **加速 GitHub 代理**:登录页可改,默认 `https://tmdb-8d1.pages.dev`,值传给 `UpdateService` 用于检查更新/下载 APK
+- **加速 GitHub 代理**:登录页可改, 用于检查更新/下载 APK
 - **自动登录**:勾选后启动时静默登录,失败降级到登录页
 
 ### 深色模式(v2.7.7)
@@ -195,8 +195,6 @@ flutter analyze
 
 - 主仓库:[djsevenx1/shiheng_oa_flutter](https://github.com/djsevenx1/shiheng_oa_flutter)
 - CI/CD:GitHub Actions
-- 加速代理(默认):[tmdb-8d1.pages.dev](https://tmdb-8d1.pages.dev)
-
 ---
 
-Copyright © 时恒电子. 内部使用,未经许可不得外传。
+Copyright © 个人项目. 内部使用,未经许可不得外传。
