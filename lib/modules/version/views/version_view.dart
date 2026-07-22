@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.4',
+              'OA 移动办公平台 v2.7.5',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.7.5', '2026-07-22', [
+            'getFieldValue 改为按 ctrl+config 精确匹配:info+department 查部门,info+name/loginName/id 查人员',
+            '所有纯数字字段统一兜底查 userMap / deptMap',
+            '打开流程详情时若字典未加载,自动异步预加载一次',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.7.4', '2026-07-22', [
             '新增全局名称字典:登录后异步拉取部门树+全员,缓存到本地',

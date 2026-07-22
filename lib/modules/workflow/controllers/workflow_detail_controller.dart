@@ -60,6 +60,10 @@ class WorkflowDetailController extends GetxController {
     isLoading.value = true;
     errorMessage.value = null;
     try {
+      // 进入详情时确保字典可用(若还没加载或缓存为空,异步预加载一次,失败静默)
+      if (!_nameDict.isLoaded) {
+        unawaited(_nameDict.preload());
+      }
       final result = await _repository.getWorkflowDetail(proId.value);
       if (result['success'] == true) {
         final data = (result['data'] as Map?)?.cast<String, dynamic>() ?? {};
@@ -183,9 +187,15 @@ class WorkflowDetailController extends GetxController {
   }
 
   /// 获取字段显示值
+  /// 老 App tableSchema 字段结构:{id, name, ctrl, config, required, ...}
+  /// 关键规则:
+  ///   ctrl == "info" + config == "name"|"loginName"|"id"|"userId" → 查 userMap
+  ///   ctrl == "info" + config == "department"|"groupId"|"groupName" → 查 deptMap
+  ///   其他情况:对纯数字值,优先 userMap 兜底,再 deptMap
   String getFieldValue(Map<String, dynamic> field) {
     final id = field['id']?.toString() ?? '';
     final ctrl = field['ctrl']?.toString() ?? '';
+    final config = field['config']?.toString() ?? '';
     final value = formData[id];
 
     if (ctrl == 'logs') {
@@ -212,36 +222,27 @@ class WorkflowDetailController extends GetxController {
     }
 
     final s = value.toString();
-    // 按 ctrl/id 判断,决定走部门/人员字典
-    final ctrlLower = ctrl.toLowerCase();
-    final idLower = id.toLowerCase();
-    final isUser = ctrlLower == 'user' ||
-        ctrlLower == 'users' ||
-        ctrlLower == 'select' ||
-        idLower.contains('userid') ||
-        idLower.contains('user_id') ||
-        idLower.contains('approver') ||
-        idLower.contains('creator') ||
-        idLower.contains('node');
-    final isDept = ctrlLower == 'group' ||
-        ctrlLower == 'dept' ||
-        ctrlLower == 'department' ||
-        idLower.contains('groupid') ||
-        idLower.contains('group_id') ||
-        idLower.contains('deptid') ||
-        idLower.contains('dept_id');
-    if (RegExp(r'^\d+$').hasMatch(s)) {
-      if (isUser) {
-        final mapped = _nameDict.userName(s);
-        if (mapped != s) return mapped;
-      } else if (isDept) {
-        final mapped = _nameDict.deptName(s);
-        if (mapped != s) return mapped;
-      } else {
-        // 兜底:纯数字,优先人,再部门
-        final mapped = _nameDict.nameOf(s);
-        if (mapped != s) return mapped;
+    final isPureNumber = RegExp(r'^\d+$').hasMatch(s);
+
+    // 1) 精确 ctrl + config 匹配
+    if (isPureNumber) {
+      if (ctrl == 'info') {
+        // 用户类 config
+        const userConfigs = {'name', 'loginname', 'id', 'userid', 'creator'};
+        // 部门类 config
+        const deptConfigs = {'department', 'groupid', 'groupname', 'dep', 'deptid'};
+        final cfgLower = config.toLowerCase();
+        if (userConfigs.contains(cfgLower)) {
+          final mapped = _nameDict.userName(s);
+          if (mapped != s) return mapped;
+        } else if (deptConfigs.contains(cfgLower)) {
+          final mapped = _nameDict.deptName(s);
+          if (mapped != s) return mapped;
+        }
       }
+      // 2) 通用兜底:纯数字优先人,再部门
+      final mapped = _nameDict.nameOf(s);
+      if (mapped != s) return mapped;
     }
     return s;
   }
