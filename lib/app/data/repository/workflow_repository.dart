@@ -298,7 +298,7 @@ class WorkflowRepository {
 
   /// 审批（POST /oa/pro/handle）
   /// flagPositive=true 同意, flagPositive=false 拒绝
-  /// 返回 {errCode, errMsg}，errCode>0 表示成功
+  /// 后端可能返回 HTTP 500 但操作已生效，需从 response.data 提取 errCode
   Future<Map<String, dynamic>> approveWorkflow({
     required int proId,
     required String result, // 'pass' / 'reject'
@@ -319,11 +319,21 @@ class WorkflowRepository {
         if (errCode > 0) {
           return {'success': true, 'data': data, 'message': errMsg};
         } else {
-          return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '操作失败(errCode=$errCode)', 'data': data};
+          return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '操作失败(errCode=$errCode)', 'data': data, 'errCode': errCode};
         }
       }
       return {'success': true, 'data': data};
     } on dio.DioException catch (e) {
+      // 后端可能返回 500 但操作已生效，提取 response.data 中的 errCode/errMsg
+      final data = e.response?.data;
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        final errMsg = data['errMsg']?.toString() ?? '';
+        if (errCode > 0) {
+          return {'success': true, 'data': data, 'message': errMsg};
+        }
+        return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '操作失败(errCode=$errCode)', 'data': data, 'errCode': errCode};
+      }
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
       return {'success': false, 'message': '审批失败: $e'};
@@ -359,16 +369,14 @@ class WorkflowRepository {
   }
 
   /// 转交（在审批通过时附带 extraUserIds）
-  /// 老 App core.js handle(): payload 必须包含 name, formData, groupId, fileIds 等
-  /// 缺少 groupId/name 会导致后端 ACL 处理异常（死锁）
+  /// 老 App core.js handle(): payload 包含 name, formData, groupId, fileIds 等
+  /// 后端可能返回 HTTP 500（ACL 二次处理异常）但操作已生效，需从 response.data 提取 errCode
   Future<Map<String, dynamic>> forwardWorkflow({
     required int proId,
     required List<int> extraUserIds,
     String comment = '',
     String name = '',
     int? groupId,
-    Map<String, dynamic>? formData,
-    List? fileIds,
   }) async {
     try {
       final response = await _api.dioInstance.post('/oa/pro/handle', data: {
@@ -376,9 +384,9 @@ class WorkflowRepository {
         'flagPositive': true,
         'name': name,
         'message': comment.isNotEmpty ? comment : '转交审批',
-        'formData': formData ?? {},
+        'formData': {},
         'groupId': groupId,
-        'fileIds': fileIds ?? [],
+        'fileIds': [],
         'extraUserIds': extraUserIds,
       });
       final data = response.data;
@@ -388,10 +396,20 @@ class WorkflowRepository {
         if (errCode > 0) {
           return {'success': true, 'data': data, 'message': errMsg};
         }
-        return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '转交失败(errCode=$errCode)', 'data': data};
+        return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '转交失败(errCode=$errCode)', 'data': data, 'errCode': errCode};
       }
       return {'success': true, 'data': data};
     } on dio.DioException catch (e) {
+      // 后端可能返回 500 但操作已生效，提取 response.data 中的 errCode/errMsg
+      final data = e.response?.data;
+      if (data is Map) {
+        final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
+        final errMsg = data['errMsg']?.toString() ?? '';
+        if (errCode > 0) {
+          return {'success': true, 'data': data, 'message': errMsg};
+        }
+        return {'success': false, 'message': errMsg.isNotEmpty ? errMsg : '转交失败(errCode=$errCode)', 'data': data, 'errCode': errCode};
+      }
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
       return {'success': false, 'message': '转交失败: $e'};
