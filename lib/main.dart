@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
       splitScreenMode: true,
       builder: (context, child) {
         return GetMaterialApp(
-          title: 'OA',
+          title: '时恒OA',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           themeMode: ThemeMode.light,

@@ -1,7 +1,5 @@
 # OA 移动办公平台 (Flutter)
 
-基于 Flutter 3.24 实现的现代化移动办公应用，从老旧的 Ionic v1 + AngularJS 完整迁移而来。
-
 ## 功能模块
 
 | 模块 | 说明 |
