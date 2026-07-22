@@ -127,7 +127,3 @@ flutter run
 # 分析
 flutter analyze
 ```
-
-## License
-
-© 2024 OA Mobile
