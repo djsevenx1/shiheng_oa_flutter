@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.6.4',
+              '版本 v2.6.5',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.6.4 (Build 264)'),
+          _buildInfoRow('版本', 'v2.6.5 (Build 265)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.6.5', '2026-07-22', [
+            '修复审批"非法审批"错误：approve/reject payload 缺少 name/groupId/fileIds 字段',
+            '与 forwardWorkflow 保持一致，补全后端必需字段',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.6.4', '2026-07-22', [
             '新增自动登录：登录页勾选后下次启动自动登录',

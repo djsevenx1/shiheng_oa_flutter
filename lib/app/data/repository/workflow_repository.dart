@@ -308,14 +308,19 @@ class WorkflowRepository {
     required int proId,
     required String result, // 'pass' / 'reject'
     String comment = '',
+    String name = '',
+    int? groupId,
   }) async {
     try {
       final flagPositive = result == 'pass';
       final response = await _api.dioInstance.post('/oa/pro/handle', data: {
         'proId': proId,
         'flagPositive': flagPositive,
+        'name': name,
         'message': comment,
         'formData': {},
+        'groupId': groupId,
+        'fileIds': [],
       });
       final data = response.data;
       if (data is Map) {

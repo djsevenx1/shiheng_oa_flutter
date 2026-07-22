@@ -204,10 +204,16 @@ class WorkflowDetailController extends GetxController {
     isLoading.value = true;
     try {
       final oldLogCount = logs.length;
+      final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
+      final groupId = userInfo?['groupId'] is int
+          ? userInfo!['groupId'] as int
+          : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
       final result = await _repository.approveWorkflow(
         proId: proId.value,
         result: 'pass',
         comment: commentController.text.trim(),
+        name: moduleName,
+        groupId: groupId > 0 ? groupId : null,
       );
       // 老 App: 后端返回 errMsg 作为提示信息（如"已提交库房审批"）
       final serverMsg = result['message']?.toString() ?? '';
@@ -245,10 +251,16 @@ class WorkflowDetailController extends GetxController {
     isLoading.value = true;
     try {
       final oldLogCount = logs.length;
+      final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
+      final groupId = userInfo?['groupId'] is int
+          ? userInfo!['groupId'] as int
+          : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
       final result = await _repository.approveWorkflow(
         proId: proId.value,
         result: 'reject',
         comment: commentController.text.trim(),
+        name: moduleName,
+        groupId: groupId > 0 ? groupId : null,
       );
       final serverMsg = result['message']?.toString() ?? '';
       final displayMsg = serverMsg.isNotEmpty ? serverMsg : '已拒绝';
