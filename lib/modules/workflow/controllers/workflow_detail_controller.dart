@@ -149,22 +149,15 @@ class WorkflowDetailController extends GetxController {
     return id == 1 || id == 2 || id == 4 || id == 5 || id == 11;
   }
 
-  /// 是否为审批人模式（显示拒绝/通过按钮）
-  /// 老 App goHandle: state > 0 → handle 视图（拒绝/通过）
-  /// 但若 approveNode 含 'start'，说明流程被退回给发起人，需重新提交 → form 视图（放弃/提交）
+  /// 是否为审批人模式（显示拒绝/通过 + 转交/前加签/通知）
+  /// 老 App pro.js goHandle(): state > 0 || state == -2 → handle 视图
+  ///                        state <= 0 && state != -2 → form 视图
   bool get isApproverMode {
     if (!isHandleMode.value) return false;
     final state = workflowDetail['state'];
-    final approveNode = workflowDetail['approveNode'];
-    if (approveNode is List) {
-      final nodes = approveNode.map((e) => e.toString()).toList();
-      // approveNode 含 'start' → 流程退回给发起人，需重新提交
-      if (nodes.contains('start')) return false;
-      // approveNode 含非 start 节点 → 审批人
-      if (nodes.isNotEmpty) return true;
+    if (state is int) {
+      return state > 0 || state == -2;
     }
-    // approveNode 无信息时，state > 0 默认审批人
-    if (state is int && state > 0) return true;
     return false;
   }
 
