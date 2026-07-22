@@ -9,43 +9,42 @@ import '../../themes/app_theme.dart';
 
 /// 应用内更新服务
 /// 通过 GitHub Releases API 检查新版本，下载 APK 并调起安装
-/// 使用 Cloudflare Pages 代理加速 GitHub 访问
+/// 使用 Cloudflare Pages 代理加速 GitHub 访问（path-based 路由）
 class UpdateService {
   static const _repoOwner = 'djsevenx1';
   static const _repoName = 'shiheng_oa_flutter';
   static const _apkName = 'shiheng-oa-universal.apk';
-  static const _currentVersion = '2.6.0'; // 与 pubspec.yaml 保持一致
+  static const _currentVersion = '2.6.1';
 
-  /// CF Pages 代理前缀（加速 GitHub 访问）
-  static const _cfProxy = 'https://tmdb-8d1.pages.dev/';
+  /// CF Pages 代理域名（path-based 路由，跟 LunaTV-Mobile 一致）
+  static const _cfProxy = 'https://tmdb-8d1.pages.dev';
+
+  /// CF 代理 API: /github/repos/:owner/:repo/releases/latest
+  static String get _apiUrlProxy =>
+      '$_cfProxy/github/repos/$_repoOwner/$_repoName/releases/latest';
 
   /// GitHub API 直连
   static const _apiUrlDirect =
       'https://api.github.com/repos/$_repoOwner/$_repoName/releases/latest';
 
-  /// CF 代理 API
-  static const _apiUrlProxy =
-      '${_cfProxy}https://api.github.com/repos/$_repoOwner/$_repoName/releases/latest';
-
-  /// 构建 CF 代理下载 URL
-  static String _buildProxyDownloadUrl(String directUrl) {
-    return '$_cfProxy$directUrl';
+  /// 构建 CF 代理下载 URL: /github/asset/:owner/:repo/:tag/:asset
+  static String _buildProxyDownloadUrl(String owner, String repo, String tag, String asset) {
+    return '$_cfProxy/github/asset/$owner/$repo/$tag/$asset';
   }
 
   /// 检查是否有新版本
-  /// 返回 {hasUpdate, latestVersion, downloadUrl, releaseNotes, htmlUrl}
   static Future<Map<String, dynamic>> checkUpdate() async {
     // 先尝试 CF 代理，失败回退直连
-    final result = await _checkUpdateWithUrl(_apiUrlProxy);
+    final result = await _checkUpdateWithUrl(_apiUrlProxy, useProxy: true);
     if (result != null) return result;
 
-    final directResult = await _checkUpdateWithUrl(_apiUrlDirect);
+    final directResult = await _checkUpdateWithUrl(_apiUrlDirect, useProxy: false);
     if (directResult != null) return directResult;
 
     return {'hasUpdate': false, 'error': '检查更新失败，请稍后重试'};
   }
 
-  static Future<Map<String, dynamic>?> _checkUpdateWithUrl(String apiUrl) async {
+  static Future<Map<String, dynamic>?> _checkUpdateWithUrl(String apiUrl, {required bool useProxy}) async {
     try {
       final response = await dio.Dio().get(
         apiUrl,
@@ -57,30 +56,33 @@ class UpdateService {
       );
       final data = response.data;
       if (data is! Map) return null;
-      // 检查是否是错误响应
-      if (data.containsKey('error') || data.containsKey('message')) {
-        if (data['tag_name'] == null) return null;
-      }
       if (data['tag_name'] == null) return null;
 
       final tagName = data['tag_name']?.toString() ?? '';
-      final latestVersion =
-          tagName.startsWith('v') ? tagName.substring(1) : tagName;
+      final latestVersion = tagName.startsWith('v') ? tagName.substring(1) : tagName;
       final hasUpdate = _compareVersion(latestVersion, _currentVersion) > 0;
 
       // 找 APK 下载 URL
       String? directDownloadUrl;
+      String? apkAssetName;
       final assets = data['assets'];
       if (assets is List) {
         for (final asset in assets) {
           if (asset is Map && asset['name']?.toString() == _apkName) {
             directDownloadUrl = asset['browser_download_url']?.toString();
+            apkAssetName = asset['name']?.toString();
             break;
           }
         }
       }
       directDownloadUrl ??=
           'https://github.com/$_repoOwner/$_repoName/releases/download/$tagName/$_apkName';
+      apkAssetName ??= _apkName;
+
+      // 构建代理下载 URL
+      final proxyDownloadUrl = useProxy
+          ? _buildProxyDownloadUrl(_repoOwner, _repoName, tagName, apkAssetName)
+          : _buildProxyDownloadUrl(_repoOwner, _repoName, tagName, apkAssetName);
 
       final releaseNotes = data['body']?.toString() ?? '';
 
@@ -89,7 +91,7 @@ class UpdateService {
         'latestVersion': latestVersion,
         'currentVersion': _currentVersion,
         'directDownloadUrl': directDownloadUrl,
-        'proxyDownloadUrl': _buildProxyDownloadUrl(directDownloadUrl),
+        'proxyDownloadUrl': proxyDownloadUrl,
         'releaseNotes': releaseNotes,
         'htmlUrl': data['html_url']?.toString() ?? '',
       };
@@ -124,19 +126,11 @@ class UpdateService {
     }
 
     // 先尝试 CF 代理下载
-    bool success = await _downloadFile(
-      proxyDownloadUrl,
-      filePath,
-      onProgress,
-    );
+    bool success = await _downloadFile(proxyDownloadUrl, filePath, onProgress);
 
     // 代理失败，回退直连
     if (!success) {
-      success = await _downloadFile(
-        directDownloadUrl,
-        filePath,
-        onProgress,
-      );
+      success = await _downloadFile(directDownloadUrl, filePath, onProgress);
     }
 
     if (!success) {
@@ -178,6 +172,7 @@ class UpdateService {
           }
         },
         options: dio.Options(
+          responseType: dio.ResponseType.bytes,
           receiveTimeout: const Duration(minutes: 10),
           sendTimeout: const Duration(seconds: 30),
           followRedirects: true,
@@ -196,8 +191,7 @@ class UpdateService {
     final directDownloadUrl = updateInfo['directDownloadUrl']?.toString() ?? '';
     final proxyDownloadUrl = updateInfo['proxyDownloadUrl']?.toString() ?? '';
     final releaseNotes = updateInfo['releaseNotes']?.toString() ?? '';
-    final currentVersion =
-        updateInfo['currentVersion']?.toString() ?? _currentVersion;
+    final currentVersion = updateInfo['currentVersion']?.toString() ?? _currentVersion;
 
     Get.dialog(
       AlertDialog(
@@ -210,23 +204,16 @@ class UpdateService {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('当前版本: v$currentVersion',
-                  style: TextStyle(
-                      fontSize: 13.sp, color: AppTheme.textSecondary)),
+                  style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary)),
               SizedBox(height: 12.h),
               Text('更新内容：',
-                  style: TextStyle(
-                      fontSize: 14.sp, fontWeight: FontWeight.w500)),
+                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500)),
               SizedBox(height: 4.h),
               Flexible(
                 child: SingleChildScrollView(
                   child: Text(
-                    releaseNotes.isNotEmpty
-                        ? releaseNotes
-                        : 'Bug 修复和性能优化',
-                    style: TextStyle(
-                        fontSize: 13.sp,
-                        color: AppTheme.textSecondary,
-                        height: 1.5),
+                    releaseNotes.isNotEmpty ? releaseNotes : 'Bug 修复和性能优化',
+                    style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary, height: 1.5),
                   ),
                 ),
               ),
@@ -237,16 +224,14 @@ class UpdateService {
           TextButton(
             onPressed: () => Get.back(),
             child: Text('稍后再说',
-                style: TextStyle(
-                    fontSize: 14.sp, color: AppTheme.textSecondary)),
+                style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
             onPressed: () {
               Get.back();
               _showDownloadDialog(directDownloadUrl, proxyDownloadUrl);
             },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryColor),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
             child: Text('立即更新',
                 style: TextStyle(fontSize: 14.sp, color: Colors.white)),
           ),
@@ -256,8 +241,7 @@ class UpdateService {
   }
 
   /// 显示下载进度对话框
-  static void _showDownloadDialog(
-      String directDownloadUrl, String proxyDownloadUrl) {
+  static void _showDownloadDialog(String directDownloadUrl, String proxyDownloadUrl) {
     final progress = 0.obs;
     final isDownloading = true.obs;
     final receivedStr = ''.obs;
@@ -265,26 +249,22 @@ class UpdateService {
 
     Get.dialog(
       Obx(() => AlertDialog(
-            title: Text(
-                isDownloading.value ? '正在下载更新' : '下载完成',
-                style: TextStyle(
-                    fontSize: 16.sp, fontWeight: FontWeight.w600)),
+            title: Text(isDownloading.value ? '正在下载更新' : '下载完成',
+                style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 LinearProgressIndicator(
                   value: progress.value / 100.0,
                   backgroundColor: AppTheme.gray100,
-                  valueColor:
-                      AlwaysStoppedAnimation(AppTheme.primaryColor),
+                  valueColor: AlwaysStoppedAnimation(AppTheme.primaryColor),
                 ),
                 SizedBox(height: 12.h),
                 Text(
                   isDownloading.value
                       ? '${progress.value}%  ${receivedStr.value} / ${totalStr.value}'
                       : '正在安装，请稍候...',
-                  style: TextStyle(
-                      fontSize: 13.sp, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
                 ),
               ],
             ),
@@ -293,9 +273,7 @@ class UpdateService {
                     TextButton(
                       onPressed: () => Get.back(),
                       child: Text('取消',
-                          style: TextStyle(
-                              fontSize: 14.sp,
-                              color: AppTheme.textSecondary)),
+                          style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary)),
                     ),
                   ]
                 : null,
