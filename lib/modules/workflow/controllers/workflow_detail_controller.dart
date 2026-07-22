@@ -58,18 +58,19 @@ class WorkflowDetailController extends GetxController {
         // 解析 tableSchema
         var ts = data['tableSchema'];
         if (ts is String) {
-          ts = jsonDecode(ts);
+          try { ts = jsonDecode(ts); } catch (_) { ts = null; }
         }
         if (ts is List) {
           mainFields.clear();
           detailFields.clear();
           for (final f in ts) {
-            final field = Map<String, dynamic>.from(f as Map);
+            if (f is! Map) continue;
+            final field = Map<String, dynamic>.from(f);
             if (field['flagDetail'] == true) {
               final subs = field['fields'];
               if (subs is List) {
                 for (final s in subs) {
-                  detailFields.add(Map<String, dynamic>.from(s as Map));
+                  if (s is Map) detailFields.add(Map<String, dynamic>.from(s));
                 }
               }
             } else {
@@ -79,7 +80,9 @@ class WorkflowDetailController extends GetxController {
         }
 
         // 解析 formData
-        final rawFormData = (data['formData'] as Map?)?.cast<String, dynamic>() ?? {};
+        final rawFormData = data['formData'] is Map
+            ? (data['formData'] as Map).cast<String, dynamic>()
+            : <String, dynamic>{};
         formData.value = Map<String, dynamic>.from(rawFormData);
         for (final key in ['created_date', 'rq', 'last_date']) {
           if (formData.containsKey(key)) {
@@ -90,8 +93,8 @@ class WorkflowDetailController extends GetxController {
         // 解析 mx（明细数据行）
         final mx = formData['mx'];
         if (mx is List) {
-          mxItems.value = mx.map((m) {
-            final item = Map<String, dynamic>.from(m as Map);
+          mxItems.value = mx.whereType<Map>().map((m) {
+            final item = Map<String, dynamic>.from(m);
             for (final key in ['created_date', 'xqrq', 'rq']) {
               if (item.containsKey(key)) {
                 _formatTimestampField(item, key);
@@ -104,12 +107,16 @@ class WorkflowDetailController extends GetxController {
         }
 
         // 解析 logs
-        final rawLogs = (data['logs'] as List?) ?? [];
-        logs.value = rawLogs.map((log) {
-          final m = Map<String, dynamic>.from(log as Map);
-          _formatTimestampField(m, 'createdDate');
-          return m;
-        }).toList();
+        final rawLogs = data['logs'];
+        if (rawLogs is List) {
+          logs.value = rawLogs.whereType<Map>().map((log) {
+            final m = Map<String, dynamic>.from(log);
+            _formatTimestampField(m, 'createdDate');
+            return m;
+          }).toList();
+        } else {
+          logs.clear();
+        }
       } else {
         errorMessage.value = result['message']?.toString() ?? '加载详情失败';
       }

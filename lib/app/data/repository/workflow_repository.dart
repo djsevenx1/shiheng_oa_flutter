@@ -215,7 +215,12 @@ class WorkflowRepository {
     try {
       // 用 initWithMod 获取 tableSchema（表单字段定义）+ formData + logs
       final response = await _api.dioInstance.get('/oa/pro/initWithMod/$proId');
-      return {'success': true, 'data': response.data};
+      final data = response.data;
+      // 后端可能返回 String（如错误提示）而非 Map，需类型检查
+      if (data is Map) {
+        return {'success': true, 'data': data};
+      }
+      return {'success': false, 'message': '流程数据格式异常，请刷新列表后重试'};
     } on dio.DioException catch (e) {
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {

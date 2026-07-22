@@ -282,7 +282,7 @@ class DashboardTab extends GetView<HomeController> {
     final type = item['eveType'] ?? 0;
     final state = item['state'] ?? 0;
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         final proId = item['proId'];
         final topId = item['topId'];
         if (type == 0 && topId != null) {
@@ -290,7 +290,11 @@ class DashboardTab extends GetView<HomeController> {
           Get.toNamed(Routes.TOPIC, arguments: {'id': topId});
         } else if ((type == 1 || type == 2) && proId != null) {
           // 待办流程 / 历史流程 → 流程详情
-          Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId});
+          final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': type == 1});
+          // 从详情返回后，若有操作则刷新通知列表和待办列表
+          if (result is Map && result['refresh'] == true) {
+            controller.refreshTodo();
+          }
         }
       },
       child: Container(

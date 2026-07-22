@@ -146,6 +146,11 @@ class HomeController extends GetxController {
     if (todoRes['success'] == true) {
       todoList.value = todoRes['data'] ?? [];
     }
+    // 同时刷新最近动态（通知列表），因为审批后通知会消失
+    final eventRes = await _dashboardRepository.getEvents();
+    if (eventRes['success'] == true) {
+      events.value = eventRes['data'] ?? [];
+    }
   }
 
   void changePage(int index) {

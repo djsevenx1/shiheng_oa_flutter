@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.5.6',
+              '版本 v2.5.7',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.5.6 (Build 256)'),
+          _buildInfoRow('版本', 'v2.5.7 (Build 257)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.5.7', '2026-07-22', [
+            '修复已处理流程点击崩溃：API返回String时显示友好提示而非类型转换异常',
+            '修复主页通知列表审批后不刷新：返回时自动刷新待办和动态列表',
+            '所有JSON解析加类型安全检查，避免异常数据导致崩溃',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.5.6', '2026-07-22', [
             '审批/拒绝/转交成功后显示后端返回的提示信息（如"已提交库房审批"）',
