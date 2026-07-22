@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.6.7',
+              '版本 v2.6.9',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.6.7 (Build 267)'),
+          _buildInfoRow('版本', 'v2.6.9 (Build 269)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,16 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.6.9', '2026-07-22', [
+            '修复审批提交后未返回上一页：改为无论成功失败都返回',
+            '优化首页待处理刷新：并行请求+异常容错，确保返回后列表及时更新',
+          ]),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.6.8', '2026-07-22', [
+            '去除硬编码服务器地址，改为登录页输入',
+            '去除品牌字样',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.6.7', '2026-07-22', [
             '修复转交流程：选人后不再直接提交，改为暂存后填审批意见点"通过"才提交',

@@ -144,15 +144,22 @@ class HomeController extends GetxController {
 
   /// 仅刷新首页待处理流程列表（从流程详情返回后调用）
   Future<void> refreshTodo() async {
-    await _loadModules();
-    final todoRes = await _workflowRepository.getWorkflowList(status: 'todo', limit: 5);
-    if (todoRes['success'] == true) {
-      todoList.value = todoRes['data'] ?? [];
-    }
-    // 同时刷新最近动态（通知列表），因为审批后通知会消失
-    final eventRes = await _dashboardRepository.getEvents();
-    if (eventRes['success'] == true) {
-      events.value = eventRes['data'] ?? [];
+    try {
+      await _loadModules();
+      // 并行刷新待处理列表和通知列表
+      final results = await Future.wait([
+        _workflowRepository.getWorkflowList(status: 'todo', limit: 5),
+        _dashboardRepository.getEvents(),
+      ]);
+      if (results[0]['success'] == true) {
+        todoList.value = results[0]['data'] ?? [];
+      }
+      if (results[1]['success'] == true) {
+        events.value = results[1]['data'] ?? [];
+      }
+    } catch (e) {
+      // 静默失败，不影响用户操作
+      print('refreshTodo 失败: $e');
     }
   }
 

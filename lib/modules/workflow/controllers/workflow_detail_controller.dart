@@ -234,23 +234,21 @@ class WorkflowDetailController extends GetxController {
       final displayMsg = serverMsg.isNotEmpty
           ? serverMsg
           : (forwardUserIds.isNotEmpty ? '已转交给${forwardUserNames.length}人审批' : '审批已通过');
-      if (result['success'] == true) {
-        Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: AppTheme.success, colorText: Colors.white);
-        Get.back(result: {'refresh': true});
-      } else {
-        // 后端可能返回错误但操作已生效，重新加载详情验证
+      final isSuccess = result['success'] == true;
+      if (!isSuccess) {
+        // 后端返回失败，重新加载详情验证操作是否实际已生效
         await loadDetail();
-        if (logs.length > oldLogCount) {
-          Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: AppTheme.success, colorText: Colors.white);
-          Get.back(result: {'refresh': true});
-        } else {
-          Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: AppTheme.danger, colorText: Colors.white);
-        }
       }
+      final actuallySucceeded = isSuccess || logs.length > oldLogCount;
+      Get.snackbar(
+        actuallySucceeded ? '成功' : '失败',
+        actuallySucceeded ? displayMsg : (result['message']?.toString() ?? '操作失败'),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: actuallySucceeded ? AppTheme.success : AppTheme.danger,
+        colorText: Colors.white,
+      );
+      // 无论成功失败都返回上一页，让列表刷新
+      Get.back(result: {'refresh': true});
     } catch (e) {
       Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.danger, colorText: Colors.white);
@@ -281,23 +279,20 @@ class WorkflowDetailController extends GetxController {
       );
       final serverMsg = result['message']?.toString() ?? '';
       final displayMsg = serverMsg.isNotEmpty ? serverMsg : '已拒绝';
-      if (result['success'] == true) {
-        Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: AppTheme.warning, colorText: Colors.white);
-        Get.back(result: {'refresh': true});
-      } else {
-        // 后端可能返回错误但操作已生效，重新加载详情验证
+      final isSuccess = result['success'] == true;
+      if (!isSuccess) {
         await loadDetail();
-        if (logs.length > oldLogCount) {
-          Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: AppTheme.warning, colorText: Colors.white);
-          Get.back(result: {'refresh': true});
-        } else {
-          Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
-              snackPosition: SnackPosition.BOTTOM,
-              backgroundColor: AppTheme.danger, colorText: Colors.white);
-        }
       }
+      final actuallySucceeded = isSuccess || logs.length > oldLogCount;
+      Get.snackbar(
+        actuallySucceeded ? '成功' : '失败',
+        actuallySucceeded ? displayMsg : (result['message']?.toString() ?? '操作失败'),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: actuallySucceeded ? AppTheme.warning : AppTheme.danger,
+        colorText: Colors.white,
+      );
+      // 无论成功失败都返回上一页，让列表刷新
+      Get.back(result: {'refresh': true});
     } catch (e) {
       Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.danger, colorText: Colors.white);
