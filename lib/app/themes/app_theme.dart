@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class AppTheme {
-  // 主色调 - 时恒电子品牌色
+  // 主色调 - 品牌色
   static const Color primaryColor = Color(0xFF61428F);
   static const Color primaryLight = Color(0xFF8B6BBF);
   static const Color primaryDark = Color(0xFF3D2666);

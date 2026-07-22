@@ -69,7 +69,7 @@ class LoginView extends GetView<LoginController> {
                         // Title
                         Center(
                           child: Text(
-                            '时恒电子',
+                            'OA',
                             style: TextStyle(
                               fontSize: 28.sp,
                               fontWeight: FontWeight.bold,

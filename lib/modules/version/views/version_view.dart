@@ -27,7 +27,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 16.h),
             Text(
-              '时恒电子 OA',
+              'OA',
               style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
             SizedBox(height: 4.h),
@@ -69,12 +69,12 @@ class VersionView extends StatelessWidget {
             _buildUpdateLog(),
             SizedBox(height: 24.h),
             Text(
-              '© 2024 时恒电子 版权所有',
+              '© 2024 OA 版权所有',
               style: TextStyle(fontSize: 12.sp, color: AppTheme.textTertiary),
             ),
             SizedBox(height: 8.h),
             Text(
-              '南京时恒电子科技有限公司',
+              'OA Mobile',
               style: TextStyle(fontSize: 11.sp, color: AppTheme.textTertiary),
             ),
           ],

@@ -75,7 +75,7 @@ jobs:
           prerelease: false
           generate_release_notes: true
           body: |
-            ## 时恒电子 OA v${{ github.ref_name }}
+            ## OA v${{ github.ref_name }}
 
             ### 安装说明
             下载 `shiheng-oa-universal.apk` 安装即可（支持所有架构）。

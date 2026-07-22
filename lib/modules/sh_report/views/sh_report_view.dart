@@ -11,7 +11,7 @@ class ShReportView extends GetView<ShReportController> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('时恒专属报表'),
+        title: const Text('专属报表'),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: () => controller.loadData()),
         ],

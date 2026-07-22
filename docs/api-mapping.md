@@ -1,4 +1,4 @@
-# OA 后端真实接口映射（基于 njsh2012.5i178.com:9090 静态分析）
+# OA 后端真实接口映射（基于后端静态分析）
 
 > 本文件由 `modules/*.js` + `modules/config/api.js` 反推得出（2026-06-23）。
 > Spring Security 表单登录，`/login` 302 → JSESSIONID cookie。

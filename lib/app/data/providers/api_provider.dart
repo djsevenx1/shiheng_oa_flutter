@@ -49,8 +49,8 @@ class ApiProvider {
 
   final _storage = GetStorage();
 
-  // 基础配置 - 默认服务器地址（用户可在登录页修改并自动保存）
-  static const String _defaultBaseUrl = 'http://njsh2012.5i178.com:9090';
+  // 基础配置 - 默认服务器地址（用户在登录页输入并自动保存）
+  static const String _defaultBaseUrl = '';
   static const String _storageBaseUrlKey = 'serverBaseUrl';
 
   // 初始化为默认地址（init() 中会从存储读取覆盖）

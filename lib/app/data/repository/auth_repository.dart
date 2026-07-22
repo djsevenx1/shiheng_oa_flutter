@@ -13,7 +13,6 @@ class AuthRepository {
   GetStorage getStorage() => _storage;
 
   /// 用户登录 - Spring Security form login 风格
-  /// 服务器: http://njsh2012.5i178.com:9090
   /// 端点: POST /login (form-encoded)
   /// 字段: username + password
   /// 成功: 302 重定向到 / 或首页

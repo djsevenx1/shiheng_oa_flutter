@@ -36,7 +36,7 @@ class CompanyView extends StatelessWidget {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      '时恒电子',
+                      'OA',
                       style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     SizedBox(height: 4.h),
@@ -60,7 +60,7 @@ class CompanyView extends StatelessWidget {
                   Text('公司简介', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
                   SizedBox(height: 8.h),
                   Text(
-                    '时恒电子是一家专注于电子产品研发、生产、销售为一体的综合性企业。公司主要产品包括电子元件、控制器模块、电源组件等，广泛应用于工业自动化、智能制造等领域。',
+                    '专注于电子产品研发、生产、销售为一体的综合性企业。公司主要产品包括电子元件、控制器模块、电源组件等，广泛应用于工业自动化、智能制造等领域。',
                     style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary, height: 1.6),
                   ),
                 ],
