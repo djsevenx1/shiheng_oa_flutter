@@ -16,8 +16,15 @@ class DashboardTab extends GetView<HomeController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      body: CustomScrollView(
-        slivers: [
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await controller.loadDashboardData();
+        },
+        color: AppTheme.primaryColor,
+        child: CustomScrollView(
+          // 关键：保证内容不足一屏时也能下拉刷新
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
           // 顶部渐变区域
           SliverToBoxAdapter(
             child: Container(
@@ -159,6 +166,7 @@ class DashboardTab extends GetView<HomeController> {
           }),
           SliverToBoxAdapter(child: SizedBox(height: 24.h)),
         ],
+        ),
       ),
     );
   }
