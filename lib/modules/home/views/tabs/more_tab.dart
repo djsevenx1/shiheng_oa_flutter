@@ -18,11 +18,8 @@ class MoreTab extends GetView<HomeController> {
       body: ListView(
         padding: EdgeInsets.all(16.w),
         children: [
-          _buildMenuSection('业务模块', [
+          _buildMenuSection([
             _MenuItem(Icons.contacts_outlined, '通讯录', Colors.blue, Routes.CONTACTS),
-          ]),
-          SizedBox(height: 16.h),
-          _buildMenuSection('其他', [
             _MenuItem(Icons.settings_outlined, '个人设置', Colors.blueGrey, Routes.SETTINGS),
             _MenuItem(Icons.help_outline, '帮助中心', Colors.blue, Routes.HELP),
             _MenuItem(Icons.business_outlined, '公司信息', Colors.indigo, Routes.COMPANY),
@@ -51,7 +48,7 @@ class MoreTab extends GetView<HomeController> {
     );
   }
 
-  Widget _buildMenuSection(String title, List<_MenuItem> items) {
+  Widget _buildMenuSection(List<_MenuItem> items) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -67,18 +64,6 @@ class MoreTab extends GetView<HomeController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: EdgeInsets.all(16.w),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-          ),
-          Divider(height: 1.h, color: AppTheme.gray200, indent: 16.w),
           ...items.map((item) => ListTile(
             leading: Container(
               width: 36.w,
