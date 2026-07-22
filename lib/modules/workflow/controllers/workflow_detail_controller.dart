@@ -205,6 +205,7 @@ class WorkflowDetailController extends GetxController {
       return;
     }
     isLoading.value = true;
+    var shouldPop = true; // 标记是否要 pop（任何路径都默认要 pop）
     try {
       final oldLogCount = logs.length;
       final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
@@ -213,31 +214,59 @@ class WorkflowDetailController extends GetxController {
           ? userInfo!['groupId'] as int
           : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
 
-      // 如果选了转交人，走转交审批接口；否则走普通通过
-      final result = forwardUserIds.isNotEmpty
-          ? await _repository.forwardWorkflow(
-              proId: proId.value,
-              extraUserIds: forwardUserIds.toList(),
-              comment: commentController.text.trim(),
-              name: moduleName,
-              groupId: groupId > 0 ? groupId : null,
-            )
-          : await _repository.approveWorkflow(
-              proId: proId.value,
-              result: 'pass',
-              comment: commentController.text.trim(),
-              name: moduleName,
-              groupId: groupId > 0 ? groupId : null,
-            );
+      // 根据模式选择接口：审批人 → approveWorkflow（不带 formData）
+      // 发起人（待处理列表里 state<=0 或 isHandleMode 但不是审批节点）→ submitWorkflow（带 formData,flagPositive=null）
+      final Map<String, dynamic> result;
+      final isApprover = isApproverMode;
+      if (forwardUserIds.isNotEmpty) {
+        result = await _repository.forwardWorkflow(
+          proId: proId.value,
+          extraUserIds: forwardUserIds.toList(),
+          comment: commentController.text.trim(),
+          name: moduleName,
+          groupId: groupId > 0 ? groupId : null,
+        );
+      } else if (isApprover) {
+        result = await _repository.approveWorkflow(
+          proId: proId.value,
+          result: 'pass',
+          comment: commentController.text.trim(),
+          name: moduleName,
+          groupId: groupId > 0 ? groupId : null,
+        );
+      } else {
+        // 发起人"提交"：带完整 formData，flagPositive=null
+        result = await _repository.submitWorkflow(
+          modId: (workflowDetail['module'] is Map ? (workflowDetail['module'] as Map)['id'] : null) is int
+              ? (workflowDetail['module'] as Map)['id'] as int
+              : int.tryParse(workflowDetail['module']?['id']?.toString() ?? '') ?? 0,
+          formData: Map<String, dynamic>.from(formData),
+          appKey: workflowDetail['module']?['tableKey']?.toString() ?? '',
+          name: moduleName,
+          module: workflowDetail['module'] is Map
+              ? Map<String, dynamic>.from(workflowDetail['module'] as Map)
+              : null,
+          proId: proId.value,
+          groupId: groupId > 0 ? groupId : null,
+          message: commentController.text.trim(),
+          flagPositive: null,
+        );
+      }
       // 老 App: 后端返回 errMsg 作为提示信息（如"已提交库房审批"）
       final serverMsg = result['message']?.toString() ?? '';
       final displayMsg = serverMsg.isNotEmpty
           ? serverMsg
-          : (forwardUserIds.isNotEmpty ? '已转交给${forwardUserNames.length}人审批' : '审批已通过');
+          : (forwardUserIds.isNotEmpty
+              ? '已转交给${forwardUserNames.length}人审批'
+              : (isApprover ? '审批已通过' : '提交成功,等待审批'));
       final isSuccess = result['success'] == true;
       if (!isSuccess) {
         // 后端返回失败，重新加载详情验证操作是否实际已生效
-        await loadDetail();
+        try {
+          await loadDetail();
+        } catch (_) {}
+        // 失败时不立即 pop,留给用户看错误
+        shouldPop = false;
       }
       final actuallySucceeded = isSuccess || logs.length > oldLogCount;
       Get.snackbar(
@@ -247,13 +276,22 @@ class WorkflowDetailController extends GetxController {
         backgroundColor: actuallySucceeded ? AppTheme.success : AppTheme.danger,
         colorText: Colors.white,
       );
-      // 无论成功失败都返回上一页，让列表刷新
-      Get.back(result: {'refresh': true});
     } catch (e) {
       Get.snackbar('失败', '网络错误: $e', snackPosition: SnackPosition.BOTTOM,
           backgroundColor: AppTheme.danger, colorText: Colors.white);
     } finally {
       isLoading.value = false;
+      // 任何路径都保证 pop 一次（成功或异常），避免卡在详情页
+      if (shouldPop && Get.isOverlaysOpen == false) {
+        // 延迟一帧让 snackbar/loading 完全释放
+        Future.microtask(() {
+          if (Get.isOverlaysOpen) return;
+          // Get.back 可能被调用多次导致多次 pop，加 guard
+          if (Get.currentRoute.contains('detail')) {
+            Get.back(result: {'refresh': true});
+          }
+        });
+      }
     }
   }
 

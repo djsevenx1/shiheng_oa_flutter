@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.1',
+              'OA 移动办公平台 v2.7.2',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.0 (Build 270)'),
+          _buildInfoRow('版本', 'v2.7.2 (Build 272)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.7.2', '2026-07-22', [
+            '修复流程详情"提交"按钮卡在当前页:发起人模式改走 submitWorkflow 接口(带 formData + flagPositive=null)',
+            '区分审批人/发起人模式:审批人继续走 approveWorkflow,发起人改走 submitWorkflow',
+            '异常路径也强制 Get.back 返回上一页,避免卡住',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.7.1', '2026-07-22', [
             '加回"时恒电子"品牌字样：启动页、公司信息页、关于版本页均显示完整品牌名',
