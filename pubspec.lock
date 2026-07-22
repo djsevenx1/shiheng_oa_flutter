@@ -214,6 +214,11 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_localizations:
+    dependency: "direct main"
+    description: flutter_localizations
+    source: sdk
+    version: "0.0.0"
   flutter_cache_manager:
     dependency: transitive
     description:
