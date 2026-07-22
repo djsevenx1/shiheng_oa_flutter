@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.5.8',
+              '版本 v2.5.9',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.5.8 (Build 258)'),
+          _buildInfoRow('版本', 'v2.5.9 (Build 259)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.5.9', '2026-07-22', [
+            '应用内更新套上 CF Pages 代理加速(tmdb-8d1.pages.dev)',
+            'API检查和APK下载均优先走代理，失败自动回退直连',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.5.8', '2026-07-22', [
             '修复审批记录actionId=6显示为"退回"，实际应为"转交"',
