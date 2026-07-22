@@ -92,16 +92,24 @@ class ContactsController extends GetxController {
       return;
     }
     isSearching.value = true;
-    final completer = Completer<void>();
-    _searchDebounce = Timer(const Duration(milliseconds: 250), () async {
-      final result = await _repo.searchMembers(keyword.trim());
-      if (!completer.isCompleted) completer.complete();
-      if (result['success'] == true) {
-        searchResults.value = (result['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      }
+    // 后端不支持 humanSearch 参数（被忽略），改为本地过滤 allMembers
+    _searchDebounce = Timer(const Duration(milliseconds: 200), () {
+      final kw = keyword.trim().toLowerCase();
+      final filtered = allMembers.where((m) {
+        final name = (m['name']?.toString() ?? '').toLowerCase();
+        final loginName = (m['login_name']?.toString() ?? '').toLowerCase();
+        final mobile = (m['mobile']?.toString() ?? '').toLowerCase();
+        final userGroup = (m['userGroup']?.toString() ?? '').toLowerCase();
+        final userRole = (m['userRole']?.toString() ?? '').toLowerCase();
+        return name.contains(kw) ||
+            loginName.contains(kw) ||
+            mobile.contains(kw) ||
+            userGroup.contains(kw) ||
+            userRole.contains(kw);
+      }).toList();
+      searchResults.value = filtered;
       isSearching.value = false;
     });
-    return completer.future;
   }
 
   @override

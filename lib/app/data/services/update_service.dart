@@ -14,7 +14,7 @@ class UpdateService {
   static const _repoOwner = 'djsevenx1';
   static const _repoName = 'shiheng_oa_flutter';
   static const _apkName = 'shiheng-oa-universal.apk';
-  static const _currentVersion = '2.5.9'; // 与 pubspec.yaml 保持一致
+  static const _currentVersion = '2.6.0'; // 与 pubspec.yaml 保持一致
 
   /// CF Pages 代理前缀（加速 GitHub 访问）
   static const _cfProxy = 'https://tmdb-8d1.pages.dev/';

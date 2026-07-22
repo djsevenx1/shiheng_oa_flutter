@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.5.9',
+              '版本 v2.6.0',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.5.9 (Build 259)'),
+          _buildInfoRow('版本', 'v2.6.0 (Build 260)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.6.0', '2026-07-22', [
+            '修复通讯录搜索：后端不支持humanSearch参数，改为本地过滤',
+            '支持按姓名/工号/手机号/部门/角色搜索',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.5.9', '2026-07-22', [
             '应用内更新套上 CF Pages 代理加速(tmdb-8d1.pages.dev)',
