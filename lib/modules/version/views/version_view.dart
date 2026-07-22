@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.8',
+              'OA 移动办公平台 v2.7.10',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.9 (Build 279)'),
+          _buildInfoRow('版本', 'v2.7.10 (Build 280)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -129,6 +129,11 @@ class VersionView extends StatelessWidget {
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           SizedBox(height: 12.h),
+          _buildLogItem('v2.7.10', '2026-07-22', [
+            '登录页新增"加速GitHub地址"输入框,默认 https://tmdb-8d1.pages.dev,值持久化到 GetStorage',
+            'UpdateService 改为读取 GetStorage 里的 github_proxy_url,登录后可随时换代理',
+            '输入框带 helper 文字"检查更新/下载 APK 走此代理"',
+          ]),
           _buildLogItem('v2.7.9', '2026-07-22', [
             '链接服务器速度优化:HttpClient 开启 keep-alive,后续请求复用 TCP 连接(单 host 6 并发,idle 30s)',
             '链接服务器速度优化:API 超时从 30s/30s/30s 缩短到 8s/10s/12s,失败更快感知',

@@ -152,6 +152,37 @@ class LoginView extends GetView<LoginController> {
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                                 ),
                               ),
+                              SizedBox(height: 12.h),
+                              // 加速 GitHub(检查更新/下载 APK 走此代理,默认 tmdb-8d1.pages.dev)
+                              TextField(
+                                controller: controller.githubProxyController,
+                                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 15),
+                                enableSuggestions: false,
+                                autocorrect: false,
+                                keyboardType: TextInputType.url,
+                                decoration: InputDecoration(
+                                  hintText: '加速GitHub地址',
+                                  hintTextStyle: const TextStyle(color: AppTheme.gray400, fontSize: 15),
+                                  helperText: '检查更新/下载 APK 走此代理',
+                                  helperStyle: const TextStyle(color: AppTheme.gray400, fontSize: 11),
+                                  prefixIcon: const Icon(Icons.rocket_launch_outlined, color: AppTheme.gray400, size: 22),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: AppTheme.gray200, width: 1),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                ),
+                              ),
                               SizedBox(height: 16.h),
                               // Username
                               TextField(

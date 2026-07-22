@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,13 +15,22 @@ class UpdateService {
   static const _repoOwner = 'djsevenx1';
   static const _repoName = 'shiheng_oa_flutter';
   static const _apkName = 'shiheng-oa-universal.apk';
-  static const _currentVersion = '2.7.9';
+  static const _currentVersion = '2.7.10';
 
   /// 暴露给 UI 使用的当前版本号（如设置页、关于页）
   static String get currentVersion => _currentVersion;
 
-  /// CF Pages 代理域名（path-based 路由，跟 LunaTV-Mobile 一致）
-  static const _cfProxy = 'https://tmdb-8d1.pages.dev';
+  /// GitHub 加速代理地址(用户在登录页可改,默认 tmdb-8d1.pages.dev)
+  /// 读取顺序: GetStorage 持久化值 > 硬编码默认值
+  static String get _cfProxy {
+    final saved = GetStorage().read('github_proxy_url');
+    if (saved is String && saved.trim().isNotEmpty) {
+      final s = saved.trim();
+      // 去掉末尾的 /,避免拼出 // 路径
+      return s.endsWith('/') ? s.substring(0, s.length - 1) : s;
+    }
+    return 'https://tmdb-8d1.pages.dev';
+  }
 
   /// CF 代理 API: /github/repos/:owner/:repo/releases/latest
   static String get _apiUrlProxy =>
