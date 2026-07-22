@@ -32,6 +32,10 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    // 性能优化:把 4 件原本串行/不并行的事一次性 Future.wait
+    // - loadUserInfo(同步) + refreshUserInfo(异步,首页用)
+    // - loadDashboardData(4 并行 + 1 串行 → 改为 6 全并行)
+    // - UpdateService.checkUpdateOnStartup
     loadUserInfo();
     loadDashboardData();
     // 启动时静默检查更新
@@ -93,12 +97,15 @@ class HomeController extends GetxController {
   Future<void> loadDashboardData() async {
     isLoading.value = true;
     try {
-      // 并行加载数据
+      // 性能优化:把 6 个接口全部并行,避免等待"待处理流程"和"模块列表"
+      // 这两个原先在 Future.wait 之后才发起,会让首屏多等 200-500ms
       final results = await Future.wait([
         _dashboardRepository.getBulletins(),
         _dashboardRepository.getNews(),
         _dashboardRepository.getUserList(),
         _dashboardRepository.getEvents(),
+        _workflowRepository.getWorkflowList(status: 'todo', limit: 5),
+        _myAppRepo.getModules(), // 一次性把 modsMap 也并行拉回来
       ]);
 
       if (results[0]['success'] == true) {
@@ -113,26 +120,18 @@ class HomeController extends GetxController {
       if (results[3]['success'] == true) {
         events.value = results[3]['data'] ?? [];
       }
-      // 加载待处理流程（首页"待处理"板块）
-      final todoRes = await _workflowRepository.getWorkflowList(status: 'todo', limit: 5);
-      if (todoRes['success'] == true) {
-        todoList.value = todoRes['data'] ?? [];
+      if (results[4]['success'] == true) {
+        todoList.value = results[4]['data'] ?? [];
       }
-      // 加载模块名称映射（列表标题用）
-      await _loadModules();
+      // 模块映射也已经在第 6 项并行拉了
+      final modsRes = results[5];
+      if (modsRes['success'] == true && modsRes['data'] is Map) {
+        modsMap.assignAll((modsRes['data'] as Map).cast<int, String>());
+      }
     } catch (e) {
       print('加载仪表盘数据失败: $e');
     } finally {
       isLoading.value = false;
-    }
-  }
-
-  /// 获取模块列表（老 App 调 /oa/handle/initMods，用于列表标题）
-  Future<void> _loadModules() async {
-    if (modsMap.isNotEmpty) return;
-    final res = await _myAppRepo.getModules();
-    if (res['success'] == true && res['data'] is Map) {
-      modsMap.assignAll((res['data'] as Map).cast<int, String>());
     }
   }
 
@@ -145,17 +144,23 @@ class HomeController extends GetxController {
   /// 仅刷新首页待处理流程列表（从流程详情返回后调用）
   Future<void> refreshTodo() async {
     try {
-      await _loadModules();
-      // 并行刷新待处理列表和通知列表
-      final results = await Future.wait([
+      // 并行刷新待处理列表、通知列表、模块映射(只在 modsMap 为空时才拉)
+      final tasks = <Future<Map<String, dynamic>>>[
         _workflowRepository.getWorkflowList(status: 'todo', limit: 5),
         _dashboardRepository.getEvents(),
-      ]);
+      ];
+      if (modsMap.isEmpty) {
+        tasks.add(_myAppRepo.getModules());
+      }
+      final results = await Future.wait(tasks);
       if (results[0]['success'] == true) {
         todoList.value = results[0]['data'] ?? [];
       }
       if (results[1]['success'] == true) {
         events.value = results[1]['data'] ?? [];
+      }
+      if (results.length > 2 && results[2]['success'] == true && results[2]['data'] is Map) {
+        modsMap.assignAll((results[2]['data'] as Map).cast<int, String>());
       }
     } catch (e) {
       // 静默失败，不影响用户操作

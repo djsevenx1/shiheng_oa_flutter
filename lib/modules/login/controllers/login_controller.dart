@@ -205,12 +205,14 @@ class LoginController extends GetxController {
         }
         Get.put<NameDictRepository>(dict, permanent: true);
         unawaited(dict.preload());
+        // 登录成功后立即跳转,500ms 的人工延迟去掉(网络都已建立,没必要再等)
         _showMessage(
           title: '登录成功',
           message: '欢迎回来，${result['data']?['name'] ?? username}',
           bg: Colors.green,
         );
-        await Future.delayed(const Duration(milliseconds: 500));
+        // 拉用户信息 + 预加载名称字典都放到后台,不阻塞跳首页
+        unawaited(_fetchAndCacheCurrentUser(username));
         Get.offAllNamed(Routes.HOME);
       } else {
         _showMessage(

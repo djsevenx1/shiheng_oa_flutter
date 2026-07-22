@@ -14,7 +14,7 @@ class UpdateService {
   static const _repoOwner = 'djsevenx1';
   static const _repoName = 'shiheng_oa_flutter';
   static const _apkName = 'shiheng-oa-universal.apk';
-  static const _currentVersion = '2.7.8';
+  static const _currentVersion = '2.7.9';
 
   /// 暴露给 UI 使用的当前版本号（如设置页、关于页）
   static String get currentVersion => _currentVersion;

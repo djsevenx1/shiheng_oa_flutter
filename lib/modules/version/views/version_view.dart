@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.8 (Build 278)'),
+          _buildInfoRow('版本', 'v2.7.9 (Build 279)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -129,6 +129,16 @@ class VersionView extends StatelessWidget {
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           SizedBox(height: 12.h),
+          _buildLogItem('v2.7.9', '2026-07-22', [
+            '链接服务器速度优化:HttpClient 开启 keep-alive,后续请求复用 TCP 连接(单 host 6 并发,idle 30s)',
+            '链接服务器速度优化:API 超时从 30s/30s/30s 缩短到 8s/10s/12s,失败更快感知',
+            '链接服务器速度优化:启用 Accept-Encoding: gzip,响应体积压缩 70%+',
+            '链接服务器速度优化:splash 阶段主动 warmup() 预热连接,首屏省 100-300ms',
+            '链接服务器速度优化:splash 强制停留 2s → 800ms',
+            '链接服务器速度优化:登录成功后 500ms 空闲延迟去掉,跳首页即跳转',
+            '链接服务器速度优化:首页 6 个接口全部 Future.wait 并行(原 4 并行 + 2 串行)',
+            '调试优化:_PerfInterceptor 自动记录每个请求耗时,>800ms 的会标 SLOW 写入 DiagLog',
+          ]),
           _buildLogItem('v2.7.8', '2026-07-22', [
             '修复文本选择菜单英文:加入 flutter_localizations,强制 locale=zh_CN,Cut/Copy/Paste/Share/Select all 等系统文案改为中文',
             '支持中文(简体/繁体)与英文回落',

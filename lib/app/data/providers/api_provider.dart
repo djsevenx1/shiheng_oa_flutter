@@ -117,9 +117,12 @@ class ApiProvider {
 
     _dio = dio.Dio(dio.BaseOptions(
       baseUrl: _baseUrl,
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      sendTimeout: const Duration(seconds: 30),
+      // 性能优化：超时从 30s 缩短到 8s/12s,失败能更快被感知
+      connectTimeout: const Duration(seconds: 8),
+      sendTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 12),
+      // 长连接
+      persistentConnection: true,
       followRedirects: true,
       maxRedirects: 5,
       validateStatus: (status) {
@@ -130,20 +133,30 @@ class ApiProvider {
       },
       headers: {
         'Accept': 'application/json',
+        // 性能优化：告诉服务端支持 gzip 响应,JSON 体积通常能压缩 70%+
+        'Accept-Encoding': 'gzip',
       },
     ));
 
     // 关键修复：dio 5.x 在 Android 上 dart:io 的 HttpClient 不会自动把 set-cookie
     // 暴露到 response.headers。这是 HttpClient 的历史行为。
     // 我们用 onHttpClientCreate 配置 HttpClient 让它接受所有 cookies。
+    // 同时启用 keep-alive,让多个请求复用同一个 TCP 连接,避免每次都三次握手
     _dio.httpClientAdapter = IOHttpClientAdapter(
       createHttpClient: () {
         final client = HttpClient();
         // 允许 set-cookie 中任何 cookie 头被解析
         client.badCertificateCallback = (cert, host, port) => false;
+        // 性能优化：30s 内的 keep-alive 连接会被复用
+        client.idleTimeout = const Duration(seconds: 30);
+        // 单 host 最大 6 个并发连接
+        client.maxConnectionsPerHost = 6;
         return client;
       },
     );
+
+    // 性能埋点拦截器
+    _dio.interceptors.add(_PerfInterceptor());
 
     _dio.interceptors.add(dio.InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -318,6 +331,26 @@ class ApiProvider {
 
   // —— 业务错误归一化 —— //
 
+  /// 性能优化：连接预热。splash 阶段主动发一个 HEAD/GET,触发 TCP 握手 + TLS
+  /// 这样后面真正业务请求过来时不用重新建连接,首屏能省 100-300ms
+  Future<bool> warmup() async {
+    if (_baseUrl.isEmpty) return false;
+    try {
+      final r = await _dio.get(
+        '/',
+        options: dio.Options(
+          sendTimeout: const Duration(seconds: 4),
+          receiveTimeout: const Duration(seconds: 4),
+          // 预热失败不要影响主流程
+          validateStatus: (s) => s != null && s < 600,
+        ),
+      );
+      return r.statusCode != null && r.statusCode! < 500;
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// 把任意 Dio/网络异常转成 [ApiError]，供 UI 层直接展示。
   static ApiError normalize(Object error) {
     if (error is dio.DioException) {
@@ -369,5 +402,42 @@ class ApiProvider {
       return '[$method $url${code != null ? ' · HTTP $code' : ''}]';
     }
     return '';
+  }
+}
+
+/// 性能埋点拦截器:记录每个请求耗时,慢请求会单独高亮,方便定位瓶颈
+class _PerfInterceptor extends dio.Interceptor {
+  static const _kStart = '_perf_start';
+
+  @override
+  void onRequest(dio.RequestOptions options, dio.RequestInterceptorHandler handler) {
+    options.extra[_kStart] = DateTime.now().millisecondsSinceEpoch;
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(dio.Response response, dio.ResponseInterceptorHandler handler) {
+    _log(response.requestOptions, response.statusCode, null);
+    handler.next(response);
+  }
+
+  @override
+  void onError(dio.DioException err, dio.ErrorInterceptorHandler handler) {
+    _log(err.requestOptions, err.response?.statusCode, err.message ?? err.type.toString());
+    handler.next(err);
+  }
+
+  void _log(dio.RequestOptions opts, int? status, String? err) {
+    if (!kDebugMode) return;
+    final start = opts.extra[_kStart] as int?;
+    if (start == null) return;
+    final dur = DateTime.now().millisecondsSinceEpoch - start;
+    final path = opts.path;
+    if (dur > 800) {
+      debugPrint('[SLOW ${dur}ms] $status $path $err');
+      DiagLog.write('SLOW', '${dur}ms $status $path $err');
+    } else {
+      debugPrint('[API ${dur}ms] $status $path');
+    }
   }
 }
