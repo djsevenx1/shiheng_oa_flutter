@@ -447,22 +447,29 @@ class WorkflowRepository {
     }
   }
 
-  /// 通知（POST /oa/message/add）
-  /// 老 App flow.js doAlert(): 发送站内消息通知其他用户查看流程
-  /// receivers = 用户 ID 列表
+  /// 通知（POST /oa/wechat/pushText）
+  /// 老 App APIWechat.pushText(): 推送企业微信通知到手机
+  /// loginNames = 用户 login_name 用 | 分隔，末尾加 |qy|admin
   Future<Map<String, dynamic>> broadcastWorkflow({
-    required String name,
+    required String title,
     required String content,
-    required List<int> receivers,
+    required List<String> loginNames,
   }) async {
     try {
-      final response = await _api.dioInstance.post('/oa/message/add', data: {
-        'name': name,
-        'content': content,
-        'receivers': receivers,
-        'for_all': 0,
+      final response = await _api.dioInstance.post('/oa/wechat/pushText', data: {
+        'loginNames': '${loginNames.join('|')}|qy|admin',
+        'pushText': title,
+        'pushBody': content,
+        'url': '',
       });
       final data = response.data;
+      // pushText 返回数字（1=成功），非 Map
+      if (data is int && data > 0) {
+        return {'success': true, 'data': data};
+      }
+      if (data is String && data.isNotEmpty) {
+        return {'success': true, 'data': data};
+      }
       if (data is Map) {
         final errCode = (data['errCode'] as num?)?.toInt() ?? 0;
         if (errCode >= 0) {
@@ -472,6 +479,11 @@ class WorkflowRepository {
       }
       return {'success': true, 'data': data};
     } on dio.DioException catch (e) {
+      // 后端可能返回 500 但操作已生效
+      final respData = e.response?.data;
+      if (respData is int && respData > 0) {
+        return {'success': true, 'data': respData};
+      }
       return {'success': false, 'message': ApiProvider.normalize(e).message};
     } catch (e) {
       return {'success': false, 'message': '通知发送失败: $e'};

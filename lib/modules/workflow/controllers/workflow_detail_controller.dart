@@ -397,29 +397,31 @@ class WorkflowDetailController extends GetxController {
     }
   }
 
-  /// 通知：选择人员后，发送站内消息通知其查看此流程
+  /// 通知：选择人员后，推送企业微信通知到其手机
+  /// 老 App APIWechat.pushText(): POST /oa/wechat/pushText
   Future<void> broadcast() async {
     final users = await _pickUsers(title: '选择通知人', multiSelect: true);
     if (users == null || users.isEmpty) return;
-    final receivers = users.map((u) {
-      final id = u['id'];
-      return id is int ? id : int.tryParse(id?.toString() ?? '') ?? 0;
-    }).where((id) => id > 0).toList();
-    if (receivers.isEmpty) {
-      Get.snackbar('提示', '请选择有效的通知人', snackPosition: SnackPosition.BOTTOM);
+    final loginNames = users.map((u) {
+      return u['login_name']?.toString() ?? u['loginName']?.toString() ?? '';
+    }).where((n) => n.isNotEmpty).toList();
+    if (loginNames.isEmpty) {
+      Get.snackbar('提示', '选中人员没有登录账号，无法推送通知', snackPosition: SnackPosition.BOTTOM);
       return;
     }
 
     isLoading.value = true;
     try {
       final moduleName = workflowDetail['module']?['name']?.toString() ?? '流程';
+      final userInfo = _authRepo.getUserInfo();
+      final senderName = userInfo?['name']?.toString() ?? '';
       final result = await _repository.broadcastWorkflow(
-        name: '$moduleName 通知',
+        title: '来自$senderName的$moduleName通知',
         content: '请查看流程：$moduleName（编号：${proId.value}）',
-        receivers: receivers,
+        loginNames: loginNames,
       );
       if (result['success'] == true) {
-        Get.snackbar('成功', '已通知${users.length}人', snackPosition: SnackPosition.BOTTOM,
+        Get.snackbar('成功', '已推送通知给${users.length}人', snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
       } else {
         Get.snackbar('失败', result['message']?.toString() ?? '操作失败',
