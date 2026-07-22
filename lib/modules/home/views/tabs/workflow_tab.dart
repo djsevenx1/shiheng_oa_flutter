@@ -15,10 +15,11 @@ class WorkflowTab extends StatefulWidget {
   State<WorkflowTab> createState() => _WorkflowTabState();
 }
 
-class _WorkflowTabState extends State<WorkflowTab> {
+class _WorkflowTabState extends State<WorkflowTab> with SingleTickerProviderStateMixin {
   final _workflowRepository = WorkflowRepository();
   final _myAppRepo = MyApplicationRepository();
   Map<int, String> modsMap = {};  // modId → moduleName（列表标题用）
+  late TabController _tabController;
 
   List<dynamic> todoList = [];       // 待处理（preHandle）
   List<dynamic> historyList = [];    // 历史流程（全部）
@@ -30,7 +31,14 @@ class _WorkflowTabState extends State<WorkflowTab> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _loadAll();
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadAll() async {
@@ -120,37 +128,36 @@ class _WorkflowTabState extends State<WorkflowTab> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('流程'),
-          bottom: TabBar(
-            tabs: [
-              Tab(text: '待处理 (${todoList.length})'),
-              Tab(text: '历史流程 (${historyList.length})'),
-            ],
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
-            unselectedLabelStyle: TextStyle(fontSize: 14.sp),
-            isScrollable: true,
-            tabAlignment: TabAlignment.start,
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo, error: todoError, isHandle: true),
-            _buildFlowList(historyList, isLoadingHistory, '暂无历史流程', _loadHistory, error: historyError, isHandle: false),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('流程'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: '待处理 (${todoList.length})'),
+            Tab(text: '历史流程 (${historyList.length})'),
           ],
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
+          labelStyle: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+          unselectedLabelStyle: TextStyle(fontSize: 14.sp),
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: _openWorkflowPicker,
-          icon: const Icon(Icons.add),
-          label: const Text('发起流程'),
-          backgroundColor: AppTheme.primaryColor,
-        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _buildFlowList(todoList, isLoadingTodo, '暂无待处理流程', _loadTodo, error: todoError, isHandle: true),
+          _buildFlowList(historyList, isLoadingHistory, '暂无历史流程', _loadHistory, error: historyError, isHandle: false),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _openWorkflowPicker,
+        icon: const Icon(Icons.add),
+        label: const Text('发起流程'),
+        backgroundColor: AppTheme.primaryColor,
       ),
     );
   }
@@ -222,10 +229,13 @@ class _WorkflowTabState extends State<WorkflowTab> {
             onTap: () async {
               final id = item['id'];
               if (id != null) {
-                await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id, 'handle': isHandle});
-                // 从详情返回后无条件刷新列表
-                if (mounted) {
-                  _loadAll();
+                final result = await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': id, 'handle': isHandle});
+                if (!mounted) return;
+                // 刷新列表数据
+                await _loadAll();
+                // 如果在待处理列表做了操作（审批/放弃等），切到历史流程 Tab
+                if (isHandle && result is Map && result['refresh'] == true) {
+                  _tabController.animateTo(1);
                 }
               }
             },

@@ -292,7 +292,7 @@ class DashboardTab extends GetView<HomeController> {
           // 待办流程 / 历史流程 → 流程详情
           await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': type == 1});
           // 从详情返回后无条件刷新通知列表和待办列表
-          controller.refreshTodo();
+          await controller.refreshTodo();
         }
       },
       child: Container(
@@ -390,7 +390,7 @@ class DashboardTab extends GetView<HomeController> {
         if (proId != null) {
           await Get.toNamed(Routes.WORKFLOW_DETAIL, arguments: {'proId': proId, 'handle': true});
           // 从详情返回后无条件刷新待处理列表
-          controller.refreshTodo();
+          await controller.refreshTodo();
         }
       },
       child: Container(

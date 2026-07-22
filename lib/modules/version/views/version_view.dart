@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.6.9',
+              '版本 v2.7.0',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.6.9 (Build 269)'),
+          _buildInfoRow('版本', 'v2.7.0 (Build 270)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.7.0', '2026-07-22', [
+            '待处理审批提交后自动切到历史流程Tab并刷新',
+            '优化首页待处理列表刷新：await确保刷新完成',
+            '恢复App名称为时恒OA',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.6.9', '2026-07-22', [
             '修复审批提交后未返回上一页：改为无论成功失败都返回',
