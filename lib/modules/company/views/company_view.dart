@@ -36,12 +36,12 @@ class CompanyView extends StatelessWidget {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      'OA',
+                      '时恒电子',
                       style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     SizedBox(height: 4.h),
                     Text(
-                      '移动办公平台 v3.0',
+                      '移动办公平台 v2.7.1',
                       style: TextStyle(fontSize: 12.sp, color: Colors.white70),
                     ),
                     SizedBox(height: 20.h),

@@ -27,13 +27,13 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 16.h),
             Text(
-              'OA',
+              '时恒电子',
               style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.7.0',
-              style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
+              'OA 移动办公平台 v2.7.1',
+              style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
             // 检查更新按钮
@@ -128,6 +128,11 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.7.1', '2026-07-22', [
+            '加回"时恒电子"品牌字样：启动页、公司信息页、关于版本页均显示完整品牌名',
+            'Android 应用名保持为"时恒OA"',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.7.0', '2026-07-22', [
             '待处理审批提交后自动切到历史流程Tab并刷新',

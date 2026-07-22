@@ -32,11 +32,20 @@ class SplashView extends StatelessWidget {
             Icon(Icons.business, size: 80, color: Colors.white),
             SizedBox(height: 16),
             Text(
-              'OA',
+              '时恒电子',
               style: TextStyle(
                 fontSize: 24,
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 6),
+            Text(
+              '移动办公平台',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.white70,
+                letterSpacing: 2,
               ),
             ),
           ],
