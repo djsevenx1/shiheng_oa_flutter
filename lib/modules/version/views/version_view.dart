@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.6',
+              'OA 移动办公平台 v2.7.8',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.7 (Build 277)'),
+          _buildInfoRow('版本', 'v2.7.8 (Build 278)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -129,6 +129,10 @@ class VersionView extends StatelessWidget {
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
           SizedBox(height: 12.h),
+          _buildLogItem('v2.7.8', '2026-07-22', [
+            '修复文本选择菜单英文:加入 flutter_localizations,强制 locale=zh_CN,Cut/Copy/Paste/Share/Select all 等系统文案改为中文',
+            '支持中文(简体/繁体)与英文回落',
+          ]),
           _buildLogItem('v2.7.7', '2026-07-22', [
             '深色模式真正生效:设置页开关切换 GetMaterialApp.themeMode,选择持久化到 GetStorage',
             '深色模式图标随状态变化(已开/已关),副标题中文说明',

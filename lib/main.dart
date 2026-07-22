@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -63,6 +64,19 @@ class MyApp extends StatelessWidget {
           themeMode: Get.isRegistered<SettingsController>()
               ? Get.find<SettingsController>().themeMode.value
               : ThemeMode.light,
+          // 强制中文:让系统级文本选择菜单(Cut/Copy/Paste/Share/Select all)显示中文
+          locale: const Locale('zh', 'CN'),
+          fallbackLocale: const Locale('zh', 'CN'),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('zh', 'CN'),
+            Locale('zh', 'TW'),
+            Locale('en', 'US'),
+          ],
           initialRoute: AppPages.INITIAL,
           getPages: AppPages.routes,
           defaultTransition: Transition.cupertino,
