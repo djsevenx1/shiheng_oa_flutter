@@ -126,38 +126,7 @@ lib/
     ├── settings/                   # 设置(主题/缓存/通知)
     ├── help/                       # 帮助
     ├── company/                    # 公司信息
-    └── version/                    # 版本日志
-```
-
-## 核心特性
-
-### 性能优化(v2.7.9)
-- **HTTP keep-alive**:`maxConnectionsPerHost=6` / `idleTimeout=30s`,后续请求复用 TCP 连接
-- **GZIP 压缩**:响应头 `Accept-Encoding: gzip`,JSON 体积压缩 70%+
-- **连接预热**:`ApiProvider.warmup()` 在 splash 阶段主动发 GET /,触发 TCP 握手,首屏省 100-300ms
-- **超时缩短**:30s/30s/30s → 8s/10s/12s,失败更快感知
-- **并行加载**:首页 6 个接口一次性 `Future.wait`,首屏省 200-500ms
-- **慢请求埋点**:`_PerfInterceptor` 自动记录每个请求耗时,>800ms 标 SLOW
-
-### 网络配置(v2.7.10)
-- **服务器地址**:登录页可改,持久化到 `GetStorage`,换服务器自动清旧登录态
-- **加速 GitHub 代理**:登录页可改, 用于检查更新/下载 APK
-- **自动登录**:勾选后启动时静默登录,失败降级到登录页
-
-### 深色模式(v2.7.7)
-- 设置页开关实时切换 `GetMaterialApp.themeMode`
-- 持久化到 `GetStorage`,启动恢复
-- 暗色卡片 / 暗色 AppBar / 暗色输入框
-
-### 中文化(v2.7.8)
-- `flutter_localizations` + `locale=zh_CN`
-- 文本选择菜单、Material 默认文案全部中文
-
-### 名称字典(v2.7.5)
-- `NameDictRepository` 启动时拉 `/oa/common/groups` + `/oa/u/initList`
-- 流程详情/通知中的 ID 自动转中文名
-- 缓存到本地,离线也能展示
-
+    └── version/                    # 版日记
 ## 开发
 
 ```bash
@@ -180,7 +149,6 @@ flutter analyze
 
 ## 版本历史
 
-完整版本日志见 [Releases](https://github.com/djsevenx1/shiheng_oa_flutter/releases),或 App 内"设置 → 关于 → 更新日志"。
 
 最近几个版本:
 - **v2.8.0** (2026-07-22) - 加速 GitHub 代理配置从登录页迁到"设置 > 网络"
