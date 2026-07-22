@@ -202,15 +202,18 @@ class WorkflowDetailController extends GetxController {
         result: 'pass',
         comment: commentController.text.trim(),
       );
+      // 老 App: 后端返回 errMsg 作为提示信息（如"已提交库房审批"）
+      final serverMsg = result['message']?.toString() ?? '';
+      final displayMsg = serverMsg.isNotEmpty ? serverMsg : '审批已通过';
       if (result['success'] == true) {
-        Get.snackbar('成功', '审批已通过', snackPosition: SnackPosition.BOTTOM,
+        Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
         Get.back(result: {'refresh': true});
       } else {
         // 后端可能返回错误但操作已生效，重新加载详情验证
         await loadDetail();
         if (logs.length > oldLogCount) {
-          Get.snackbar('成功', '审批已通过', snackPosition: SnackPosition.BOTTOM,
+          Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
               backgroundColor: AppTheme.success, colorText: Colors.white);
           Get.back(result: {'refresh': true});
         } else {
@@ -240,15 +243,17 @@ class WorkflowDetailController extends GetxController {
         result: 'reject',
         comment: commentController.text.trim(),
       );
+      final serverMsg = result['message']?.toString() ?? '';
+      final displayMsg = serverMsg.isNotEmpty ? serverMsg : '已拒绝';
       if (result['success'] == true) {
-        Get.snackbar('成功', '已拒绝', snackPosition: SnackPosition.BOTTOM,
+        Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.warning, colorText: Colors.white);
         Get.back(result: {'refresh': true});
       } else {
         // 后端可能返回错误但操作已生效，重新加载详情验证
         await loadDetail();
         if (logs.length > oldLogCount) {
-          Get.snackbar('成功', '已拒绝', snackPosition: SnackPosition.BOTTOM,
+          Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
               backgroundColor: AppTheme.warning, colorText: Colors.white);
           Get.back(result: {'refresh': true});
         } else {
@@ -335,8 +340,10 @@ class WorkflowDetailController extends GetxController {
         name: moduleName,
         groupId: groupId > 0 ? groupId : null,
       );
+      final serverMsg = result['message']?.toString() ?? '';
+      final displayMsg = serverMsg.isNotEmpty ? serverMsg : '已转交给${users.length}人审批';
       if (result['success'] == true) {
-        Get.snackbar('成功', '已转交给${users.length}人审批', snackPosition: SnackPosition.BOTTOM,
+        Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
             backgroundColor: AppTheme.success, colorText: Colors.white);
         Get.back(result: {'refresh': true});
       } else {
@@ -344,7 +351,7 @@ class WorkflowDetailController extends GetxController {
         await loadDetail();
         if (logs.length > oldLogCount) {
           // logs 增加 → 操作实际已生效
-          Get.snackbar('成功', '已转交给${users.length}人审批', snackPosition: SnackPosition.BOTTOM,
+          Get.snackbar('成功', displayMsg, snackPosition: SnackPosition.BOTTOM,
               backgroundColor: AppTheme.success, colorText: Colors.white);
           Get.back(result: {'refresh': true});
         } else {
