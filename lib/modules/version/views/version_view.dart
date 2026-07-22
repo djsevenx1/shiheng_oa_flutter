@@ -30,7 +30,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              '版本 v2.5.1',
+              '版本 v2.5.2',
               style: TextStyle(fontSize: 14.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 4.h),
@@ -82,7 +82,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.5.1 (Build 251)'),
+          _buildInfoRow('版本', 'v2.5.2 (Build 252)'),
           _buildInfoRow('发布时间', '2026-07-21'),
           _buildInfoRow('MD5', '—'),
         ],
@@ -128,6 +128,10 @@ class VersionView extends StatelessWidget {
             '更新日志',
             style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
           ),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.5.2', '2026-07-22', [
+            '修复转交功能报数据库死锁：补全 payload 字段(name/groupId/formData/fileIds)',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.5.1', '2026-07-22', [
             '修复审批模式判断：与老 App 一致，state>0 即显示审批人模式（拒绝/通过+转交/前加签/通知）',

@@ -3,12 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/data/repository/contacts_repository.dart';
 import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/themes/app_theme.dart';
 
 class WorkflowDetailController extends GetxController {
   final _repository = WorkflowRepository();
+  final _authRepo = AuthRepository();
 
   final isLoading = false.obs;
   final proId = 0.obs;
@@ -326,10 +328,28 @@ class WorkflowDetailController extends GetxController {
 
     isLoading.value = true;
     try {
+      // 老 App core.js handle payload: name, formData, groupId, fileIds, extraUserIds
+      final moduleName = workflowDetail['module']?['name']?.toString() ?? '';
+      final formData = workflowDetail['formData'] is Map
+          ? workflowDetail['formData'] as Map<String, dynamic>
+          : <String, dynamic>{};
+      final fileIds = workflowDetail['fileIds'] is List
+          ? workflowDetail['fileIds'] as List
+          : <dynamic>[];
+      // groupId 从用户信息获取（老 App userInfo.groupId）
+      final userInfo = _authRepo.getUserInfo();
+      final groupId = userInfo?['groupId'] is int
+          ? userInfo!['groupId'] as int
+          : int.tryParse(userInfo?['groupId']?.toString() ?? '') ?? 0;
+
       final result = await _repository.forwardWorkflow(
         proId: proId.value,
         extraUserIds: userIds,
         comment: commentController.text.trim(),
+        name: moduleName,
+        groupId: groupId > 0 ? groupId : null,
+        formData: formData,
+        fileIds: fileIds,
       );
       if (result['success'] == true) {
         Get.snackbar('成功', '已转交给${users.length}人审批', snackPosition: SnackPosition.BOTTOM,

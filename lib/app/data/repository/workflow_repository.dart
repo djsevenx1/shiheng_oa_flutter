@@ -359,19 +359,26 @@ class WorkflowRepository {
   }
 
   /// 转交（在审批通过时附带 extraUserIds）
-  /// 老 App core.js handle(): payload.extraUserIds = scope.extraUserIds
-  /// 然后调 POST /oa/pro/handle，后端将流程转交给这些人审批
+  /// 老 App core.js handle(): payload 必须包含 name, formData, groupId, fileIds 等
+  /// 缺少 groupId/name 会导致后端 ACL 处理异常（死锁）
   Future<Map<String, dynamic>> forwardWorkflow({
     required int proId,
     required List<int> extraUserIds,
     String comment = '',
+    String name = '',
+    int? groupId,
+    Map<String, dynamic>? formData,
+    List? fileIds,
   }) async {
     try {
       final response = await _api.dioInstance.post('/oa/pro/handle', data: {
         'proId': proId,
         'flagPositive': true,
+        'name': name,
         'message': comment.isNotEmpty ? comment : '转交审批',
-        'formData': {},
+        'formData': formData ?? {},
+        'groupId': groupId,
+        'fileIds': fileIds ?? [],
         'extraUserIds': extraUserIds,
       });
       final data = response.data;
