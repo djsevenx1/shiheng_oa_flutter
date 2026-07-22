@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import '../../../app/core/app_config.dart';
 import '../../../app/data/providers/api_provider.dart';
 import '../../../app/data/repository/auth_repository.dart';
+import '../../../app/data/repository/name_dict_repository.dart';
 import '../../../app/routes/app_pages.dart';
 
 class LoginController extends GetxController {
@@ -196,6 +197,13 @@ class LoginController extends GetxController {
         // 登录成功后主动拉取一次用户信息并缓存（供首页展示用）
         _storage.write('cachedUsername', username);
         _fetchAndCacheCurrentUser(username);
+        // 登录成功后异步预加载全局名称字典（部门+人员），不阻塞跳转
+        final dict = NameDictRepository();
+        if (Get.isRegistered<NameDictRepository>()) {
+          Get.delete<NameDictRepository>(force: true);
+        }
+        Get.put<NameDictRepository>(dict, permanent: true);
+        unawaited(dict.preload());
         _showMessage(
           title: '登录成功',
           message: '欢迎回来，${result['data']?['name'] ?? username}',

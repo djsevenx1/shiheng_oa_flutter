@@ -5,12 +5,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import '../../../app/data/repository/auth_repository.dart';
 import '../../../app/data/repository/contacts_repository.dart';
+import '../../../app/data/repository/name_dict_repository.dart';
 import '../../../app/data/repository/workflow_repository.dart';
 import '../../../app/themes/app_theme.dart';
 
 class WorkflowDetailController extends GetxController {
   final _repository = WorkflowRepository();
   final _authRepo = AuthRepository();
+  final _contactsRepo = ContactsRepository();
+  final NameDictRepository _nameDict =
+      Get.isRegistered<NameDictRepository>() ? Get.find<NameDictRepository>() : NameDictRepository();
 
   final isLoading = false.obs;
   final proId = 0.obs;
@@ -28,6 +32,11 @@ class WorkflowDetailController extends GetxController {
   // 转交：选人后暂存，等用户填审批意见点"通过"时一起提交
   final forwardUserIds = <int>[].obs;
   final forwardUserNames = <String>[].obs;
+
+  // ID→名字 映射（用于把 groupId/userId 等数字显示为名字）
+  final _deptMap = <String, String>{};   // groupId → groupName
+  final _userMap = <String, String>{};   // userId → userName
+  bool _nameMapLoaded = false;
 
   @override
   void onInit() {
@@ -189,7 +198,52 @@ class WorkflowDetailController extends GetxController {
     }
 
     if (value == null) return '';
-    return value.toString();
+
+    // 列表型字段直接拼名字
+    if (value is List) {
+      return value
+          .map((e) => e is Map ? (e['name']?.toString() ?? e.toString()) : e.toString())
+          .where((s) => s.toString().isNotEmpty)
+          .join('、');
+    }
+    if (value is Map) {
+      final name = value['name'];
+      if (name != null) return name.toString();
+    }
+
+    final s = value.toString();
+    // 按 ctrl/id 判断,决定走部门/人员字典
+    final ctrlLower = ctrl.toLowerCase();
+    final idLower = id.toLowerCase();
+    final isUser = ctrlLower == 'user' ||
+        ctrlLower == 'users' ||
+        ctrlLower == 'select' ||
+        idLower.contains('userid') ||
+        idLower.contains('user_id') ||
+        idLower.contains('approver') ||
+        idLower.contains('creator') ||
+        idLower.contains('node');
+    final isDept = ctrlLower == 'group' ||
+        ctrlLower == 'dept' ||
+        ctrlLower == 'department' ||
+        idLower.contains('groupid') ||
+        idLower.contains('group_id') ||
+        idLower.contains('deptid') ||
+        idLower.contains('dept_id');
+    if (RegExp(r'^\d+$').hasMatch(s)) {
+      if (isUser) {
+        final mapped = _nameDict.userName(s);
+        if (mapped != s) return mapped;
+      } else if (isDept) {
+        final mapped = _nameDict.deptName(s);
+        if (mapped != s) return mapped;
+      } else {
+        // 兜底:纯数字,优先人,再部门
+        final mapped = _nameDict.nameOf(s);
+        if (mapped != s) return mapped;
+      }
+    }
+    return s;
   }
 
   String getDetailValue(Map<String, dynamic> mxItem, Map<String, dynamic> field) {

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
+import 'app/data/repository/name_dict_repository.dart';
 import 'app/routes/app_pages.dart';
 import 'app/themes/app_theme.dart';
 
@@ -18,6 +19,17 @@ void main() async {
     await GetStorage.init();
   } catch (e) {
     debugPrint('GetStorage init failed: $e');
+  }
+
+  // 启动时先从本地缓存恢复名称字典,无网络也能展示历史数据
+  try {
+    final dict = NameDictRepository();
+    dict.loadFromCache();
+    if (dict.isLoaded) {
+      Get.put<NameDictRepository>(dict, permanent: true);
+    }
+  } catch (e) {
+    debugPrint('NameDict loadFromCache failed: $e');
   }
 
   runApp(const MyApp());

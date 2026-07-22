@@ -32,7 +32,7 @@ class VersionView extends StatelessWidget {
             ),
             SizedBox(height: 4.h),
             Text(
-              'OA 移动办公平台 v2.7.3',
+              'OA 移动办公平台 v2.7.4',
               style: TextStyle(fontSize: 13.sp, color: AppTheme.textSecondary),
             ),
             SizedBox(height: 12.h),
@@ -94,7 +94,7 @@ class VersionView extends StatelessWidget {
       child: Column(
         children: [
           _buildInfoRow('技术框架', 'Flutter 3.44'),
-          _buildInfoRow('版本', 'v2.7.3 (Build 273)'),
+          _buildInfoRow('版本', 'v2.7.4 (Build 274)'),
           _buildInfoRow('发布时间', '2026-07-22'),
           _buildInfoRow('MD5', '—'),
           _buildInfoRow('适用平台', 'Android 5.0+'),
@@ -128,6 +128,12 @@ class VersionView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('更新日志', style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          SizedBox(height: 12.h),
+          _buildLogItem('v2.7.4', '2026-07-22', [
+            '新增全局名称字典:登录后异步拉取部门树+全员,缓存到本地',
+            '流程详情/表单字段自动把 groupId/userId 转换为部门名/人名',
+            '无网络或字典未加载时,回退显示原 ID 不影响主流程',
+          ]),
           SizedBox(height: 12.h),
           _buildLogItem('v2.7.3', '2026-07-22', [
             '最新页面支持下拉刷新:公告/动态/待处理流程均可下拉重新加载',
